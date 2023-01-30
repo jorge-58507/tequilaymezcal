@@ -1,0 +1,39 @@
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('/', function () {
+    return view('welcome');
+})->name('welcome');
+Route::get('/request', function () {
+    return view('request.index');
+})->name('request')->middleware('auth');
+
+Route::get('configuration', 'configurationController@index')->middleware('auth');;
+Route::get('prefix/{prefix}', 'ubicationController@getPrefix');
+
+Route::resource('ubication', 'ubicationController')->middleware('auth');
+Route::resource('table', 'tableController')->middleware('auth');
+Route::resource('product', 'productController')->middleware('auth');
+
+
+// Auth::routes();
+
+// Route::get('/home', 'HomeController@index')->name('home');
+
+// Route::get('/home', 'HomeController@index')->name('home');
+Auth::routes();
+
+// Route::get('/login', function (Request $request) {      return redirect('/');   });
+// Route::get('/gin', function (Request $request) {      return redirect('/');   });
+
+

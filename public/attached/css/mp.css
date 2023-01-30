@@ -1,0 +1,338 @@
+.content {
+  margin-bottom: 50px;
+  background: #ffffff; /* Old browsers */
+  background: -moz-linear-gradient(top, #ffffff 0%, #f2fffa 51%, #ffffff 100%); /* FF3.6-15 */
+  background: -webkit-linear-gradient(top, #ffffff 0%,#f2fffa 51%,#ffffff 100%); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(to bottom, #ffffff 0%,#f2fffa 51%,#ffffff 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
+}
+.content.explore {
+background: rgb(225,227,255);
+background: -moz-linear-gradient(90deg, rgba(225,227,255,1) 0%, rgba(195,204,251,1) 38%, rgba(184,179,252,0.9724089464887518) 76%);
+background: -webkit-linear-gradient(90deg, rgba(225,227,255,1) 0%, rgba(195,204,251,1) 38%, rgba(184,179,252,0.9724089464887518) 76%);
+background: linear-gradient(90deg, rgba(225,227,255,1) 0%, rgba(195,204,251,1) 38%, rgba(184,179,252,0.9724089464887518) 76%);
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#e1e3ff",endColorstr="#b8b3fc",GradientType=1);
+}
+#tutorial_container{
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+  border: solid 1px rgba(0, 0, 0, 0.14);
+  background: #fafafa;;
+  width: 300px;
+  height: 150px;
+  position: fixed;
+  padding: 10px;;
+  overflow: auto;
+  text-align: center;
+  transition: text-shadow 0.5s linear, opacity 1s linear, background-color 0.5s ease;
+  z-index: 10;
+  display: inline;
+  line-height: 25px;
+  font-size: 14pt;
+}
+.tutorial_hover{
+  background: #f5deb300 !important;
+  color: #cacaca;
+}
+span.pulse_shadow{
+    animation-duration: 1s;
+    animation-name: highlights;
+    animation-iteration-count: infinite;
+    transition: all 0.50s ease;
+}
+@keyframes highlights {
+  from {
+    text-shadow: 0;
+  }
+  50%{
+    text-shadow: 0 1px 15px black;
+  }
+  to {
+    text-shadow: 0;
+  }
+}
+
+div.pulse_shadow{
+  animation-duration: 1s;
+  animation-name: div_highlights;
+  animation-iteration-count: infinite;
+  transition: all 0.50s ease;
+}
+@keyframes div_highlights {
+  from {
+    box-shadow: 0;
+    border-radius: 0px;
+  }
+
+  50% {
+    box-shadow: 0 0 10px #000;
+    border-radius: 10px;
+  }
+
+  to {
+    box-shadow: 0;
+    border-radius: 0px;
+  }
+}
+
+
+
+nav{
+  transition: background 2s;
+}
+.input_valid {
+  border-bottom: solid 1px #01a422 !important;
+}
+.input_invalid {
+  border-bottom: solid 1px red !important;
+}
+.navbar-fixed {
+  height: 45px;
+  bottom: 0px;
+  position: fixed;
+}
+.navbar-fixed nav{
+  line-height: 35px;
+  height: 45px;
+}
+.panel_button {
+  margin-left: -60px;
+  z-index: 1000;
+}
+.panel_button.active {
+  margin-left: -25px;
+}
+.sidenav {
+  width: 400px;
+  padding: 10px;
+}
+.btn_openSidenav{
+  position: fixed;
+  left: 0px;
+}
+#div_border {
+  width: 0px;
+  height: 100vh;
+  background: #ccc;
+  margin-left: -1px;
+  position: absolute;
+}
+#btn_slide_panel>i {
+  font-size: 30pt;
+  text-align: right;
+  padding: 0 0 0 15px;
+}
+/* ########################     FLEXBOX CLASSES  ######################## */
+.flex{
+  display: flex;
+}
+.flex.flex-column{ /*  V-DIRECTION */
+  flex-direction: column;
+}
+.flex.flex-column-reverse{
+  flex-direction: column-reverse;
+}
+.flex.flex-row{ /*  H-DIRECTION */
+  flex-direction: row;
+}
+.flex.flex-row-reverse{
+  flex-direction: row-reverse;
+}
+.flex.flex-wrap{ /*  MULTI LINEA */
+  flex-wrap: wrap;
+}
+.flex.flex-wrap-reverse{
+  flex-direction: wrap-reverse;
+}
+.flex.justify-center{ /* H-CENTER */
+  justify-content: center;
+}
+.flex.justify-start{
+  justify-content: flex-start;
+}
+.flex.justify-end{
+  justify-content: flex-end;
+}
+.flex.justify-center div{ 
+  align-self: center;
+  margin: 0 !important;
+}
+.flex.align-center{ /* V-CENTER */
+  align-items: center;
+}
+.flex.align-end{
+  align-items: flex-end;
+}
+.flex.align-start{
+  align-items: flex-start;
+}
+/* ########################     BORDER CLASS     ######################## */
+.bx_0 { border-right: 0; border-left: 0;}
+.by_0 { border-bottom: 0; border-top: 0;}
+.bx_1 { border-right: solid 1px; border-left: solid 1px;}
+.by_1 { border-bottom: solid 1px; border-top: solid 1px;}
+.bt_0 { border-top: 0; }
+.bt_1 { border-top: solid 1px; }
+.br_0 { border-right: 0; }
+.br_1 { border-right: solid 1px; }
+.bb_0 { border-bottom: 0; }
+.bb_1 { border-bottom: solid 1px; }
+.bl_0 { border-left: 0; }
+.bl_1 { border-left: solid 1px; }
+/* ########################     BORDER FORMAT     ######################## */
+.bs_2 {  border: solid 2px;  }
+.bs_1 {  border: solid 1px;  }
+.radius_5 {  border-radius: 5px;  }
+.radius_10 {  border-radius: 10px;  }
+.border_teal {  border-color: #4db6ac;  }
+.border_teal4 {  border-color: #004d40;  }
+.border_blue4 {  border-color: #0D47A1;  }
+.border_gray {  border-color: #e0e0e0; }
+.border_black {  border-color: #000000; }
+
+/* ########################     PADDING CLASS     ######################## */
+.p_5 { padding-top: 0 !important;  padding-right: 0 !important;  padding-bottom: 0 !important; padding-left: 0 !important;}
+.px_0 { padding-left: 0 !important; padding-right: 0 !important; }
+.px_5 { padding-left: 5px; padding-right: 5px; }
+.px_10 { padding-left: 10px !important; padding-right: 10px !important; }
+.px_15 { padding-left: 15px !important; padding-right: 15px !important; }
+.px_20 { padding-left: 20px !important; padding-right: 20px !important; }
+.px_30 { padding-left: 30px !important; padding-right: 30px !important; }
+.py_0 { padding-top: 0; padding-bottom: 0; }
+.py_5 { padding-top: 5px !important; padding-bottom: 5px !important; }
+.py_10 { padding-top: 10px; padding-bottom: 10px; }
+.py_15 { padding-top: 15px; padding-bottom: 15px; }
+.py_20 { padding-top: 20px!important; padding-bottom: 20px!important; }
+.pt_0 { padding-top: 0; }
+.pt_5 { padding-top: 5px !important; }
+.pt_10 { padding-top: 10px !important; }
+.pt_15 { padding-top: 15px !important; }
+.pt_20 { padding-top: 20px !important; }
+.pt_25 { padding-top: 25px !important; }
+.pt_40 { padding-top: 40px !important; }
+.pr_0 { padding-right: 0; }
+.pr_5 { padding-right: 5px; }
+.pr_10 { padding-right: 10px; }
+.pr_15 { padding-right: 15px; }
+.pb_0 { padding-bottom: 0 !important; }
+.pb_5 { padding-bottom: 5px !important; }
+.pb_10 { padding-bottom: 10px !important; }
+.pb_20 { padding-bottom: 20px !important; }
+.pb_100 { padding-bottom: 100px !important; }
+.pl_0 { padding-left: 0 !important; }
+.pl_5 { padding-left: 5px !important; }
+.pl_10 { padding-left: 10px !important; }
+
+.m_0 { margin: 0; }
+.m_5 { margin: 5px; }
+.m_10 { margin:10px; }
+
+.my_0 { margin-top: 0 !important; margin-bottom: 0 !important; }
+.my_5 { margin: 5px 0 5px 0 !important; }
+.my_10 { margin:10px 0 10px 0 !important; }
+.my_20 { margin:20px 0 20px 0 !important; }
+
+.mx_10 { margin-left: 10px !important; margin-right: 10px !important; }
+
+.mt_5 { margin-top: 5px; }
+.mt_10 { margin-top: 10px; }
+.mt_15 { margin-top: 15px; }
+.mt_20 { margin-top: 20px !important; }
+
+.mb_0 { margin-bottom: 0px !important; }
+.mb_5 { margin-bottom: 5px !important; }
+.mb_10 { margin-bottom: 10px; }
+.mb_15 { margin-bottom: 15px; }
+.mb_20 { margin-bottom: 20px; }
+.mb_25 { margin-bottom: 25px; }
+.mb_50 { margin-bottom: 50px; }
+
+/* ########################     FONT CLASS     ######################## */
+.fs_20 {  font-size: 20px;  }
+.fs_30 {  font-size: 30px;  }
+.fs_40 {  font-size: 40px;  }
+.fs_50 {  font-size: 50px;  }
+.fs_60 {  font-size: 60px;  }
+
+/* ########################     FLEX WIDTH CLASS     ######################## */
+.w_100 { width: 100px; }
+.w_150 { width: 150px; }
+.w_200 { width: 200px; }
+.w_300 { width: 300px; }
+.w_400 { width: 400px; }
+.w_460 { width: 460px; }
+.w_500 { width: 500px; }
+/* ########################     FLEX HEIGHT CLASS     ######################## */
+.h_10 { height: 10px; }
+.h_20 { height: 20px; }
+.h_30 { height: 30px; }
+.h_50 { height: 50px; }
+.h_90 { height: 90px; }
+.h_100 { height: 100px; }
+.h_140 { height: 140px; }
+.h_150 { height: 150px; }
+.h_190 { height: 190px; }
+.h_200 { height: 200px; }
+.h_250 { height: 250px; }
+.h_300 { height: 300px; }
+.h_350 { height: 350px; }
+.h_400 { height: 400px; }
+.h_450 { height: 450px; }
+.h_500 { height: 500px; }
+.h_650 { height: 650px; }
+
+.mhp_100 { height: 100%; }
+/* ########################     HEIGHT 100% VIEWPORT CLASS     ######################## */
+.height_100 {  height: 100vh;  }
+/* ########################     TOGGLE CLASS     ######################## */
+.toggle_on {
+  visibility: visible;
+  opacity: 1;
+  transition: visibility 0s, height 0.5s, opacity 0.6s ease-in;
+}
+.toggle_off {
+  height: 0px;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, height 0.5s, opacity 0.1s ease-out;
+}
+
+.font_bolder {
+  font-weight: bolder;
+}
+.v_scrollable {
+  overflow-y: auto;
+}
+.h_scrollable {
+  overflow-x: auto;
+}
+.text_center{
+  text-align: center;
+}
+.text_left{
+  text-align: left;
+}
+.text_right{
+  text-align: right;
+}
+.cursor_pointer{
+  cursor: pointer;
+}
+.cursor_text {
+  cursor: text;
+}
+.cursor_default {
+  cursor: default;
+}
+#span_medic_logged {
+  margin: 0 0 0 30px;
+  font-size: 16px;
+}
+.nav-wrapper{
+  padding-left: 50px;
+}
+.brand-logo{
+  position: inherit !important;
+}
+.display_none {
+  display: none;
+}
