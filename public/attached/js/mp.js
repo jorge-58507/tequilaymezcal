@@ -15,6 +15,20 @@
 // ___________________________
 /*####MOUSTACHED##PILOT####*/
 
+// var url = '/client/';
+// var method = 'PUT';
+// var body = JSON.stringify({ });
+// var funcion = function (obj) {
+//   if (obj.status === 'success') {
+
+//   } else {
+//     cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+//   }
+// }
+// cls_general.async_laravel_request(url, method, funcion, body);
+
+// document.getElementById("myBtn").addEventListener("click", displayDate)
+
 class general_funct {
   test(){
     alert('lalalasldkaskldn');
@@ -119,7 +133,7 @@ class general_funct {
     }
   } 
   is_empty_var(string) {
-    if (string === null || string.length === 0 || /^\s+$/.test(string)) {
+    if (string === undefined || string === null || string.length === 0 || /^\s+$/.test(string)) {
       return 0;  //Vacio
     } else {
       return 1;  //Lleno
@@ -196,11 +210,13 @@ class general_funct {
         </div>
       </div>
     `
-    document.getElementById('toast_container').innerHTML += newToast;
-    var raw_toast = document.getElementsByClassName('toast');
-    const toast_selected = raw_toast[raw_toast.length - 1];
-    const toast = new bootstrap.Toast(toast_selected,opt)
-    toast.show()
+    if (cls_general.is_empty_var(message) != 0) {
+      document.getElementById('toast_container').innerHTML += newToast;
+      var raw_toast = document.getElementsByClassName('toast');
+      const toast_selected = raw_toast[raw_toast.length - 1];
+      const toast = new bootstrap.Toast(toast_selected,opt)
+      toast.show()
+    }
   }
   IsJsonString(str){
     try {
@@ -233,17 +249,19 @@ class general_funct {
     var to_splited = to.split('');
     return array_fecha[to_splited[0]] + '-' + array_fecha[to_splited[1]] + '-' + array_fecha[to_splited[2]];
   }
-  datetime_converter(from, to, datetime) {
+  datetime_converter(datetime) {
     var split = datetime.split(' ');
-    var string = split[0];
-    var raw_fecha = string.split('-');
-    var from_splited = from.split('');
-    var array_fecha = {};
-    for (const a in from_splited) {
-      array_fecha[from_splited[a]] = raw_fecha[a];
-    }
-    var to_splited = to.split('');
-    return array_fecha[to_splited[0]] + '-' + array_fecha[to_splited[1]] + '-' + array_fecha[to_splited[2]]+' '+split[1];
+    // var string = split[0];
+
+    return cls_general.date_converter('ymd','dmy',split[0]);
+    // var raw_fecha = string.split('-');
+    // var from_splited = from.split('');
+    // var array_fecha = {};
+    // for (const a in from_splited) {
+    //   array_fecha[from_splited[a]] = raw_fecha[a];
+    // }
+    // var to_splited = to.split('');
+    // return array_fecha[to_splited[0]] + '-' + array_fecha[to_splited[1]] + '-' + array_fecha[to_splited[2]]+' '+split[1];
   }
   //  ###### FUNCION DE REPORTE A PPT
   validFranz(selector, raw_acept, alt = '') { // raw_acept = array; selector = "string"
@@ -362,6 +380,42 @@ class general_funct {
     }
     return answer;
   }
+  val_price(str, decimal, refill, split) {
+    //decimal = cantidad de decimales permitidos
+    //refill  = rellenar la cantidad de decimales con ceros
+    //split   = hay que cortar el string al limite indicado
+    var ans = isNaN(str)
+    str = (ans) ? '' : str;
+    if (str === '') { return ''; }
+    str = parseFloat(str);
+    if (decimal > 0) {
+      var pat = new RegExp('(^[-][0-9]{1}|^[0-9]+|[0-9]+)([.][0-9]{1,' + decimal + '})?$');
+      if (!pat.test(str)) { return false; }
+    }
+    var str_splited = (str.toString()).split('.');
+    var decimal_part = '';
+    for (var i = 0; i < decimal; i++) { decimal_part += '0'; }
+    if (str_splited.length > 1) {
+      if (str_splited.length > 2) {
+        str_splited.splice(2);
+      }
+      if (str_splited[0].length === 0) {
+        str_splited[0] = '0';
+      }
+      if (refill === 1) {
+        str_splited[1] += decimal_part;  // REFILL
+      }
+      if (split === 1) {
+        str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
+      }
+      str = (decimal > 0) ? str_splited[0].replace(/(.)(?=(\d{3})+$)/g, '$1,') + '.' + str_splited[1] : str_splited[0];
+    } else {
+      if (refill === 1) { // REFILL
+        str = (decimal > 0) ? str_splited[0].replace(/(.)(?=(\d{3})+$)/g, '$1,') + '.' + decimal_part : str_splited[0];
+      }
+    }
+    return str;
+  }
   val_dec(str,decimal,refill,split){
     //decimal = cantidad de decimales permitidos
     //refill  = rellenar la cantidad de decimales con ceros
@@ -418,7 +472,7 @@ class general_funct {
     if (limitField.value.length > limitNum) {
       limitField.value = limitField.value.substring(0, limitNum);
       if (toast === 1) {
-        cls_genral.shot_toast_bs('Se excedi&oacute; la cantidad de caracteres');
+        cls_general.shot_toast_bs('Se excedi&oacute; la cantidad de caracteres');
       }
     }
     return limitField.value.length;
@@ -458,8 +512,40 @@ class general_funct {
     }, 500);
   }
 
+  calculate_sale(raw_price) { //[{PRICE,discount,tax, quantity}]
+    // calcular desc (redondear) RESTAR DESC
+    // calcular imp (redondear) SUMAR IMPUESTO
+    // MULTIPLICAR CNTIDAD
+    var ttl_gross = 0;
+    var ttl_discount = 0;
+    var ttl_tax = 0;
+    var subtotal = 0;
+    var total = 0;
+    raw_price.map((article) => {
+      var discount = (article.price * article.discount)/100;
+      discount = cls_general.val_dec(discount,2,1,1);
+      var price_discount = parseFloat(article.price) - parseFloat(discount);
+      var tax = (price_discount*article.tax)/100
+      tax = cls_general.val_dec(tax, 2, 1, 1);
+      var price_tax = parseFloat(price_discount) + parseFloat(tax);
+      
+      ttl_gross += article.quantity * article.price;
+      subtotal += article.quantity * price_discount;
+      total += article.quantity * price_tax;
+      ttl_discount += article.quantity * discount;
+      ttl_tax += article.quantity * tax;
+    })
+    return { 
+      gross_total: cls_general.val_dec(ttl_gross, 2, 1, 1), 
+      subtotal: cls_general.val_dec(subtotal, 2, 1, 1), 
+      total: cls_general.val_dec(total, 2, 1, 1),
+      discount: cls_general.val_dec(ttl_discount, 2, 1, 1), 
+      tax: cls_general.val_dec(ttl_tax, 2, 1, 1)
+    }
+  }
+
+  //   #######################     GENERALES
 }
-//   #######################     GENERALES
 
 
 

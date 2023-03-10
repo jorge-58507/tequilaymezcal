@@ -165,6 +165,13 @@ nav{
 .flex.align-start{
   align-items: flex-start;
 }
+/* ########################     FLOAT CLASS     ######################## */
+.float_right{
+  float: right;
+}
+.float_left{
+  float: left;
+}
 /* ########################     BORDER CLASS     ######################## */
 .bx_0 { border-right: 0; border-left: 0;}
 .by_0 { border-bottom: 0; border-top: 0;}
@@ -181,11 +188,11 @@ nav{
 /* ########################     BORDER FORMAT     ######################## */
 .bs_2 {  border: solid 2px;  }
 .bs_1 {  border: solid 1px;  }
+
 .radius_5 {  border-radius: 5px;  }
 .radius_10 {  border-radius: 10px;  }
 .border_teal {  border-color: #4db6ac;  }
-.border_teal4 {  border-color: #004d40;  }
-.border_blue4 {  border-color: #0D47A1;  }
+.border_blue {  border-color: #0D47A1;  }
 .border_gray {  border-color: #e0e0e0; }
 .border_black {  border-color: #000000; }
 
@@ -208,6 +215,7 @@ nav{
 .pt_15 { padding-top: 15px !important; }
 .pt_20 { padding-top: 20px !important; }
 .pt_25 { padding-top: 25px !important; }
+.pt_35 {  padding-top: 35px !important; }
 .pt_40 { padding-top: 40px !important; }
 .pr_0 { padding-right: 0; }
 .pr_5 { padding-right: 5px; }
@@ -247,12 +255,15 @@ nav{
 .mb_50 { margin-bottom: 50px; }
 
 /* ########################     FONT CLASS     ######################## */
+.fs_10 {  font-size: 10px;  }
+.fs_15 {  font-size: 15px;  }
 .fs_20 {  font-size: 20px;  }
 .fs_30 {  font-size: 30px;  }
 .fs_40 {  font-size: 40px;  }
 .fs_50 {  font-size: 50px;  }
 .fs_60 {  font-size: 60px;  }
 
+.f_white { color: #fff;   }
 /* ########################     FLEX WIDTH CLASS     ######################## */
 .w_100 { width: 100px; }
 .w_150 { width: 150px; }

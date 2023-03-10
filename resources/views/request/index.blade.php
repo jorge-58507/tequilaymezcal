@@ -3,56 +3,87 @@
 @section('css')
 @endsection
 @section('content')
-
-
-
-
-    <div class="col-xs-12 col-md-7">
-
-        
-        <div class="row">
-            <div class="col">
-
-
-                <nav>
-                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                        <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Home</button>
-                        <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Profile</button>
-                    </div>
-                </nav>
-                <div class="tab-content" id="nav-tabContent">
-                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">uno</div>
-                    <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">dos</div>
-                </div>
-
-
-            </div>
+  <!-- Modal -->
+  <div class="modal fade" id="commandModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="commandModal_title">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-
-
-    </div>
-    <div class="col-xs-12 col-md-5">
-        <div class="row">
-            <div class="col">
-
-            </div>
+        <div id="commandModal_content" class="modal-body">
         </div>
+        <div id="commandModal_footer" class="modal-footer">
+        </div>
+      </div>
     </div>
+  </div>
+  <!-- Modal -->
+  <div class="modal fade" id="clientModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="clientModal_title">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="clientModal_content" class="modal-body">
+        </div>
+        <div id="clientModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal -->
+  <div class="modal fade" id="requestModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="requestModal_title">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="requestModal_content" class="modal-body">
+        </div>
+        <div id="requestModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
 
+	<div id="container_request" class="row"></div>
 
-
-
-@endsection
+	@endsection
 
 @section('javascript')
-    {{-- <script src="{{ asset('js/jquery.js') }}"></script> --}}
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
+	<script src="{{ asset('attached/js/request.js') }}"></script>
+	<script src="{{ asset('attached/js/sweetalert.js') }}"></script>
+	
+	<script type="text/javascript">
+		var open_request = JSON.parse('<?php echo json_encode($data['open_request']) ?>');
+		var closed_request = JSON.parse('<?php echo json_encode($data['closed_request']) ?>');
+		var canceled_request = JSON.parse('<?php echo json_encode($data['canceled_request']) ?>');
+		var cls_request = new class_request(open_request,closed_request,canceled_request);
 
-        });
 
-    </script>
-    {{-- ##############    JQUERY   ############### --}}
-    <script type="text/javascript">
-    </script>
+		var raw_table = JSON.parse('<?php echo json_encode($data['table_list']) ?>');
+		var cls_table = new class_table(raw_table);
+
+		var raw_article = JSON.parse('<?php echo json_encode($data['article_list']) ?>');
+		var cls_article = new class_article(raw_article);
+		
+		var cls_command = new class_command;
+
+		var raw_client = JSON.parse('<?php echo json_encode($data['client_list']) ?>');
+		var cls_client = new class_client(raw_client);
+			
+		document.addEventListener('DOMContentLoaded', function() {
+			cls_request.index(); //MUESTRA LA INTERFAZ PEDIDO
+			cls_table.render(cls_table.table_list); //MUESTRA LAS MESAS
+			cls_request.render('open',cls_request.open_request); //MUESTRA LOS PEDIDOS ABIERTOS
+		});
+
+
+	</script>
+	{{-- ##############    JQUERY   ############### --}}
+	<script type="text/javascript">
+	</script>
 @endsection

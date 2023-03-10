@@ -1,0 +1,12 @@
+AL TERMINAR ACTIVAR LAS RESTRICCINES PARA ELIMINAR PRODUCTO productController->Destroy Y LOS MODELOS {tm_dataproductoutput, tm_datarequisition, tm_dataproductinput, tm_dataproductinputdevolution}
+AL TERMINAR ACTIVAR LAS RESTRICCINES PARA ELIMINAR ARTICLE articleController->Destroy Y LOS MODELOS { tm_commanddata, tm_price, rel_article_presentation}
+
+los botones de las comandas para reimprimir/anular la impresion de la anulacion de la comanda
+
+
+boton en request para marcar comanda como entregada
+quita botones de plato del dia en pedido,
+en pedido, com se ve el plato del dia
+
+funcion para el bton anular charge
+

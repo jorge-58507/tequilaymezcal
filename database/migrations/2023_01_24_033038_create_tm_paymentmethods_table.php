@@ -17,6 +17,7 @@ class CreateTmPaymentmethodsTable extends Migration
             $table->bigIncrements('ai_paymentmethod_id');
             $table->integer('paymentmethod_ai_user_id');
             $table->string('tx_paymentmethod_value');
+            $table->integer('tx_paymentmethod_change');
             $table->integer('tx_paymentmethod_status');
             $table->timestamps();
         });

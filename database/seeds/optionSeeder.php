@@ -52,5 +52,11 @@ class optionSeeder extends Seeder
         $tm->tx_option_title = 'EMAIL';
         $tm->tx_option_value = 'tequilaymezcal@mail.com';
         $tm->save();
+
+        $tm = new tm_option;
+        $tm->tx_option_title = 'TAX';
+        $tm->tx_option_value = 7;
+        $tm->save();
+
     }
 }

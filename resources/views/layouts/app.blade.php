@@ -19,7 +19,8 @@
         <main>
             <div class="container-xl">
                 <div class="row">
-                    <div class="col-sm-12 col-md-1">
+                    <div class="col-md-12 col-lg-1 text-truncate text-center pt-1">
+                        <span class="bs_1 text-bg-success radius_5 p-1 fs_15" title="{{ Auth()->user()->name }}">{{ Auth()->user()->name }}</span>
                         <br><br>
                         <button class="btn btn-primary btn_xl rounded-circle pt_0 px_10" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu">
                             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-text-center" viewBox="0 0 16 16">
@@ -74,7 +75,7 @@
                                 </div>
                                 <div class="row py-3">
                                     <div class="col-sm-6 text-center d-grid gap-2">
-                                        <button class="btn btn-primary btn_xl" onclick="window.location='/stock'" type="button">Innentario</button>
+                                        <button class="btn btn-primary btn_xl" onclick="window.location='/stock'" type="button">Inventario</button>
                                     </div>
                                     <div class="col-sm-6 text-center d-grid gap-2">
                                         <button class="btn btn-primary btn_xl" onclick="window.location='/report'" type="button">Reportes</button>
@@ -91,13 +92,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-12 col-md-10 col-lg-11 ">
+                    <div class="col-md-12 col-lg-11 ">
                         @yield('content')
                         <div id="toast_container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
                     </div>
                 </div>
             </div>
         </main>
+
         <script src="{{ asset('attached/js/popper.js') }}"></script>
         <script src="{{ asset('attached/js/bootstrap.min.js') }}"></script>
         <script src="{{ asset('attached/js/jquery.js') }}"></script>

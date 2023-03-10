@@ -18,7 +18,7 @@ class CreateTmRequestsTable extends Migration
             $table->integer('request_ai_table_id');
             $table->integer('request_ai_client_id')->nullable();
             $table->integer('request_ai_charge_id')->nullable();
-            $table->string('tx_requet_code');
+            $table->string('tx_request_code');
             $table->string('tx_request_title');
             $table->integer('tx_request_status')->default(0);
             $table->string('tx_request_closedby')->nullable();
