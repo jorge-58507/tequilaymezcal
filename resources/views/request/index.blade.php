@@ -85,5 +85,6 @@
 	</script>
 	{{-- ##############    JQUERY   ############### --}}
 	<script type="text/javascript">
+  
 	</script>
 @endsection

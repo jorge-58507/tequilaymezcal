@@ -198,14 +198,20 @@ class class_table {
   }
   create(ubication_id){
     var content = `
+      <form id="form_newtable" name="form_newtable" method="post" onsubmit="event.preventDefault(); cls_table.save();" autocomplete="off">
         <div class="row">
           <div class="col-xs-12 py-2">
             <label for="tableValue" class="form-label">Descripci&oacute;n</label>
-            <input type="text" class="form-control" id="tableValue" alt="${ubication_id}" onfocus="cls_general.validFranz(this.id, ['word','number'])" >
+            <input type="text" class="form-control" id="tableValue" name="tableValue" alt="${ubication_id}" onfocus="cls_general.validFranz(this.id, ['word','number'])" >
+            <input type="hidden" class="form-control" id="tableUbication" name="tableUbication" value="${ubication_id}">
+          </div>
+          <div class="col-md-12 col-lg-6 py-2">
             <label for="tableCode" class="form-label">C&oacute;digo</label>
-            <input type="text" class="form-control" id="tableCode" value="" onfocus="cls_general.validFranz(this.id, ['word','number'])" >
+            <input type="text" class="form-control" id="tableCode" name="tableCode" value="" onfocus="cls_general.validFranz(this.id, ['word','number'])" >
+          </div>
+          <div class="col-md-12 col-lg-6 py-2">
             <label for="tableType" class="form-label">Tipo</label>
-            <select class="form-select" id="tableType">
+            <select class="form-select" id="tableType" name="tableType">
               <option value="" selected>Seleccione</option>
               <option value="1">Barra</option>
               <option value="2">Mesa</option>
@@ -213,12 +219,27 @@ class class_table {
               <option value="4">Cocina</option>
             </select>
           </div>
+          <div class="col-xs-12 py-2">
+            <div class="row">
+              <div class="col-md-12 col-lg-3 mb-3 text-center">
+                <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 58.001 58.001" width="80" height="80" xml:space="preserve">
+                  <path style="fill:#88C057;" d="M29,19.5c-0.552,0-1-0.447-1-1v-8c0-0.553,0.448-1,1-1s1,0.447,1,1v8C30,19.053,29.552,19.5,29,19.5z"></path><path style="fill:#88C057;" d="M29,17.5c-0.256,0-0.512-0.098-0.707-0.293l-2-2c-0.391-0.391-0.391-1.023,0-1.414s1.023-0.391,1.414,0l2,2c0.391,0.391,0.391,1.023,0,1.414C29.512,17.403,29.256,17.5,29,17.5z"></path><path style="fill:#88C057;" d="M29,15.5c-0.256,0-0.512-0.098-0.707-0.293c-0.391-0.391-0.391-1.023,0-1.414l2-2c0.391-0.391,1.023-0.391,1.414,0s0.391,1.023,0,1.414l-2,2C29.512,15.403,29.256,15.5,29,15.5z"></path><path style="fill:#553323;" d="M57,54.5c-0.426,0-0.82-0.273-0.954-0.702l-5-16c-0.165-0.526,0.129-1.088,0.656-1.252c0.525-0.166,1.088,0.128,1.253,0.656l5,16c0.165,0.526-0.129,1.088-0.656,1.252C57.199,54.486,57.099,54.5,57,54.5z"></path><path style="fill:#553323;" d="M47.001,54.5c-0.081,0-0.162-0.01-0.244-0.03c-0.536-0.134-0.861-0.677-0.728-1.212l4-16c0.135-0.536,0.68-0.86,1.213-0.728c0.536,0.134,0.861,0.677,0.728,1.212l-4,16C47.857,54.198,47.449,54.5,47.001,54.5z"></path><path style="fill:#553323;" d="M11,54.5c-0.426,0-0.82-0.273-0.954-0.702l-5-16c-0.165-0.526,0.129-1.088,0.656-1.252c0.525-0.166,1.088,0.128,1.253,0.656l5,16c0.165,0.526-0.129,1.088-0.656,1.252C11.199,54.486,11.099,54.5,11,54.5z"></path><path style="fill:#553323;" d="M1.001,54.5c-0.081,0-0.162-0.01-0.244-0.03c-0.536-0.134-0.861-0.677-0.728-1.212l4-16c0.134-0.536,0.678-0.86,1.213-0.728c0.536,0.134,0.861,0.677,0.728,1.212l-4,16C1.857,54.198,1.449,54.5,1.001,54.5z"></path><path style="fill:#C7CAC7;" d="M18,53.5h22c-4.971,0-9-4.029-9-9v-9h3v-4H24v4h3v9C27,49.471,22.971,53.5,18,53.5z"></path><path style="fill:#553323;" d="M48.043,27.5H9.958c1.152,1.147,2.091,2.504,2.779,4h32.526C45.952,30.004,46.89,28.648,48.043,27.5z"></path><rect x="13" y="24.5" style="fill:#C7CAC7;" width="6" height="3"></rect><path style="fill:#C7CAC7;" d="M21,25.5H11c-0.552,0-1-0.447-1-1s0.448-1,1-1h10c0.552,0,1,0.447,1,1S21.552,25.5,21,25.5z"></path><rect x="39" y="24.5" style="fill:#C7CAC7;" width="6" height="3"></rect><path style="fill:#C7CAC7;" d="M47,25.5H37c-0.552,0-1-0.447-1-1s0.448-1,1-1h10c0.552,0,1,0.447,1,1S47.552,25.5,47,25.5z"></path><path style="fill:#C7CAC7;" d="M26.025,18.5C25.39,20.093,25,20.192,25,22.5c0,4.97,1.791,5,4,5s4-0.03,4-5c0-2.308-0.39-2.407-1.025-4H26.025z"></path><path style="fill:#DD352E;" d="M29,3.5h-3v4c0,1.65,1.35,3,3,3V3.5z"></path><path style="fill:#B02721;" d="M29,4.5h3v3c0,1.65-1.35,3-3,3V4.5z"></path><path style="fill:#BFA380;" d="M14,37.5H4.366C1.955,37.5,0,35.546,0,33.135V23.5h0.274C7.855,23.5,14,29.646,14,37.226V37.5z"></path><path style="fill:#BFA380;" d="M44,37.5h9.634c2.411,0,4.366-1.955,4.366-4.366V23.5h-0.274C50.146,23.5,44,29.646,44,37.226V37.5z"></path><path style="fill:#839594;" d="M44,54.5H14c-0.552,0-1-0.447-1-1s0.448-1,1-1h30c0.552,0,1,0.447,1,1S44.552,54.5,44,54.5z"></path><rect x="24" y="32.5" style="fill:#839594;" width="10" height="3"></rect><path style="fill:#E7ECED;" d="M30,52.5h-3l0.112-2.014c0.033-0.591,0.172-1.167,0.349-1.732C27.818,47.62,28,46.436,28,45.244V35.5h1v9.744c0,1.192,0.182,2.376,0.538,3.511c0.177,0.565,0.316,1.141,0.349,1.732L30,52.5z"></path>
+                </svg>
+              </div>
+              <div class="col-md-12 col-lg-9 mb-3">
+                <div class="input-group mb-3">
+                  <input type="file" class="form-control" id="tableImage" name="tableImage">
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      `;
+      
+    `;
     var content_bottom = `          
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-      <button type="button" class="btn btn-success" id="btn_tableModal" onclick="cls_table.save()">Guardar Cambios</button>
-    `;
+      <button type="submit" id="btn_submitnewtable" class="btn btn-success" id="btn_submitnewtable" onclick="cls_table.save();">Guardar Cambios</button>
+    </form>`;
 
     document.getElementById('ubicationModal_content').innerHTML = content;
     document.getElementById('ubicationModal_footer').innerHTML = content_bottom;
@@ -227,22 +248,60 @@ class class_table {
   save(){
     var field_value = document.getElementById('tableValue');
     var value = field_value.value;
-    var ubication_id = field_value.getAttribute('alt');
     var code = document.getElementById('tableCode').value;
     var type = document.getElementById('tableType').value;
     if (cls_general.is_empty_var(value) === 0 || cls_general.is_empty_var(code) === 0 || cls_general.is_empty_var(type) === 0) {
       cls_general.shot_toast_bs('Verifique la información ingresada',{bg: 'text-bg-secondary'});
       return false;
     }
-    var url = '/table/'; var method = 'POST';
-    var body = JSON.stringify({a: value, b: code, c: type, d: ubication_id});
-    var funcion = function (obj) {
+
+    cls_general.disable_submit(document.getElementById('btn_submitnewtable'));
+    var formData = new FormData($('#form_newtable')[0]);
+    $.ajax({
+      url: '/table/',
+      type: 'POST',
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="csrf-token"]').attr('content'));
+      },
+      // Form data
+      data: formData,
+      // Tell jQuery not to process data or worry about content-type. You *must* include these options!
+      cache: false,
+      contentType: false,
+      processData: false,
+      // Custom XMLHttpRequest
+      xhr: function () {
+        var myXhr = $.ajaxSettings.xhr();
+        if (myXhr.upload) {
+          // For handling the progress of the upload
+          myXhr.upload.addEventListener('progress', function (e) {
+            if (e.lengthComputable) {
+              $('progress').attr({
+                value: e.loaded,
+                max: e.total,
+              });
+            }
+          }, false);
+        }
+        return myXhr;
+      }
+    })
+    .done(function (obj) {
+
       if (obj.status != 'failed') {
         cls_ubication.render_modal(obj.data.ubication, obj.data.table);
       }
       cls_general.shot_toast_bs(obj.message);
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
+    });
+    // var url = '/table/'; var method = 'POST';
+    // var body = JSON.stringify({a: value, b: code, c: type, d: ubication_id});
+    // var funcion = function (obj) {
+    //   if (obj.status != 'failed') {
+    //     cls_ubication.render_modal(obj.data.ubication, obj.data.table);
+    //   }
+    //   cls_general.shot_toast_bs(obj.message);
+    // }
+    // cls_general.async_laravel_request(url, method, funcion, body);
   }
   generate_list(table_list){
     var list = `<div class="list-group">`;
@@ -260,27 +319,55 @@ class class_table {
     var funcion = function (obj) {
       var table = obj['data']['table'];
       var checked = (table['tx_table_active'] === 1) ? 'checked' : '';
-      var content = `
-        <div class="row">
-          <div class="col-xs-12 py-2">
-            <label for="tableValue" class="form-label">Descripci&oacute;n</label>
-            <input type="text" class="form-control" id="tableValue" value="${table['tx_table_value']}" onfocus="cls_general.validFranz(this.id, ['word','number'])">
-            <label for="tableCode" class="form-label">C&oacute;digo</label>
-            <input type="text" class="form-control" id="tableCode" value="${table['tx_table_code']}" onfocus="cls_general.validFranz(this.id, ['word','number'])">
-            <div class="form-check form-switch py-3 ">
-              <input class="form-check-input" type="checkbox" role="switch" id="tableStatus" ${checked}>
-              <label class="form-check-label" for="tableStatus">Activo</label>
+      var img = (cls_general.is_empty_var(table['tx_table_image']) === 1) ? `<img src="attached/image/table/${table['tx_table_image'] }" width="100px"></img>` : `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 58.001 58.001" width="80" height="80" xml:space="preserve">
+          <path style="fill:#88C057;" d="M29,19.5c-0.552,0-1-0.447-1-1v-8c0-0.553,0.448-1,1-1s1,0.447,1,1v8C30,19.053,29.552,19.5,29,19.5z"></path><path style="fill:#88C057;" d="M29,17.5c-0.256,0-0.512-0.098-0.707-0.293l-2-2c-0.391-0.391-0.391-1.023,0-1.414s1.023-0.391,1.414,0l2,2c0.391,0.391,0.391,1.023,0,1.414C29.512,17.403,29.256,17.5,29,17.5z"></path><path style="fill:#88C057;" d="M29,15.5c-0.256,0-0.512-0.098-0.707-0.293c-0.391-0.391-0.391-1.023,0-1.414l2-2c0.391-0.391,1.023-0.391,1.414,0s0.391,1.023,0,1.414l-2,2C29.512,15.403,29.256,15.5,29,15.5z"></path><path style="fill:#553323;" d="M57,54.5c-0.426,0-0.82-0.273-0.954-0.702l-5-16c-0.165-0.526,0.129-1.088,0.656-1.252c0.525-0.166,1.088,0.128,1.253,0.656l5,16c0.165,0.526-0.129,1.088-0.656,1.252C57.199,54.486,57.099,54.5,57,54.5z"></path><path style="fill:#553323;" d="M47.001,54.5c-0.081,0-0.162-0.01-0.244-0.03c-0.536-0.134-0.861-0.677-0.728-1.212l4-16c0.135-0.536,0.68-0.86,1.213-0.728c0.536,0.134,0.861,0.677,0.728,1.212l-4,16C47.857,54.198,47.449,54.5,47.001,54.5z"></path><path style="fill:#553323;" d="M11,54.5c-0.426,0-0.82-0.273-0.954-0.702l-5-16c-0.165-0.526,0.129-1.088,0.656-1.252c0.525-0.166,1.088,0.128,1.253,0.656l5,16c0.165,0.526-0.129,1.088-0.656,1.252C11.199,54.486,11.099,54.5,11,54.5z"></path><path style="fill:#553323;" d="M1.001,54.5c-0.081,0-0.162-0.01-0.244-0.03c-0.536-0.134-0.861-0.677-0.728-1.212l4-16c0.134-0.536,0.678-0.86,1.213-0.728c0.536,0.134,0.861,0.677,0.728,1.212l-4,16C1.857,54.198,1.449,54.5,1.001,54.5z"></path><path style="fill:#C7CAC7;" d="M18,53.5h22c-4.971,0-9-4.029-9-9v-9h3v-4H24v4h3v9C27,49.471,22.971,53.5,18,53.5z"></path><path style="fill:#553323;" d="M48.043,27.5H9.958c1.152,1.147,2.091,2.504,2.779,4h32.526C45.952,30.004,46.89,28.648,48.043,27.5z"></path><rect x="13" y="24.5" style="fill:#C7CAC7;" width="6" height="3"></rect><path style="fill:#C7CAC7;" d="M21,25.5H11c-0.552,0-1-0.447-1-1s0.448-1,1-1h10c0.552,0,1,0.447,1,1S21.552,25.5,21,25.5z"></path><rect x="39" y="24.5" style="fill:#C7CAC7;" width="6" height="3"></rect><path style="fill:#C7CAC7;" d="M47,25.5H37c-0.552,0-1-0.447-1-1s0.448-1,1-1h10c0.552,0,1,0.447,1,1S47.552,25.5,47,25.5z"></path><path style="fill:#C7CAC7;" d="M26.025,18.5C25.39,20.093,25,20.192,25,22.5c0,4.97,1.791,5,4,5s4-0.03,4-5c0-2.308-0.39-2.407-1.025-4H26.025z"></path><path style="fill:#DD352E;" d="M29,3.5h-3v4c0,1.65,1.35,3,3,3V3.5z"></path><path style="fill:#B02721;" d="M29,4.5h3v3c0,1.65-1.35,3-3,3V4.5z"></path><path style="fill:#BFA380;" d="M14,37.5H4.366C1.955,37.5,0,35.546,0,33.135V23.5h0.274C7.855,23.5,14,29.646,14,37.226V37.5z"></path><path style="fill:#BFA380;" d="M44,37.5h9.634c2.411,0,4.366-1.955,4.366-4.366V23.5h-0.274C50.146,23.5,44,29.646,44,37.226V37.5z"></path><path style="fill:#839594;" d="M44,54.5H14c-0.552,0-1-0.447-1-1s0.448-1,1-1h30c0.552,0,1,0.447,1,1S44.552,54.5,44,54.5z"></path><rect x="24" y="32.5" style="fill:#839594;" width="10" height="3"></rect><path style="fill:#E7ECED;" d="M30,52.5h-3l0.112-2.014c0.033-0.591,0.172-1.167,0.349-1.732C27.818,47.62,28,46.436,28,45.244V35.5h1v9.744c0,1.192,0.182,2.376,0.538,3.511c0.177,0.565,0.316,1.141,0.349,1.732L30,52.5z"></path>
+        </svg>`;
+      var content = 
+      `
+        <form id="form_updatetable" name="form_updatetable" method="post" onsubmit="event.preventDefault(); cls_table.update();" autocomplete="off">
+          <div class="row">
+            <div class="col-xs-12 py-2">
+              <label for="tableValue" class="form-label">Descripci&oacute;n</label>
+              <input type="text" class="form-control" id="tableValue" name="tableValue" value="${table['tx_table_value']}" onfocus="cls_general.validFranz(this.id, ['word','number'])">
+              <input type="hidden" id="tableId" name="tableId" value="${table['ai_table_id']}" onfocus="cls_general.validFranz(this.id, ['word','number'])">
             </div>
-            <div class="col-xs-6">
-              <span class="form-control cursor_default">${cls_table.raw_type[table['tx_table_type']]}</span>
+            <div class="col-md-12 col-lg-4 py-2">
+              <label for="tableCode" class="form-label">C&oacute;digo</label>
+              <input type="text" class="form-control" id="tableCode" name="tableCode" value="${table['tx_table_code']}" onfocus="cls_general.validFranz(this.id, ['word','number'])">
+            </div>
+            <div class="col-md-12 col-lg-4 pt-4">
+              <div class="form-check form-switch py-3 ">
+                <input class="form-check-input" type="checkbox" role="switch" id="tableStatus" name="tableStatus" ${checked}>
+                <label class="form-check-label" for="tableStatus">Activo</label>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-4 py-2">
+              <div class="col-xs-12">
+                <label class="form-check-label" for="">Tipo</label>
+                <span class="form-control cursor_default">${cls_table.raw_type[table['tx_table_type']]}</span>
+              </div>
+            </div>
+            <div class="col-xs-12 py-2">
+              <div class="row">
+                <div class="col-md-12 col-lg-3 mb-3 text-center">
+                  ${img}
+                </div>
+                <div class="col-md-12 col-lg-9 mb-3">
+                  <div class="input-group mb-3">
+                    <input type="file" class="form-control" id="tableImage" name="tableImage">
+                    <input type="hidden" id="tableImage" name="tableImagePlaceholder" value="${table['tx_table_image']}">
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
       `;
       var content_bottom = `          
-        <button type="button" class="btn btn-warning" data-bs-dismiss="modal" onclick="cls_table.delete(${table['ai_table_id']});">Eliminar Mesa</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        <button type="button" class="btn btn-success" id="btn_tableModal" name="${table['ai_table_id']}" onclick="cls_table.update(this.name)">Guardar Cambios</button>
+          <button type="button" class="btn btn-warning" data-bs-dismiss="modal" onclick="cls_table.delete(${table['ai_table_id']});">Eliminar Mesa</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="submit" class="btn btn-success" id="btn_submitupdatetable" onclick="cls_table.update();" >Guardar Cambios</button>
+        </form>
+
       `;
       document.getElementById('ubicationModal_title').innerHTML = table['tx_table_value'];
       document.getElementById('ubicationModal_content').innerHTML = content;
@@ -292,20 +379,65 @@ class class_table {
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  update(table_id){
+  update(){
+    cls_general.disable_submit(document.getElementById('btn_submitupdatetable'));
     var description = document.getElementById('tableValue').value;
     var code = document.getElementById('tableCode').value;
-    var status = (document.getElementById('tableStatus').checked === true) ? 1 : 0;
+    // var status = (document.getElementById('tableStatus').checked === true) ? 1 : 0;
 
-    var url = '/table/' + table_id; var method = 'PUT';
-    var body = JSON.stringify({ a: description, b: code, c: status });
-    var funcion = function (obj) {
+    if (cls_general.is_empty_var(description) === 0 || cls_general.is_empty_var(code) === 0) {
+      cls_general.shot_toast_bs('Verifique la información ingresada.', { bg: 'text-bg-secondary' });
+      return false;
+    }
+
+    var formData = new FormData($('#form_updatetable')[0]);
+    $.ajax({
+      url: '/table_upd/',
+      type: 'POST',
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="csrf-token"]').attr('content'));
+      },
+      // Form data
+      data: formData,
+      // Tell jQuery not to process data or worry about content-type. You *must* include these options!
+      cache: false,
+      contentType: false,
+      processData: false,
+      // Custom XMLHttpRequest
+      xhr: function () {
+        var myXhr = $.ajaxSettings.xhr();
+        if (myXhr.upload) {
+          // For handling the progress of the upload
+          myXhr.upload.addEventListener('progress', function (e) {
+            if (e.lengthComputable) {
+              $('progress').attr({
+                value: e.loaded,
+                max: e.total,
+              });
+            }
+          }, false);
+        }
+        return myXhr;
+      }
+    })
+    .done(function (obj) {
       if (obj.status != 'failed') {
         cls_ubication.render_modal(obj.data.ubication, obj.data.table);
       }
-      cls_general.shot_toast_bs(obj['message']);
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
+      cls_general.shot_toast_bs(obj.message);
+    });
+
+
+
+    // var url = '/table/' + table_id; var method = 'PUT';
+    // var body = JSON.stringify({ a: description, b: code, c: status });
+    // var funcion = function (obj) {
+    //   if (obj.status != 'failed') {
+    //     cls_ubication.render_modal(obj.data.ubication, obj.data.table);
+    //   }
+    //   cls_general.shot_toast_bs(obj['message']);
+    // }
+    // cls_general.async_laravel_request(url, method, funcion, body);
   }
   delete(table_id) {
     var url = '/table/' + table_id; var method = 'DELETE';
@@ -533,7 +665,7 @@ class class_product{
           </div>
           <div class="row">
             <div class="col-lg-6">
-              <label for="productMeasure" class="form-label">Medida M&iacute;nima</label>
+              <label for="productMeasure" class="form-label">Medida M&iacute;nima = 1</label>
               <select id="productMeasure" class="form-select"><option value="" disabled selected>Seleccione</option> ${option_productmeasure}</select>
             </div>
             <div class="col-lg-6">
@@ -732,7 +864,7 @@ class class_product{
             </div>
             <div class="col-lg-6">
               <div class="input-group mb-3" style="padding-top: 32px;">
-                <input type="text" id="measureRelation" class="form-control" placeholder="Relacion a 1" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 20, toast = 0)" onblur="cls_general.limitText(this, 20, toast = 0)">
+                <input type="text" id="measureRelation" class="form-control" placeholder="Relacion a 1" onfocus="cls_general.validFranz(this.id, ['number'],'.')" onkeyup="cls_general.limitText(this, 20, toast = 0)" onblur="cls_general.limitText(this, 20, toast = 0)">
                 <button class="btn btn-success" type="button" id="btn_addMeasureProduct" onclick="cls_product.save_measure('${productSlug}')">Agregar</button>
               </div>
             </div>
@@ -899,7 +1031,7 @@ class class_article {
       var bg = (raw_list[a]['tx_article_status'] == '0') ? 'text-bg-secondary' : '';
       var inactive = (raw_list[a]['tx_article_status'] == '0') ? ' (INACTIVO)' : '';
 
-      list += `<a href = "#" class="list-group-item list-group-item-action ${bg}" onclick="event.preventDefault(); cls_article.show(${raw_list[a]['tx_article_slug']})">${raw_list[a]['tx_article_value']} ${inactive}</a>`;
+      list += `<a href = "#" class="list-group-item list-group-item-action ${bg}" onclick="event.preventDefault(); cls_article.show('${raw_list[a]['tx_article_slug']}')">${raw_list[a]['tx_article_value']} ${inactive}</a>`;
     }
     list += '</div>';
     return list;
@@ -1146,7 +1278,7 @@ class class_article {
                 <input type="text" class="form-control" id="articleDiscountrate" value="${article.tx_article_discountrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
               </div>
               <div class="col-sm-12 col-md-6 col-lg-3 d-grid gap-2 pt-3">
-                <button type="button" class="btn btn-info" onclick="cls_article.price(${article_slug})">Precio</button>
+                <button type="button" class="btn btn-info" onclick="cls_article.price('${article_slug}')">Precio</button>
               </div>
             </div>
             <div class="row">
@@ -1512,7 +1644,7 @@ class class_price{
           </div>
           <div class="row">
             <div class="col-lg-12 text-center pt-2">
-              <button type="button" class="btn btn-success" onclick="cls_price.save(this,${article_slug})">Agregar Precio</button>
+              <button type="button" class="btn btn-success" onclick="cls_price.save(this,'${article_slug}')">Agregar Precio</button>
             </div>
           </div>
           <div class="row">
@@ -1620,7 +1752,7 @@ class class_presentation{
 //       list_presentation += `
 //         <li class="list-group-item d-flex justify-content-between align-items-center">
 //           ${presentation.tx_presentation_value}
-//           <button class="btn btn-primary" type="button" onclick="cls_articlepresentation.save(this,${presentation.ai_presentation_id},${article_slug})">
+//           <button class="btn btn-primary" type="button" onclick="cls_articlepresentation.save(this,${presentation.ai_presentation_id},'${article_slug}')">
 //             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
 //               <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
 //             </svg>

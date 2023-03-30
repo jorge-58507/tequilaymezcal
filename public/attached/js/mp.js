@@ -239,6 +239,15 @@ class general_funct {
     }
     return edad
   }
+  getDate(){
+    const fecha = new Date();
+    const añoActual = fecha.getFullYear();
+
+    const hoy = fecha.getDate();
+    const mesActual = fecha.getMonth() + 1; 
+
+    return [`${fecha.getFullYear()}-${(fecha.getMonth() > 9) ? fecha.getMonth() + 1 : '0' + (fecha.getMonth() + 1)}-${fecha.getDate()}`,`${fecha.getHours()}:${fecha.getMinutes()}`]
+  }
   date_converter(from, to, string) { //Ymd,dmY,fecha
     var raw_fecha = string.split('-');
     var from_splited = from.split('');
@@ -251,18 +260,16 @@ class general_funct {
   }
   datetime_converter(datetime) {
     var split = datetime.split(' ');
-    // var string = split[0];
 
     return cls_general.date_converter('ymd','dmy',split[0]);
-    // var raw_fecha = string.split('-');
-    // var from_splited = from.split('');
-    // var array_fecha = {};
-    // for (const a in from_splited) {
-    //   array_fecha[from_splited[a]] = raw_fecha[a];
-    // }
-    // var to_splited = to.split('');
-    // return array_fecha[to_splited[0]] + '-' + array_fecha[to_splited[1]] + '-' + array_fecha[to_splited[2]]+' '+split[1];
   }
+  time_converter(datetime) {
+    var split = datetime.split(' ');
+    var time_splited = split[1].split(':');
+    return time_splited[0] + ':' +time_splited[1];
+    // return cls_general.date_converter('ymd', 'dmy', split[0]);
+  }
+
   //  ###### FUNCION DE REPORTE A PPT
   validFranz(selector, raw_acept, alt = '') { // raw_acept = array; selector = "string"
     var characters = '';
@@ -297,8 +304,6 @@ class general_funct {
     var instances_datepicker = M.Datepicker.init(datepicker, { "autoClose": true, "format": 'dd-mm-yyyy', "container": 'body', "defaultDate": defaultDate });
   }
   open_timepicker(originTime) {
-    // var defaultDate = new Date();
-    // defaultDate.setFullYear(originDate);
     var timepicker = document.querySelectorAll('.timepicker');
     var instances_timepicker = M.Timepicker.init(timepicker, { "autoClose": true, "container": 'body', "defaultTime": originTime });
   }

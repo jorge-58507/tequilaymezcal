@@ -258,5 +258,27 @@ class productController extends Controller
             }
         }
     }
+    public function minus_byProduct($product_list){
+        foreach ($product_list as $a => $product) {
+            // $rs_product = tm_product::where('ai_product_id',$product['ai_product_id'])->get();
+            if ($product['tx_product_discountable'] == 1) {
+                $quantity = $product['tx_product_quantity']-$product['depletion_quantity'];
+                tm_product::where('ai_product_id',$product['ai_product_id'])->update(['tx_product_quantity' => $quantity]);
+            }
+        }
+    }
+    // public function plus_byProduct($article_list){
+        // foreach ($article_list as $a => $article) {
+        //     $rs_articleproduct = tm_articleproduct::where('articleproduct_ai_article_id',$article['article_id'])->get();
+        //     foreach ($rs_articleproduct as $key => $articleproduct) {
+        //         $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')->where('measure_product_ai_measure_id',$articleproduct['articleproduct_ai_measure_id'])->where('measure_product_ai_product_id',$articleproduct['articleproduct_ai_product_id'])->first();
+        //         if ($rs_measureproduct['tx_product_discountable'] == 1) {
+        //             $quantity = $rs_measureproduct['tx_product_quantity']+(($article['quantity']*$articleproduct['tx_articleproduct_quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+        //             $product = tm_product::where('ai_product_id',$articleproduct['articleproduct_ai_product_id'])->update(['tx_product_quantity' => $quantity]);
+        //         }
+        //     }
+        // }
+    // }
+
 
 }

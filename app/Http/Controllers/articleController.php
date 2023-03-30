@@ -91,7 +91,12 @@ class articleController extends Controller
      */
     public function show($article_slug)
     {
-        $rs = tm_article::where('tx_article_slug',$article_slug)->first();
+        $qry = tm_article::where('tx_article_slug',$article_slug);
+        if ($qry->count() < 1) {
+            return response()->json(['status'=>'failed','message'=>'Articulo no existe.']);
+        }
+        $rs = $qry->first();
+
         $articleproduct = tm_articleproduct::join('tm_products','tm_products.ai_product_id','tm_articleproducts.articleproduct_ai_product_id')
         ->join('tm_measures','tm_measures.ai_measure_id','tm_articleproducts.articleproduct_ai_measure_id')
         ->where('articleproduct_ai_article_id',$rs['ai_article_id'])->get();

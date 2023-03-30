@@ -4,9 +4,18 @@ AL TERMINAR ACTIVAR LAS RESTRICCINES PARA ELIMINAR ARTICLE articleController->De
 los botones de las comandas para reimprimir/anular la impresion de la anulacion de la comanda
 
 
-boton en request para marcar comanda como entregada
-quita botones de plato del dia en pedido,
-en pedido, com se ve el plato del dia
 
-funcion para el bton anular charge
+caja menuda, imprimir la hoja laravel dompdf 
+las funciones para inventario
+incluir giftcard
+las salidas de caja menuda van aparte
+el cierre de caja
+conseguir la informacion de los campos que faltan
 
+
+
+
+merma restar d inventario
+as funciones para merma si el usuario es super que parezca un boton de aprobar a cada uno de los procesados y un botno de aprobar todos
+
+        // "php": "^7.2",

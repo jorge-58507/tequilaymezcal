@@ -40,6 +40,10 @@ class creditnoteController extends Controller
      */
     public function store(Request $request)
     {
+        if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
+            return redirect() -> route('request.index');
+        }
+
         $charge = tm_charge::where('tx_charge_slug',$request->input('a'));
         if ($charge->count() < 1) {
             return response()->json(['status'=>'failed','message'=>'El cobro no existe.']);
@@ -134,7 +138,7 @@ class creditnoteController extends Controller
         //
     }
 
-    public function getByCharge($charge_slug)
+    public function getByCharge_json($charge_slug)
     {
         $commandController = new commandController;
 
@@ -157,7 +161,91 @@ class creditnoteController extends Controller
 
         return response()->json(['status'=>'success', 'message'=>'', 'data'=>['charge'=>$rs_charge, 'article'=>$raw_commanddata, 'creditnote'=>$rs_creditnote] ]);
     }
-    public function getByCommanddata($commanddata_id){
+
+    public function getByCharge($charge_slug)
+    {
+        $commandController = new commandController;
+
+        $qry_charge = tm_charge::join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tx_charge_slug',$charge_slug);
+        if ($qry_charge->count() < 1) {
+            return response()->json(['status'=>'failed','message'=>'El cobro no existe.']);
+        }
+        $rs_charge = $qry_charge->first();
+
+        //CONSEGUIR NOTAS DE CREDITO ANTERIORES
+        $rs_request = tm_request::where('request_ai_charge_id',$rs_charge['ai_charge_id'])->get();
+        $raw_commanddata = [];
+        foreach ($rs_request as $key => $request) {
+            $rs_commanddata = tm_command::join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')->leftjoin('tm_datacreditnotes','tm_commanddatas.ai_commanddata_id','tm_datacreditnotes.datacreditnote_ai_commanddata_id')->where('command_ai_request_id',$request['ai_request_id'])->orderby('tx_commanddata_status','DESC')->orderby('ai_command_id','ASC')->groupByRaw('tm_commanddatas.ai_commanddata_id')
+            ->select('ai_commanddata_id','tx_commanddata_status','ai_article_id','tx_article_code','tx_article_value','commanddata_ai_presentation_id','tx_presentation_value','tx_commanddata_price','tx_commanddata_discountrate','tx_commanddata_taxrate','tx_commanddata_quantity')
+            ->selectRaw('sum(tx_datacreditnote_quantity) as sum,ai_commanddata_id')->get();
+            array_push($raw_commanddata, $rs_commanddata);
+        }
+        $rs_creditnote = tm_creditnote::where('creditnote_ai_charge_id',$rs_charge['ai_charge_id'])->get();
+
+        return ['charge'=>$rs_charge, 'article'=>$raw_commanddata, 'creditnote'=>$rs_creditnote];
+    }
+
+    public function nullify(Request $request, $charge_slug){
+        if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
+            return redirect() -> route('request.index');
+        }
+        $charge_slug = $request->input('a');
+        $qry_charge = tm_charge::where('tx_charge_slug',$charge_slug);
+        if ($qry_charge->count() < 1) {
+            return response()->json(['status'=>'failed','message'=>'El cobro no existe.']);
+        }
+        $rs_charge = $qry_charge->first();
+        $raw_creditnote = $this->getByCharge($charge_slug);
+
+        $raw_selected = $raw_creditnote['article'];
+
+        $raw_price = [];
+        $raw_commanddata = [];
+        foreach ($raw_selected as $value) {
+            foreach ($value as $selected) {
+                if ($selected['tx_commanddata_status'] === 1) {
+                    $rs_commanddata = tm_commanddata::where('ai_commanddata_id',$selected['ai_commanddata_id'])->first();
+                    array_push($raw_price,[
+                        'price'=> $rs_commanddata['tx_commanddata_price'],
+                        'discount'=> $rs_commanddata['tx_commanddata_discountrate'],
+                        'tax'=> $rs_commanddata['tx_commanddata_taxrate'],
+                        'quantity'=>$selected['tx_commanddata_quantity']
+                    ]);
+                    array_push($raw_commanddata,$rs_commanddata);
+                }
+            }
+        }
+        $chargeController = new chargeController;
+        $price_sale = $chargeController->calculate_sale($raw_price);
+        
+        $tm_creditnote = new tm_creditnote;
+        $user = $request->user();
+        $count_creditnote = tm_creditnote::count();
+        $number = substr('0000000000'.$count_creditnote+55,-10);
+        
+        $tm_creditnote->creditnote_ai_user_id           = $user['id'];
+        $tm_creditnote->creditnote_ai_charge_id         = $rs_charge['ai_charge_id'];
+        $tm_creditnote->tx_creditnote_retentionrate     = 0;
+        $tm_creditnote->tx_creditnote_nullification     = 1;
+        $tm_creditnote->tx_creditnote_number            = $number;
+        $tm_creditnote->tx_creditnote_nontaxable        = $price_sale['st_notaxable'];
+        $tm_creditnote->tx_creditnote_taxable           = $price_sale['subtotal'];
+        $tm_creditnote->tx_creditnote_tax               = $price_sale['tax'];
+        $tm_creditnote->tx_creditnote_reason            = $request->input('c');
+        $tm_creditnote->tx_creditnote_status            = 1;
+        $tm_creditnote->save();
+        $creditnote_id = $tm_creditnote->ai_creditnote_id;
+
+        $datacreditnoteController = new datacreditnoteController;
+        foreach ($raw_commanddata as $commanddata) {
+            $datacreditnoteController->save($creditnote_id,$commanddata['ai_commanddata_id'],$commanddata['commanddata_ai_article_id'],$commanddata['tx_commanddata_quantity'],$commanddata['commanddata_ai_presentation_id']);
+        }
+        $qry_charge->update(['tx_charge_status'=>2]);
+
+        // ANSWER
+        $rs_creditnote = tm_creditnote::where('creditnote_ai_charge_id',$rs_charge['ai_charge_id'])->get();
+        return response()->json(['status'=>'success','message'=>'Nota de Cr&eacute;dito procesada.','data'=>['creditnote'=>$rs_creditnote]]);
 
     }
     

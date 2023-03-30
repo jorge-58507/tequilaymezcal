@@ -7,6 +7,9 @@ use App\tm_charge;
 use App\tm_request;
 use App\tm_paymentmethod;
 use App\tm_payment;
+use App\tm_creditnote;
+use App\tm_cashoutput;
+use App\tm_cashregister;
 
 class chargeController extends Controller
 {
@@ -25,19 +28,13 @@ class chargeController extends Controller
         $rs_openrequest =       $requestController->getOpenRequest();
         $rs_closedrequest =     $requestController->getClosedRequest();
         $rs_canceledrequest =   $requestController->getCanceledRequest();
-        // $rs_openrequest =       tm_request::join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',0)->get();
-        // $rs_closedrequest =     tm_request::join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',1)->get();
-        // $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_charges.created_at')->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)->orderby('tm_requests.created_at','ASC')->get();
         $rs_paymentmethod =     tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
 
         $data = [
-            // 'table_list' => $rs_ubication,
             'closed_request'    => $rs_closedrequest,
             'open_request'      => $rs_openrequest,
             'canceled_request'  => $rs_canceledrequest,
             'paymentmethod'     => $rs_paymentmethod
-            // 'article_list' => $rs_article,
-            // 'client_list' => $rs_client
         ];
         return view('charge.index', compact('data'));
     }
@@ -141,7 +138,122 @@ class chargeController extends Controller
 
         return response()->json(['status'=>'success','message'=>'','data'=>['charge'=>$rs, 'payment'=>$rs_payment, 'article'=>$rs_article]]);
     }
+    public function show_cashregister($date){
+        $user = auth()->user();
+        $cashregister = $this->get_cashregister($date,$user);
+        return response()->json(['status'=>'success','message'=>'','data'=>['cashregister'=>$cashregister]]);
+    }
 
+    public function get_cashregister($date,$user){
+        // gross_sale la suma de la totalidad de las ventas sin descuentos, 
+        // net_sale: gross_sale - descuento -  devolucion - anulado, 
+        // Venta real: netsale + devolucion + anulado
+        $rs_charge = tm_charge::join('tm_payments','tm_payments.payment_ai_charge_id','tm_charges.ai_charge_id')->where('charge_ai_user_id',$user['id'])->where('charge_ai_cashregister_id',null)->get();
+        $raw_payment = [];
+        $gross_sale = 0;
+        $nontaxable = 0;
+        $taxable = 0;
+        $tax = 0;
+        $ttl_discount=0; 
+        $i=0;
+        $raw_ffid = [];
+        foreach ($rs_charge as $charge) {
+            if ($charge['payment_ai_paymentmethod_id'] === 1) {
+                if (empty($raw_payment[$charge['payment_ai_paymentmethod_id']])) {
+                    $raw_payment[$charge['payment_ai_paymentmethod_id']] = $charge['tx_payment_amount'] - $charge['tx_charge_change'];
+                }else{
+                    $raw_payment[$charge['payment_ai_paymentmethod_id']] += $charge['tx_payment_amount'] - $charge['tx_charge_change'];
+                }
+                $gross_sale += $charge['tx_payment_amount'] - $charge['tx_charge_change'];
+            }else{
+                if (empty($raw_payment[$charge['payment_ai_paymentmethod_id']])) {
+                    $raw_payment[$charge['payment_ai_paymentmethod_id']] = $charge['tx_payment_amount'];
+                }else{
+                    $raw_payment[$charge['payment_ai_paymentmethod_id']] += $charge['tx_payment_amount'];
+                }
+                $gross_sale += $charge['tx_payment_amount'];
+            }
+            if (in_array($charge['ai_charge_id'],$raw_ffid)) {
+                $ttl_discount += $charge['tx_charge_discount'];
+                $nontaxable += $charge['tx_charge_nontaxable'];
+                $taxable += $charge['tx_charge_taxable'];
+                $tax += $charge['tx_charge_tax'];
+            }else{
+                array_push($raw_ffid,$charge['ai_charge_id']);
+                $i++;
+            }
+        }
+
+        $rs_creditnote = tm_creditnote::where('creditnote_ai_user_id',$user['id'])->where('creditnote_ai_cashregister_id',null)->get();
+        $nc_nontaxable=0; 
+        $nc_taxable=0; 
+        $nc_tax=0;
+        $cashback=0; 
+        $canceled=0;
+        $raw_canceled = [];
+        $raw_creditnote = [];
+        $ite=0;
+        foreach ($rs_creditnote as $creditnote) {
+            array_push($raw_creditnote,$creditnote['ai_creditnote_id']);
+            $ite++;
+
+            if ($creditnote['tx_creditnote_nullification'] === 1) {
+                $canceled += $creditnote['tx_creditnote_taxable']+$creditnote['tx_creditnote_nontaxable']+$creditnote['tx_creditnote_tax'];
+                $rs_payment = tm_payment::where('payment_ai_charge_id',$creditnote['creditnote_ai_charge_id'])->get();
+                foreach ($rs_payment as $payment) {
+                    if (empty($raw_canceled[$payment['payment_ai_paymentmethod_id']])) {
+                        $raw_canceled[$payment['payment_ai_paymentmethod_id']] = $payment['tx_payment_amount'];
+                    }else{
+                        $raw_canceled[$payment['payment_ai_paymentmethod_id']] += $payment['tx_payment_amount'];
+                    }
+                }
+            }else{
+                $cashback += $creditnote['tx_creditnote_nontaxable']+$creditnote['tx_creditnote_taxable']+$creditnote['tx_creditnote_tax'];
+                $nc_nontaxable += $creditnote['tx_creditnote_nontaxable'];
+                $nc_taxable += $creditnote['tx_creditnote_taxable'];
+   		        $nc_tax+=$creditnote['tx_creditnote_tax'];
+            }
+        }
+
+        $rs_cashoutput = tm_cashoutput::where('cashoutput_ai_user_id',$user['id'])->where('cashoutput_ai_cashregister_id',null)->get();
+        $income_cashoutput = 0;
+        $outcome_cashoutput = 0;
+        $nullified_cashoutput = 0;
+        foreach ($rs_cashoutput as $cashoutput) {
+            if ($cashoutput['tx_cashoutput_status'] === 0) {
+                $nullified_cashoutput += $cashoutput['tx_cashoutput_amount'];
+            } else {
+                if ($cashoutput['tx_cashoutput_type'] === 1) {
+                    $outcome_cashoutput += $cashoutput['tx_cashoutput_amount'];
+                }else{
+                    $income_cashoutput  += $cashoutput['tx_cashoutput_amount'];
+                }
+            }
+        }
+
+        $cashregisterController = new cashregisterController;
+        $rs_cashregister = $cashregisterController->get_by_date(date('Y-m-d'));
+        return [
+            'payment' => $raw_payment, //array
+            'returnpayment' => $raw_canceled, //array
+            'grosssale'=> $gross_sale,
+            'netsale' => round($gross_sale - $ttl_discount - $cashback - $canceled,2),
+            'realsale' => $gross_sale - $ttl_discount,
+            'nontaxable' => $nontaxable,
+            'returnnontaxable' => $nc_nontaxable,
+            'taxable' => $taxable,
+            'returntaxable' => $nc_taxable,
+            'tax' => $tax,
+            'returntax' => $nc_tax,
+            'discount' => $ttl_discount,
+            'quantitydoc' => $i,
+            'returnquantitydoc' => $ite,
+            'cashback' => $cashback,
+            'canceled' => $canceled,
+            'cashoutput' => ['in' => $income_cashoutput, 'out' => $outcome_cashoutput, 'nullified' => $nullified_cashoutput],
+            'cashregister_list' => $rs_cashregister
+        ];
+    }
     /**
      * Show the form for editing the specified resource.
      *

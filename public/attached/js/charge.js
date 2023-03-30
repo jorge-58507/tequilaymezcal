@@ -51,7 +51,7 @@ class class_request{
           </div>
           <span class="badge bg-primary fs_20">B/ ${cls_general.val_price(request.total,2,1,1)}</span>
           &nbsp;&nbsp;&nbsp;
-          <span>${cls_general.datetime_converter(request.updated_at)}</span>
+          <span>${cls_general.datetime_converter(request.created_at)}</span>
       </li>`;
     })
     content += '</ul>';
@@ -120,7 +120,6 @@ class class_request{
         break;
       }
     });
-
   }
   async filter(target,str){
     switch (target) {
@@ -142,17 +141,17 @@ class class_request{
         switch (status) {
           case "0":
             var haystack = cls_request.open_request;
+            var limit = document.getElementById('openrequestLimit').value;
             break;
           case "1":
             var haystack = cls_request.closed_request;
-            break;
-          case "2":
-            var haystack = cls_request.canceled_request;
+            var limit = document.getElementById('closedrequestLimit').value;
             break;
         }
         var needles = str.split(' ');
         var raw_filtered = [];
         for (var i in haystack) {
+          if (i == limit) {  break;  }
           var ocurrencys = 0;
           for (const a in needles) {
             if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_code'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
@@ -174,7 +173,17 @@ class class_charge{
   
   index(){
     var content = `    
-    <div class="col-sm-12 text-center"><h3>Caja</h3></div>
+    <div class="col-sm-12 text-center">
+      <div class="dropdown">
+        <button class="btn btn-success dropdown-toggle btn-lg" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Caja
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashoutput.openmodal();">Caja Menuda</a></li>
+          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashregister.create();">Cierre de Caja</a></li>
+        </ul>
+      </div>
+    </div>
     <div class="col-md-12 col-lg-12">
       <div class="col-sm-12"><h5>Pedidos</h5></div>
       <div class="col-sm-12">
@@ -205,6 +214,16 @@ class class_charge{
                 </button>
               </div>
             </div>
+            <div class="col-md-12 col-lg-6 pt-3">
+              <div class="input-group mb-3">
+                <label class="input-group-text" for="closedrequestLimit">Mostrar</label>
+                <select id="closedrequestLimit" class="form-select">
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
             <div id='container_closedrequest' class="col-md-12">
 
             </div>
@@ -223,13 +242,22 @@ class class_charge{
                 </button>
               </div>
             </div>
+            <div class="col-md-12 col-lg-6 pt-3">
+              <div class="input-group mb-3">
+                <label class="input-group-text" for="openrequestLimit">Mostrar</label>
+                <select id="openrequestLimit" class="form-select">
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
             <div id='container_openrequest' class="col-md-12">
 
             </div>
           </div>
         </div>
         <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_canceledrequest"  role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
-        
           <div class="row">
             <div class="col-md-12 col-lg-6">
               <div class="input-group my-3">
@@ -239,6 +267,16 @@ class class_charge{
                     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
                   </svg>
                 </button>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-6 pt-3">
+              <div class="input-group mb-3">
+                <label class="input-group-text" for="canceledrequestLimit">Mostrar</label>
+                <select id="canceledrequestLimit" class="form-select">
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
               </div>
             </div>
             <div id='container_canceledrequest' class="col-md-12">
@@ -330,10 +368,11 @@ class class_charge{
       clearTimeout(this.timer);
       this.timer = setTimeout(function () {
         var haystack = cls_charge.charge_list;
-        console.log(haystack);
+        var limit = document.getElementById('canceledrequestLimit').value;
         var needles = str.split(' ');
         var raw_filtered = [];
         for (var i in haystack) {
+          if (i == limit) { break;  }
           var ocurrencys = 0;
           for (const a in needles) {
             if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_charge_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
@@ -693,6 +732,7 @@ class class_creditnote{
   render(charge_slug,number,date,client,raw_article,raw_creditnote){
     var article_charge = cls_creditnote.generate_articlecharge(raw_article);
     var creditnote_list = cls_creditnote.generate_creditnote(raw_creditnote);
+    var btn_nullify = (raw_creditnote.length === 0) ? `<button type="button" id="btn_creditnoteNullify" class="btn btn-danger btn-lg" onclick="cls_creditnote.nullify(${charge_slug})">Anular</button>` : '';
 
     var content = `
       <div class="col-sm-12">
@@ -715,9 +755,8 @@ class class_creditnote{
           <div class="col-sm-12 text-center pt-3">
           <button type="button" id="btn_creditnoteProcess" class="btn btn-primary">Procesar</button>
           <button type="button" onclick="window.location.reload();" class="btn btn-secondary">Cerrar</button>
-          <button type="button" id="btn_creditnoteNullify" class="btn btn-danger btn-lg">Anular</button>
+            ${btn_nullify}
           </div>
-
           <div class="col-sm-12">
             <span>Art&iacute;culos Facturados</span>
           </div>
@@ -899,4 +938,270 @@ class class_creditnote{
     })
     return content;
   }
+  nullify(charge_slug){
+    swal({
+      title: "¿Desea anular esta factura?",
+      text: "Se creará una salida.",
+      icon: "info",
+
+      buttons: {
+        si: {
+          text: "Si, cerrarlo",
+          className: "btn btn-success btn-lg"
+        },
+        no: {
+          text: "No",
+          className: "btn btn-warning btn-lg",
+        },
+      },
+      dangerMode: true,
+    })
+      .then((ans) => {
+        switch (ans) {
+          case 'si':
+            var url = '/creditnote/' + charge_slug + '/nullify';
+            var method = 'POST';
+            var body = JSON.stringify({ a: charge_slug, c: 'ANULADA' });
+            var funcion = function (obj) {
+              if (obj.status === 'success') {
+                cls_creditnote.selected = [];
+                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+                cls_charge.index();
+                cls_request.render('open', cls_request.open_request);
+                cls_request.render('closed', cls_request.closed_request);
+                cls_request.render('canceled', cls_charge.charge_list);
+              } else {
+                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+              }
+            }
+            cls_general.async_laravel_request(url, method, funcion, body);
+          break;
+          case 'no':
+
+            break;
+        }
+      });
+  }
 }
+class class_cashoutput{
+  openmodal(){
+    var url = '/cashoutput/';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('container_cashoutputlist').innerHTML = cls_cashoutput.generate_cashoutput(obj.data.cashoutputlist);
+        var date = cls_general.getDate();
+        document.getElementById('cashoutputDateshow').innerHTML = cls_general.date_converter('ymd', 'dmy', date[0]);
+        document.getElementById('cashoutputDatefilter').value = cls_general.date_converter('ymd','dmy',date[0]);
+
+        const modal = new bootstrap.Modal('#cashoutputModal', {})
+        modal.show();
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  save(){
+    var type = document.getElementById('cashoutputType').value;
+    var amount = document.getElementById('cashoutputAmount').value;
+    var reason = document.getElementById('cashoutputReason').value;
+
+    if (cls_general.is_empty_var(reason) === 0 || cls_general.is_empty_var(amount) === 0) {
+      cls_general.shot_toast_bs('Debe ingresar un monto y un motivo valido.', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (isNaN(amount)) {
+      cls_general.shot_toast_bs('Debe introducir un numero.', { bg: 'text-bg-warning' });
+      return false;
+    }
+    var amount = cls_general.val_dec(parseFloat(amount));
+
+    var url = '/cashoutput/';
+    var method = 'POST';
+    var body = JSON.stringify({a: type, b: amount, c: reason});
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('container_cashoutputlist').innerHTML = cls_cashoutput.generate_cashoutput(obj.data.outputlist);
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+        document.getElementById('cashoutputAmount').value = '';
+        document.getElementById('cashoutputReason').value = '';
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_cashoutput(list){
+    console.log(list);
+    var content = '<ol class="list-group list-group-numbered">';
+    list.map((cashoutput)=>{
+      var type=(cashoutput.tx_cashoutput_type === 1) ? 'Salida' : 'Entrada';
+      content += `
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold">${type}</div>
+            ${cashoutput.tx_cashoutput_reason}
+          </div>
+          <span class="badge bg-primary rounded-pill">B/ ${ cls_general.val_price(cashoutput.tx_cashoutput_amount,2,1,1)}</span>
+        </li>
+      `;
+    })
+    content += '</ol>'
+    return content;
+  }
+  show(date){
+    var url = '/cashoutput/'+date;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('container_cashoutputlist').innerHTML = cls_cashoutput.generate_cashoutput(obj.data.cashoutputlist);
+        document.getElementById('cashoutputDateshow').innerHTML = date;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+}
+class class_cashregister{
+  generate_list(list){
+    var content = '<ol class="list-group list-group-numbered">';
+    list.map((cashregister) => {
+      content += `
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold">Venta Neta: ${cashregister['tx_cashregister_netsale']}</div>
+          </div>
+          <button class="badge btn btn-info" onclick="cls_cashregister.show(${cashregister['ai_cashregister_id']})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+              <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+              <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+            </svg>
+          </button>
+        </li>
+      `;
+    })
+    content += '</ol>'
+    return content;
+  }
+  create(){
+    var today = cls_general.getDate();
+    var url = '/charge/' + today[0] +'/cashregister';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('cashregisterDatefilter').value = cls_general.date_converter('ymd', 'dmy', today[0]);
+        var cashregister_list = cls_cashregister.generate_list(obj.data.cashregister.cashregister_list);
+        document.getElementById('container_cashregisterFiltered').innerHTML = '<span>Listado de Cierres de Caja</span>'+cashregister_list;
+
+        var incomeCashout     = (cls_general.is_empty_var(obj.data.cashregister.cashoutput.in) === 0)         ? 0 : obj.data.cashregister.cashoutput.in;
+        var outcomeCashout    = (cls_general.is_empty_var(obj.data.cashregister.cashoutput.out) === 0)        ? 0 : obj.data.cashregister.cashoutput.out;
+        var nullifiedCashout  = (cls_general.is_empty_var(obj.data.cashregister.cashoutput.nullified) === 0)  ? 0 : obj.data.cashregister.cashoutput.nullified;
+        document.getElementById('span_totalCashout').innerHTML       = 'B/ ' + cls_general.val_price(incomeCashout - outcomeCashout, 2, 1, 1);
+        document.getElementById('span_incomeCashout').innerHTML      = 'B/ ' + cls_general.val_price(incomeCashout, 2, 1, 1);
+        document.getElementById('span_outcomeCashout').innerHTML     = 'B/ ' + cls_general.val_price(outcomeCashout, 2, 1, 1);
+        document.getElementById('span_nullifiedCashout').innerHTML   = 'B/ ' + cls_general.val_price(nullifiedCashout, 2, 1, 1);
+
+        var incomeCash = (cls_general.is_empty_var(obj.data.cashregister.payment[1]) === 0) ? 0 : obj.data.cashregister.payment[1];
+        var returnCash = (cls_general.is_empty_var(obj.data.cashregister.returnpayment[1]) === 0) ? 0 : obj.data.cashregister.returnpayment[1];
+        document.getElementById('span_totalCash').innerHTML         = 'B/ ' + cls_general.val_price(incomeCash - returnCash, 2, 1, 1);
+        document.getElementById('span_incomeCash').innerHTML        = 'B/ ' + cls_general.val_price(incomeCash, 2, 1, 1);
+        document.getElementById('span_returnCash').innerHTML        = 'B/ ' + cls_general.val_price(returnCash, 2, 1, 1);
+
+        var incomeCheck = (cls_general.is_empty_var(obj.data.cashregister.payment[2]) === 0) ? 0 : obj.data.cashregister.payment[2];
+        var returnCheck = (cls_general.is_empty_var(obj.data.cashregister.returnpayment[2]) === 0) ? 0 : obj.data.cashregister.returnpayment[2];
+        document.getElementById('span_totalCheck').innerHTML        = 'B/ ' + cls_general.val_price(incomeCheck - returnCheck, 2, 1, 1);
+        document.getElementById('span_incomeCheck').innerHTML       = 'B/ ' + cls_general.val_price(incomeCheck, 2, 1, 1);
+        document.getElementById('span_returnCheck').innerHTML       = 'B/ ' + cls_general.val_price(returnCheck, 2, 1, 1);
+
+        document.getElementById('span_totalDebitcard').innerHTML    = (cls_general.is_empty_var(obj.data.cashregister.payment[3]) === 0) ? 'B/ ' + cls_general.val_price(0, 2, 1, 1) : 'B/ ' + cls_general.val_price(obj.data.cashregister.payment[3], 2, 1, 1);
+        document.getElementById('span_incomeDebitcard').innerHTML   = (cls_general.is_empty_var(obj.data.cashregister.payment[3]) === 0) ? 'B/ ' + cls_general.val_price(0, 2, 1, 1) : 'B/ ' + cls_general.val_price(obj.data.cashregister.payment[3], 2, 1, 1);
+        document.getElementById('span_returnDebitcard').innerHTML   = 'B/ ' + cls_general.val_price(0, 2, 1, 1);
+
+        var incomeCreditcard = (cls_general.is_empty_var(obj.data.cashregister.payment[4]) === 0) ? 0 : obj.data.cashregister.payment[4];
+        var returnCreditcard = (cls_general.is_empty_var(obj.data.cashregister.returnpayment[4]) === 0) ? 0 : obj.data.cashregister.returnpayment[4];
+        document.getElementById('span_totalCreditcard').innerHTML   = 'B/ ' + cls_general.val_price(incomeCreditcard - returnCreditcard, 2, 1, 1);
+        document.getElementById('span_incomeCreditcard').innerHTML  = 'B/ ' + cls_general.val_price(incomeCreditcard, 2, 1, 1);
+        document.getElementById('span_returnCreditcard').innerHTML  = 'B/ ' + cls_general.val_price(returnCreditcard, 2, 1, 1);
+
+        var incomeYappi = (cls_general.is_empty_var(obj.data.cashregister.payment[5]) === 0) ? 0 : obj.data.cashregister.payment[5];
+        var returnYappi = (cls_general.is_empty_var(obj.data.cashregister.returnpayment[5]) === 0) ? 0 : obj.data.cashregister.returnpayment[5];
+        document.getElementById('span_totalYappi').innerHTML        = 'B/ ' + cls_general.val_price(incomeYappi - returnYappi, 2, 1, 1)
+        document.getElementById('span_incomeYappi').innerHTML       = 'B/ ' + cls_general.val_price(incomeYappi, 2, 1, 1)
+        document.getElementById('span_returnYappi').innerHTML       = 'B/ ' + cls_general.val_price(returnYappi, 2, 1, 1)
+
+        var incomeNequi = (cls_general.is_empty_var(obj.data.cashregister.payment[6]) === 0) ? 0 : obj.data.cashregister.payment[6];
+        var returnNequi = (cls_general.is_empty_var(obj.data.cashregister.returnpayment[6]) === 0) ? 0 : obj.data.cashregister.returnpayment[6];
+        document.getElementById('span_totalNequi').innerHTML        = 'B/ ' + cls_general.val_price(incomeNequi - returnNequi, 2, 1, 1);
+        document.getElementById('span_incomeNequi').innerHTML       = 'B/ ' + cls_general.val_price(incomeNequi, 2, 1, 1);
+        document.getElementById('span_returnNequi').innerHTML       = 'B/ ' + cls_general.val_price(returnNequi, 2, 1, 1);
+
+        var incomeAnother = (cls_general.is_empty_var(obj.data.cashregister.payment[7]) === 0) ? 0 : obj.data.cashregister.payment[7];
+        var returnAnother = (cls_general.is_empty_var(obj.data.cashregister.returnpayment[7]) === 0) ? 0 : obj.data.cashregister.returnpayment[7];
+        document.getElementById('span_totalAnother').innerHTML      = 'B/ ' + cls_general.val_price(incomeAnother - returnAnother, 2, 1, 1);
+        document.getElementById('span_incomeAnother').innerHTML     = 'B/ ' + cls_general.val_price(incomeAnother, 2, 1, 1);
+        document.getElementById('span_returnAnother').innerHTML     = 'B/ ' + cls_general.val_price(returnAnother, 2, 1, 1);
+        
+        document.getElementById('span_totaldiscount').innerHTML   = 'B/ ' + cls_general.val_price(obj.data.cashregister.discount, 2, 1, 1);
+        document.getElementById('span_totalnull').innerHTML       = 'B/ ' + cls_general.val_price(obj.data.cashregister.canceled, 2, 1, 1);
+        document.getElementById('span_totalcashback').innerHTML   = 'B/ ' + cls_general.val_price(obj.data.cashregister.cashback, 2, 1, 1);
+        document.getElementById('span_grosssale').innerHTML = 'B/ ' + cls_general.val_price(obj.data.cashregister.grosssale, 2, 1, 1);
+        document.getElementById('span_netsale').innerHTML   = 'B/ ' + cls_general.val_price(obj.data.cashregister.netsale, 2, 1, 1);
+        document.getElementById('span_realsale').innerHTML  = 'B/ ' + cls_general.val_price(obj.data.cashregister.realsale, 2, 1, 1);
+
+        const modal = new bootstrap.Modal('#cashregisterModal', {})
+        modal.show();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  save(){
+    swal({
+      title: "Se cerrará esta caja ¿Desea proseguir?",
+      text: "",
+      icon: "info",
+
+      buttons: {
+        si: {
+          text: "Si, cerrar",
+          className: "btn btn-success btn-lg"
+        },
+        no: {
+          text: "No",
+          className: "btn btn-warning btn-lg",
+        },
+      },
+      dangerMode: true,
+    })
+    .then((ans) => {
+      switch (ans) {
+        case 'si':
+          var url = '/cashregister/';
+          var method = 'POST';
+          var body = '';
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              document.getElementById('form_logout').submit()
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+            }
+          }
+          cls_general.async_laravel_request(url, method, funcion, body);
+          break;
+        case 'no':
+
+          break;
+      }
+    });
+
+  }
+}
+

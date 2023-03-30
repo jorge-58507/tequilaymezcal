@@ -1,0 +1,130 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\tm_cashregister;
+use App\tm_charge;
+use App\tm_creditnote;
+use App\tm_cashoutput;
+
+class cashregisterController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        $chargeController = new chargeController;
+        $user = auth()->user();
+        $cashregister = $chargeController->get_cashregister(date('Y-m-d'),$user);
+
+        $tm_cashregister = new tm_cashregister;
+        $tm_cashregister->cashregister_ai_user_id = $user['id'];
+        $tm_cashregister->tx_cashregister_grosssale = $cashregister['grosssale'];
+        $tm_cashregister->tx_cashregister_netsale = $cashregister['netsale'];
+        $tm_cashregister->tx_cashregister_realsale = $cashregister['realsale'];
+        $tm_cashregister->tx_cashregister_nontaxable = $cashregister['nontaxable'];
+        $tm_cashregister->tx_cashregister_returnnontaxable = $cashregister['returnnontaxable'];
+        $tm_cashregister->tx_cashregister_taxable = $cashregister['taxable'];
+        $tm_cashregister->tx_cashregister_returntaxable = $cashregister['returntaxable'];
+        $tm_cashregister->tx_cashregister_tax = $cashregister['tax'];
+        $tm_cashregister->tx_cashregister_returntax = $cashregister['returntax'];
+        $tm_cashregister->tx_cashregister_discount = $cashregister['discount'];
+        $tm_cashregister->tx_cashregister_cashback = $cashregister['cashback'];
+        $tm_cashregister->tx_cashregister_canceled = $cashregister['canceled'];
+        $tm_cashregister->tx_cashregister_cashoutputin = $cashregister['cashoutput']['in'];
+        $tm_cashregister->tx_cashregister_cashoutputout = $cashregister['cashoutput']['out'];
+        $tm_cashregister->tx_cashregister_cashoutputnull = $cashregister['cashoutput']['nullified'];
+        $tm_cashregister->tx_cashregister_quantitydoc = $cashregister['quantitydoc'];
+        $tm_cashregister->tx_cashregister_returnquantitydoc = $cashregister['returnquantitydoc'];
+        $tm_cashregister->save();
+        $cashregister_id = $tm_cashregister->ai_cashregister_id;
+
+        tm_charge::where('charge_ai_user_id',$user['id'])->where('charge_ai_cashregister_id',null)->update(['charge_ai_cashregister_id' => $cashregister_id]);
+        tm_creditnote::where('creditnote_ai_user_id',$user['id'])->where('creditnote_ai_cashregister_id',null)->update(['creditnote_ai_cashregister_id' => $cashregister_id]);
+        tm_cashoutput::where('cashoutput_ai_user_id',$user['id'])->where('cashoutput_ai_cashregister_id',null)->update(['cashoutput_ai_cashregister_id' => $cashregister_id]);
+
+
+        // ANSWER
+        $rs_cashregister = $this->get_by_date(date('Y-m-d'));
+        return response()->json(['status'=>'success','message'=>'','data'=>['all'=>$rs_cashregister]]);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function get_by_date($date)
+    {
+
+        $rs_cashregister = tm_cashregister::where('created_at','like','%'.date('Y-m-d').'%')->get();
+        return $rs_cashregister;
+    }
+
+    public function show($date)
+    {
+        $rs_cashregister = $this->get_by_date($date);
+
+        return response()->json(['status'=>'success','message'=>'','data'=>['all'=>$rs_cashregister]]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}
