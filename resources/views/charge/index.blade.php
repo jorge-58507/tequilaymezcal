@@ -57,9 +57,9 @@
               <label for="cashoutputDatefilter">Fecha</label>
               <input type="text" name="cashoutputDatefilter" id="cashoutputDatefilter" class="form-control" value="" onchange="cls_cashoutput.show(this.value)">
             </div>
-            <div class="col-md-12 col-lg-6 text-center pt-3">
+            {{-- <div class="col-md-12 col-lg-6 text-center pt-3">
               <button type="button" class="btn btn-info btn-lg">Imprimir</button>
-            </div>
+            </div> --}}
             <div class="col-md-12 pt-3">
               <span>Movimientos del: </span><span id="cashoutputDateshow"></span>
               <div class="row">
@@ -95,128 +95,257 @@
             </div>
             <div class="col-md-12 col-lg-6">
               <label for="cashregisterDatefilter">Fecha</label>
-              <input type="text" name="cashregisterDatefilter" id="cashregisterDatefilter" class="form-control" value="" onchange="cls_cashregister.show(this.value)">
+              <input type="text" name="cashregisterDatefilter" id="cashregisterDatefilter" class="form-control" value="" onchange="cls_cashregister.filter(this.value)">
             </div>
-            <div id="container_cashregisterFiltered" class="col-xs-12 pt-2">
-              <span>Listado de Cierres de Caja</span>
-              <ol class="list-group list-group-numbered">
-                <li class="list-group-item d-flex justify-content-between align-items-start">
-                  <div class="ms-2 me-auto">
-                    <div class="fw-bold">Subheading</div>
-                    Content for list item
-                  </div>
-                  <span class="badge bg-primary rounded-pill">14</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-start">
-                  <div class="ms-2 me-auto">
-                    <div class="fw-bold">Subheading</div>
-                    Content for list item
-                  </div>
-                  <span class="badge bg-primary rounded-pill">14</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-start">
-                  <div class="ms-2 me-auto">
-                    <div class="fw-bold">Subheading</div>
-                    Content for list item
-                  </div>
-                  <span class="badge bg-primary rounded-pill">14</span>
-                </li>
-              </ol>
+            <div id="container_cashregisterFiltered" class="col-xs-12 pt-2" style="min-height: 100px;">
             </div>
+            <div class="col-xs-12">
+              <div class="row pt-2">
+                <div class="col-xs-12 text-bg-success h_30 text-center">
+                  Movimientos Parciales
+                </div>
+                <div class="col-xs-12">
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr class="table-success text-center">
+                        <th scope="col">Total</th>
+                        <th scope="col">Entrada</th>
+                        <th scope="col">Salida</th>
+                        <th scope="col">Salida Anulada</th>
+                      </tr>
+                    </thead> 
+                    {{-- HACER ESTA TABLA DE LA CAJA MENUDA, UBICAR EL DIV PARA LA LISTA DE ARQUEOS HECHOS EN E DIA --}}
+                    <tbody>
+                      <tr>
+                        <th><span id="span_totalCashout"></span></th>
+                        <td><span id="span_incomeCashout"></span></td>
+                        <td><span id="span_outcomeCashout"></span></td>
+                        <td><span id="span_nullifiedCashout"></span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-xs-12">                
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr class="table-success text-center">
+                        <th scope="col">M&eacute;todo de Pago</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Entrada</th>
+                        <th scope="col">Salida</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th scope="col">Efectivo</th>
+                        <td class="table-secondary"><span id="span_totalCash"></span></td>
+                        <td><span id="span_incomeCash"></span></td>
+                        <td><span id="span_returnCash"></span></td>
+                      </tr>
+                      <tr>
+                        <th>Cheque</th>
+                        <td class="table-secondary"><span id="span_totalCheck"></span></td>
+                        <td><span id="span_incomeCheck"></span></td>
+                        <td><span id="span_returnCheck"></span></td>
+                      </tr>
+                      <tr>
+                        <th>T. Debito</th>
+                        <td class="table-secondary"><span id="span_totalDebitcard"></span></td>
+                        <td><span id="span_incomeDebitcard"></span></td>
+                        <td><span id="span_returnDebitcard"></span></td>
+                      </tr>
+                      <tr>
+                        <th>T. Cr&eacute;dito</th>
+                        <td class="table-secondary"><span id="span_totalCreditcard"></span></td>
+                        <td><span id="span_incomeCreditcard"></span></td>
+                        <td><span id="span_returnCreditcard"></span></td>
+                      </tr>
+                      <tr>
+                        <th>Yappi</th>
+                        <td class="table-secondary"><span id="span_totalYappi"></span></td>
+                        <td><span id="span_incomeYappi"></span></td>
+                        <td><span id="span_returnYappi"></span></td>
+                      </tr>
+                      <tr>
+                        <th>Nequi</th>
+                        <td class="table-secondary"><span id="span_totalNequi"></span></td>
+                        <td><span id="span_incomeNequi"></span></td>
+                        <td><span id="span_returnNequi"></span></td>
+                      </tr>
+                      <tr>
+                        <th>Otro</th>
+                        <td class="table-secondary"><span id="span_totalAnother"></span></td>
+                        <td><span id="span_incomeAnother"></span></td>
+                        <td><span id="span_returnAnother"></span></td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr class="table-success">
+                        <td></td>
+                        <td>Descuentos:  <span id="span_totaldiscount"></span></td>
+                        <td>Devoluciones:  <span id="span_totalcashback"></span></td>
+                        <td>Anulaciones:  <span id="span_totalnull"></span></td>
+                      </tr>
+                      <tr class="table-success">
+                        <td></td>
+                        <td>Venta Bruta: <span id="span_grosssale"></span></td>
+                        <td>Venta Neta <span id="span_netsale"></span></td>
+                        <td>Venta Real <span id="span_realsale"></span></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="cashregisterModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade  modal-lg" id="inspectCRModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="inspectCRModal_title">Arqueo de Caja</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="inspectCRModal_content" class="modal-body">
+          <div class="row">
             <div class="row pt-2">
-              <div class="col-xs-12 text-bg-success h_30 text-center">
-                Movimientos Parciales
+              <div id="inspectCR_title" class="col-xs-12 text-bg-success h_30 text-center">
               </div>
-              <div class="col-xs-12">
-                <table class="table table-bordered">
-                  <thead>
-                    <tr class="table-success text-center">
-                      <th scope="col">Total</th>
-                      <th scope="col">Entrada</th>
-                      <th scope="col">Salida</th>
-                      <th scope="col">Salida Anulada</th>
-                    </tr>
-                  </thead> 
-                  {{-- HACER ESTA TABLA DE LA CAJA MENUDA, UBICAR EL DIV PARA LA LISTA DE ARQUEOS HECHOS EN E DIA --}}
-                  <tbody>
-                    <tr>
-                      <th><span id="span_totalCashout"></span></th>
-                      <td><span id="span_incomeCashout"></span></td>
-                      <td><span id="span_outcomeCashout"></span></td>
-                      <td><span id="span_nullifiedCashout"></span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="col-xs-12">                
-                <table class="table table-bordered">
-                  <thead>
-                    <tr class="table-success text-center">
-                      <th scope="col">M&eacute;todo de Pago</th>
-                      <th scope="col">Total</th>
-                      <th scope="col">Entrada</th>
-                      <th scope="col">Salida</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <th scope="col">Efectivo</th>
-                      <td class="table-secondary"><span id="span_totalCash"></span></td>
-                      <td><span id="span_incomeCash"></span></td>
-                      <td><span id="span_returnCash"></span></td>
-                    </tr>
-                    <tr>
-                      <th>Cheque</th>
-                      <td class="table-secondary"><span id="span_totalCheck"></span></td>
-                      <td><span id="span_incomeCheck"></span></td>
-                      <td><span id="span_returnCheck"></span></td>
-                    </tr>
-                    <tr>
-                      <th>T. Debito</th>
-                      <td class="table-secondary"><span id="span_totalDebitcard"></span></td>
-                      <td><span id="span_incomeDebitcard"></span></td>
-                      <td><span id="span_returnDebitcard"></span></td>
-                    </tr>
-                    <tr>
-                      <th>T. Cr&eacute;dito</th>
-                      <td class="table-secondary"><span id="span_totalCreditcard"></span></td>
-                      <td><span id="span_incomeCreditcard"></span></td>
-                      <td><span id="span_returnCreditcard"></span></td>
-                    </tr>
-                    <tr>
-                      <th>Yappi</th>
-                      <td class="table-secondary"><span id="span_totalYappi"></span></td>
-                      <td><span id="span_incomeYappi"></span></td>
-                      <td><span id="span_returnYappi"></span></td>
-                    </tr>
-                    <tr>
-                      <th>Nequi</th>
-                      <td class="table-secondary"><span id="span_totalNequi"></span></td>
-                      <td><span id="span_incomeNequi"></span></td>
-                      <td><span id="span_returnNequi"></span></td>
-                    </tr>
-                    <tr>
-                      <th>Otro</th>
-                      <td class="table-secondary"><span id="span_totalAnother"></span></td>
-                      <td><span id="span_incomeAnother"></span></td>
-                      <td><span id="span_returnAnother"></span></td>
-                    </tr>
-                  </tbody>
-                  <tfoot>
-                    <tr class="table-success">
-                      <td></td>
-                      <td>Descuentos:  <span id="span_totaldiscount"></span></td>
-                      <td>Devoluciones:  <span id="span_totalcashback"></span></td>
-                      <td>Anulaciones:  <span id="span_totalnull"></span></td>
-                    </tr>
-                    <tr class="table-success">
-                      <td></td>
-                      <td>Venta Bruta: <span id="span_grosssale"></span></td>
-                      <td>Venta Neta <span id="span_netsale"></span></td>
-                      <td>Venta Real <span id="span_realsale"></span></td>
-                    </tr>
-                  </tfoot>
-                </table>
+              <div id="inspectCR_container" class="col-xs-12">
+                <div class="row">
+                  <div class="col-md-12 col-lg-6">
+                    <table class="table table-bordered">
+                      <thead>
+                        <tr class="table-success text-center">
+                          <th colspan="2">Totales</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th>Venta Bruta</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Descuento</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Venta Neta</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Documentos</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Venta Real</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Devoluci&oacute;n</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Anulado</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th colspan="2">DESGLOSE ITBMS</th>
+                        </tr>
+                        <tr>
+                          <th>Base No Imponible</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Base Imponible</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Base No imponible NC</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Base imponible NC</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Impuesto</th>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Impuesto N.C.</th>
+                          <td></td>
+                        </tr>                                                                                                                        
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="col-md-12 col-lg-6">
+                    <table class="table table-bordered">
+                      <thead>
+                        <tr class="table-success text-center">
+                          <th colspan="4">Movimientos</th>
+                        </tr>
+                        <tr class="table-success text-center">
+                          <th scope="col">M&eacute;todo de Pago</th>
+                          <th scope="col">Total</th>
+                          <th scope="col">Entrada</th>
+                          <th scope="col">Salida</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th>Efectivo</th>
+                          <td class="table-secondary"></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Cheque</th>
+                          <td class="table-secondary"></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>T. Debito</th>
+                          <td class="table-secondary"></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>T. Cr&eacute;dito</th>
+                          <td class="table-secondary"></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Yappi</th>
+                          <td class="table-secondary"></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Nequi</th>
+                          <td class="table-secondary"></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <th>Cup&oacute;n</th>
+                          <td class="table-secondary"></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

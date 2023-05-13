@@ -178,9 +178,9 @@ class class_charge{
         <button class="btn btn-success dropdown-toggle btn-lg" type="button" data-bs-toggle="dropdown" aria-expanded="false">
           Caja
         </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashoutput.openmodal();">Caja Menuda</a></li>
-          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashregister.create();">Cierre de Caja</a></li>
+        <ul class="dropdown-menu fs_30">
+          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashoutput.openmodal();" >Caja Menuda</a></li>
+          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashregister.create();"  >Cierre de Caja</a></li>
         </ul>
       </div>
     </div>
@@ -339,7 +339,7 @@ class class_charge{
           </div>
           <div class="col-sm-6 pb-2">
             <label class="form-label" for="paymentAmount">Monto</label>
-            <input type="number" id="paymentAmount" class="form-control" onfocus="cls_general.validFranz(this.id,['number'],'.')" value="">
+            <input type="text" id="paymentAmount" class="form-control" onfocus="cls_general.validFranz(this.id,['number'],'.')" value="">
           </div>
           <div class="col-sm-12 p-1">
             <div id="container_paymentMethod" class="row v_scrollable" style="height: 20vh">
@@ -362,6 +362,18 @@ class class_charge{
     cls_paymentmethod.render();
 
     document.getElementById('paymentAmount').focus();
+    $(function () {
+      $('#paymentAmount').keyboard({ layout: 'num'});
+    });
+    $(function () {
+      $('#paymentNumber').keyboard();
+    });
+
+    
+    // $('#paymentAmount').bind('accepted', function (e, keyboard, el) {
+    //   document.getElementById('submit_login').click();
+    // });
+
   }
   look_for(str) {
     return new Promise(resolve => {
@@ -533,7 +545,7 @@ class class_charge{
             });
           })
         })
-        cls_creditnote.render(charge_slug, charge.tx_charge_number, charge.created_at, charge.tx_client_name, raw_article, obj.data.creditnote)
+        cls_creditnote.render(charge_slug, charge.tx_charge_number, charge.created_at, charge.tx_client_name, raw_article, obj.data.creditnote, obj.data.payment)
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
@@ -729,10 +741,12 @@ class class_creditnote{
     this.selected = [];
   }
 
-  render(charge_slug,number,date,client,raw_article,raw_creditnote){
+  render(charge_slug,number,date,client,raw_article,raw_creditnote, payment){
     var article_charge = cls_creditnote.generate_articlecharge(raw_article);
     var creditnote_list = cls_creditnote.generate_creditnote(raw_creditnote);
-    var btn_nullify = (raw_creditnote.length === 0) ? `<button type="button" id="btn_creditnoteNullify" class="btn btn-danger btn-lg" onclick="cls_creditnote.nullify(${charge_slug})">Anular</button>` : '';
+    var check_methoddebit = payment.find((pay) => { return pay.payment_ai_paymentmethod_id === 3 })
+    console.log(check_methoddebit);
+    var btn_nullify = (raw_creditnote.length === 0 && payment.length === 1 && check_methoddebit === undefined) ? `<button type="button" id="btn_creditnoteNullify" class="btn btn-danger btn-lg" onclick="cls_creditnote.nullify('${charge_slug}')">Anular</button>` : '';
 
     var content = `
       <div class="col-sm-12">
@@ -883,7 +897,6 @@ class class_creditnote{
       var content = cls_creditnote.generate_articleselected(cls_creditnote.selected);
       document.getElementById('container_tocancel').innerHTML = content;
     });
-
   }
   generate_articleselected(raw_article) {
     var content = ``;
@@ -997,7 +1010,6 @@ class class_cashoutput{
 
         const modal = new bootstrap.Modal('#cashoutputModal', {})
         modal.show();
-
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
@@ -1076,17 +1088,28 @@ class class_cashregister{
           <div class="ms-2 me-auto">
             <div class="fw-bold">Venta Neta: ${cashregister['tx_cashregister_netsale']}</div>
           </div>
-          <button class="badge btn btn-info" onclick="cls_cashregister.show(${cashregister['ai_cashregister_id']})">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+          <button class="badge btn btn-info" onclick="cls_cashregister.print_cashregister(${cashregister['ai_cashregister_id']})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
               <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
               <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
             </svg>
           </button>
+          &nbsp;&nbsp;
+          <button class="badge btn btn-info" onclick="cls_cashregister.show(${cashregister['ai_cashregister_id']})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+              <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+              <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+            </svg>
+          </button>
+
         </li>
       `;
     })
     content += '</ol>'
     return content;
+  }
+  print_cashregister(cashregister_id){
+    cls_general.print_html('/print_cashregister/'+cashregister_id);
   }
   create(){
     var today = cls_general.getDate();
@@ -1202,6 +1225,200 @@ class class_cashregister{
       }
     });
 
+  }
+  filter(date){
+    date = cls_general.date_converter('dmy','ymd',date);
+    var url = '/cashregister/'+date+'/filter';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('container_cashregisterFiltered').innerHTML = '<span>Listado de Cierres de Caja</span>' + cls_cashregister.generate_list(obj.data.all);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  print(cashregister_id){
+  }
+  generate_inspectedCR(cashregister,payment,canceled){
+    var title = 'Arqueo del '+cls_general.datetime_converter(cashregister.created_at)+' a las '+cls_general.time_converter(cashregister.created_at);
+    var income_cash = (cls_general.is_empty_var(payment[1]) === 1)    ? payment[1] : 0;
+    var outcome_cash = (cls_general.is_empty_var(canceled[1]) === 1)  ? payment[1] : 0;
+
+    var income_check = (cls_general.is_empty_var(payment[2]) === 1) ? payment[2] : 0;
+    var outcome_check = (cls_general.is_empty_var(canceled[2]) === 1) ? payment[2] : 0;
+
+    var income_debitcard = (cls_general.is_empty_var(payment[3]) === 1) ? payment[3] : 0;
+    var outcome_debitcard = (cls_general.is_empty_var(canceled[3]) === 1) ? payment[3] : 0;
+
+    var income_creditcard = (cls_general.is_empty_var(payment[4]) === 1) ? payment[4] : 0;
+    var outcome_creditcard = (cls_general.is_empty_var(canceled[4]) === 1) ? payment[4] : 0;
+
+    var income_yappi = (cls_general.is_empty_var(payment[5]) === 1) ? payment[5] : 0;
+    var outcome_yappi = (cls_general.is_empty_var(canceled[5]) === 1) ? payment[5] : 0;
+
+    var income_nequi = (cls_general.is_empty_var(payment[6]) === 1) ? payment[6] : 0;
+    var outcome_nequi = (cls_general.is_empty_var(canceled[6]) === 1) ? payment[6] : 0;
+
+    var income_coupon = (cls_general.is_empty_var(payment[7]) === 1) ? payment[7] : 0;
+    var outcome_coupon = (cls_general.is_empty_var(canceled[7]) === 1) ? payment[7] : 0;
+
+
+    var content = `
+    <div class="row">
+      <div class="col-md-12 col-lg-6">
+        <table class="table table-bordered">
+          <thead>
+            <tr class="table-success text-center">
+              <th colspan="2">Totales</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Venta Bruta</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_grosssale,2,1,1)}</td>
+            </tr>
+            <tr>
+              <th>Descuento</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_discount, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Venta Neta</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_netsale, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Documentos</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_quantitydoc, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Venta Real</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_realsale, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Devoluci&oacute;n</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_cashback, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Anulado</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_canceled, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th colspan="2">DESGLOSE ITBMS</th>
+            </tr>
+            <tr>
+              <th>Base No Imponible</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_nontaxable, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Base Imponible</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_taxable,2,1,1)}</td>
+            </tr>
+            <tr>
+              <th>Base No imponible NC</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_returnnontaxable,2,1,1)}</td>
+            </tr>
+            <tr>
+              <th>Base imponible NC</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_returntaxable,2,1,1)}</td>
+            </tr>
+            <tr>
+              <th>Impuesto</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_tax,2,1,1)}</td>
+            </tr>
+            <tr>
+              <th>Impuesto N.C.</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_returntax,2,1,1)}</td>
+            </tr>                                                                                                                        
+          </tbody>
+        </table>
+      </div>
+      <div class="col-md-12 col-lg-6">
+        <table class="table table-bordered">
+          <thead>
+            <tr class="table-success text-center">
+              <th colspan="4">Movimientos</th>
+            </tr>
+            <tr class="table-success text-center">
+              <th scope="col">M&eacute;todo de Pago</th>
+              <th scope="col">Total</th>
+              <th scope="col">Entrada</th>
+              <th scope="col">Salida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Efectivo</th>
+              <td class="table-secondary">${cls_general.val_price(income_cash - outcome_cash, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(income_cash, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(outcome_cash, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Cheque</th>
+              <td class="table-secondary">${cls_general.val_price(income_check - outcome_check, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(income_check, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(outcome_check, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>T. Debito</th>
+              <td class="table-secondary">${cls_general.val_price(income_debitcard - outcome_debitcard, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(income_debitcard, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(outcome_debitcard, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>T. Cr&eacute;dito</th>
+              <td class="table-secondary">${cls_general.val_price(income_creditcard - outcome_creditcard, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(income_creditcard, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(outcome_creditcard, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Yappi</th>
+              <td class="table-secondary">${cls_general.val_price(income_yappi - outcome_yappi, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(income_yappi, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(outcome_yappi, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Nequi</th>
+              <td class="table-secondary">${cls_general.val_price(income_nequi - outcome_nequi, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(income_nequi, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(outcome_nequi, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Cup&oacute;n</th>
+              <td class="table-secondary">${cls_general.val_price(income_coupon - outcome_coupon, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(income_coupon, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(outcome_coupon, 2, 1, 1) }</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    `;
+
+    return {title: title, content: content};
+  }
+  show(cashregister_id){
+    var url = '/cashregister/' + cashregister_id;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var raw_inspected = cls_cashregister.generate_inspectedCR(obj.data.cashregister, obj.data.payment, obj.data.canceled)
+        document.getElementById('inspectCR_title').innerHTML = raw_inspected.title;
+        document.getElementById('inspectCR_container').innerHTML = raw_inspected.content;
+
+
+        const modal = new bootstrap.Modal('#inspectCRModal', {})
+        modal.show();
+
+        // ABRIR OTRO MODAL PARA MOSTRAR EL INSPECT DEL CIERRE ELGIDO, EN EL MODAL SE DEBE MOSTRAR LA INFORMACIÓN DE LOS COBROS Y UN ISTADO DE LAS FACTURAS Y NOTAS DE CREDITO
+        // document.getElementById('container_cashregisterFiltered').innerHTML = '<span>Listado de Cierres de Caja</span>' + cls_cashregister.generate_list(obj.data.all);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
   }
 }
 

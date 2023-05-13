@@ -20,7 +20,8 @@ class class_table{
     this.table_list = raw_table;
   }
   render(table_list){
-    var content_tab = ''; var ubication_str = '';
+    var content_tab = ''; 
+    var ubication_str = '';
     var content_tab_container = '';
     table_list.map((table,index) => {
       if (table.tx_ubication_value != ubication_str) {
@@ -106,7 +107,7 @@ class class_request {
           <div class="col-xs-12 col-md-7 pt-2">
             <div class="input-group mb-3">
               <input type="text" id="requestFilter" class="form-control" placeholder="Buscar por C&oacute;digo o Cliente" onkeyup="cls_request.filter(this.value)">
-              <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter()">
+              <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter(document.getElementById('requestFilter').value)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                   <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
                 </svg>
@@ -117,7 +118,7 @@ class class_request {
             <select class="form-select" id="requestStatus">
               <option value="0" selected>Abierto</option>
               <option value="1">Cerrado</option>
-              <option value="2">Anulada</option>
+              <option value="2">Cobrada</option>
             </select>
           </div>
         </div>
@@ -129,6 +130,14 @@ class class_request {
       </div>
     `;
     document.getElementById('container_request').innerHTML = content;
+    // $(function () {
+    //   $('#requestFilter').keyboard();
+    // });
+    // $('#requestFilter').bind('accepted', function (e, keyboard, el) {
+    //   cls_request.filter(el.value)
+    // });
+
+
   }
   render(target,raw){
     switch (target) {
@@ -152,6 +161,23 @@ class class_request {
     content += '</ul>';
     return content;
   }
+  generate_closedrequest(open) {
+    var content = '<ul class="list-group">';
+    open.map((request) => {
+      content += `<li class="list-group-item cursor_pointer"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5><small>${request.tx_request_title} - ${request.tx_table_value} (${cls_general.time_converter(request.created_at)})</small></li>`;
+    })
+    content += '</ul>';
+    return content;
+  }
+  generate_cancelledrequest(open) {
+    var content = '<ul class="list-group">';
+    open.map((request) => {
+      content += `<li class="list-group-item cursor_pointer"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5><small>${request.tx_request_title} - ${request.tx_table_value} (${cls_general.time_converter(request.created_at)})</small></li>`;
+    })
+    content += '</ul>';
+    return content;
+  }
+
   showByTable(table_slug,type) {
     if (type == 1) {
       cls_request.showByBar(table_slug)
@@ -224,7 +250,6 @@ class class_request {
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-
   }
   look_for(str,status){
     return new Promise(resolve => {
@@ -246,7 +271,7 @@ class class_request {
         for (var i in haystack) {
           var ocurrencys = 0;
           for (const a in needles) {
-            if (haystack[i]['tx_request_code'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+            if (haystack[i]['tx_request_code'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
           }
           if (ocurrencys === needles.length) {
             raw_filtered.push(haystack[i]);
@@ -272,7 +297,7 @@ class class_request {
     }
     document.getElementById('container_requestlist').innerHTML = content;
   }
-  close() {
+  close(btn) {
     var request_slug = document.getElementById('btn_commandprocess').name;
     if(cls_general.is_empty_var(request_slug) === 0) {
       cls_general.shot_toast_bs('No hay elementos para cerrar.',{bg: 'text-bg-warning'}); return false;
@@ -297,6 +322,7 @@ class class_request {
     .then((ans) => {
       switch (ans) {
         case 'si':
+          cls_general.disable_submit(btn);
           var url = '/request/' + request_slug + '/close';
           var method = 'PUT';
           var body = JSON.stringify({ a: 1 });;
@@ -381,7 +407,7 @@ class class_command{
       opt_tablelist += (table.tx_table_slug === table_slug) ? `<option value="${table.ai_table_id}" selected>${table.tx_table_code} - ${table.tx_table_value}</option>` : `<option value="${table.ai_table_id}">${table.tx_table_code} - ${table.tx_table_value}</option>`;
     })
     if (request_slug.length > 0) {
-      var btn_update = `<button class="btn btn-lg btn-info" type="button" onclick="cls_request.update_info('${request_slug}')">Actualizar</button>`;
+      var btn_update = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${request_slug}')">Actualizar</button>`;
       var request_code  = request_info['tx_request_code'];
       var client_name   = request_info['tx_client_name'];
       var client_slug   = request_info['tx_client_slug'];
@@ -420,7 +446,7 @@ class class_command{
             </div>
             <div id="article_selected" class="col-xs-12 v_scrollable" style="height: 40vh">
             </div>
-            <div class="col-xs-12 input-group mb-3" style="height: 10vh">
+            <div class="col-xs-12 input-group mb-3 pt-2" style="height: 10vh">
               <input type="text" id="articleFilter" class="form-control" placeholder="Buscar por c&oacute;digo o descripci&oacute;n" onkeyup="cls_command.filter_article(this.value)">
               <button class="btn btn-outline-secondary" type="button" onclick="cls_command.filter_article(document.getElementById('articleFilter').value)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -440,7 +466,7 @@ class class_command{
         <div class="col-md-12 col-lg-1 text-center">
           <div class="row">
             <div class="col-md-12 text-center" style="height:20vh;display: flex;align-items: top;">
-              <button class="btn btn-warning btn-lg h_50" onclick="cls_request.close()">
+              <button class="btn btn-warning btn-lg h_50" onclick="cls_request.close(this)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" fill="currentColor" class="bi bi-door-closed-fill" viewBox="0 0 16 16">
                   <path d="M12 1a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V2a1 1 0 0 1 1-1h8zm-2 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
                 </svg>
@@ -505,6 +531,12 @@ class class_command{
       </div>
     `;
     document.getElementById('container_request').innerHTML = content;
+    // $(function () {
+    //   $('#articleFilter').keyboard();
+    // });
+    // $('#articleFilter').bind('accepted', function (e, keyboard, el) {
+    //   cls_command.filter_article(el.value)
+    // });
 
     cls_command.filter_article('')
   }
@@ -588,7 +620,7 @@ class class_command{
         <div class="row">
           <div class="col-sm-12">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            <button type="button" class="btn btn-primary" onclick="cls_command.add_article('${article_slug}','${description}','${obj.data.article.ai_article_id}');">Guardar</button>
+            <button type="button" class="btn btn-primary" onclick="cls_general.disable_submit(this); cls_command.add_article('${article_slug}','${description}','${obj.data.article.ai_article_id}');">Guardar</button>
           </div>
         </div>
       `;
@@ -756,7 +788,7 @@ class class_command{
       <div class="row">
         <div class="col-sm-12">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          <button type="button" class="btn btn-primary" onclick="cls_command.process('${request_slug}','${table_slug}')">Guardar</button>
+          <button type="button" class="btn btn-primary" onclick="cls_general.disable_submit(this,0); cls_command.process('${request_slug}','${table_slug}')">Guardar</button>
         </div>
       </div>
     `;
@@ -785,7 +817,7 @@ class class_command{
     var body = JSON.stringify({a: command_list, b: table_slug, c: client.name, d: 'Ped.'+client.value.replace(' ',''), e: consumption, f: observation });
     var funcion = function (obj) {
       document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
-      document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
+      document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
       cls_command.command_procesed = obj.data.command_procesed;
       cls_command.command_list = [];
       var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
@@ -858,6 +890,12 @@ class class_command{
     .then((ans) => {
       switch (ans) {
         case 'si':
+          var content_commandList = document.getElementById('commandList').innerHTML;
+          var content_requestTotal = document.getElementById('requestTotal').innerHTML;
+
+          document.getElementById('commandList').innerHTML = '<img src="attached/image/loading.gif" width="30px"></img>';
+          document.getElementById('requestTotal').innerHTML = '<img src="attached/image/loading.gif" width="10px"></img>';
+
           var url = '/command/' + commanddata_id + '/cancel';
           var method = 'PUT';
           var body = JSON.stringify({a: 1});;
@@ -872,12 +910,21 @@ class class_command{
               document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
 
             } else {
+              document.getElementById('commandList').innerHTML = content_commandList;
+              document.getElementById('requestTotal').innerHTML = content_requestTotal;
+
               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
             }
           }
           cls_general.async_laravel_request(url, method, funcion, body);
         break;
         case 'solo':
+          var content_commandList = document.getElementById('commandList').innerHTML;
+          var content_requestTotal = document.getElementById('requestTotal').innerHTML;
+
+          document.getElementById('commandList').innerHTML = '<img src="attached/image/loading.gif" width="30px"></img>';
+          document.getElementById('requestTotal').innerHTML = '<img src="attached/image/loading.gif" width="10px"></img>';
+
           var url = '/command/' + commanddata_id + '/cancel';
           var method = 'PUT';
           var body = JSON.stringify({ a: 0 });;
@@ -889,9 +936,11 @@ class class_command{
               var total_sale = cls_general.calculate_sale(command_procesed.price);
 
               document.getElementById('commandList').innerHTML = command_procesed.content;
-              document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total);
-
+              document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total,2,1,1);
             } else {
+              document.getElementById('commandList').innerHTML = content_commandList;
+              document.getElementById('requestTotal').innerHTML = content_requestTotal;
+
               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
             }
           }
@@ -969,7 +1018,6 @@ class class_client{
     cls_client.filter_modal('')
     const modal = new bootstrap.Modal('#clientModal', {})
     modal.show();
-
   }
   render_modal_create(slug,name,cif,dv,telephone,email,direction,exempt,taxpayer,status) {
     var exempt_checked = (exempt === 1) ? 'checked' : '';
@@ -1025,7 +1073,7 @@ class class_client{
           <select id="clientTaxpayer" class="form-select">
             <option value="102">No Contribuyente</option>
             <option value="101">Contribuyente</option>
-            <option value="202">Empresa</option>
+            <option value="201">Empresa</option>
             <option value="203">Gobierno</option>
             <option value="204">Extranjero</option>
           </select>

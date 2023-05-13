@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\tm_client;
+use App\tm_request;
+use App\tm_giftcard;
 
 class clientController extends Controller
 {
@@ -14,7 +16,8 @@ class clientController extends Controller
      */
     public function index()
     {
-        //
+        $rs = $this->getAll();
+        return response()->json(['status'=>'success','data'=>['all'=>$rs]]);
     }
     public function getAll(){
         $rs = tm_client::all();
@@ -82,10 +85,11 @@ class clientController extends Controller
     {
         $qry = tm_client::where('tx_client_slug',$slug);
         if ($qry->count() > 0) {
-            return response()->json(['status'=>'success','message'=>'','data'=>['client'=>$qry->first()]]);
+            $rs = $qry->first();
+            $rs_giftcard = tm_giftcard::where('giftcard_ai_client_id',$rs['ai_client_id'])->get();
+            return response()->json(['status'=>'success','message'=>'','data'=>['client'=>$rs, 'giftcard'=>$rs_giftcard]]);
         }else{
             return response()->json(['status'=>'failed','message'=>'No existe.']);
-
         }
     }
 
@@ -151,8 +155,20 @@ class clientController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($client_slug)
     {
-        //
+        $qry = tm_client::where("tx_client_slug",$client_slug);
+        if ($qry->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'No existe.']);
+        }
+        $rs = $qry->first();
+        $check_request = tm_request::where('request_ai_client_id',$rs['ai_client_id'])->count();
+        if ($check_request === 0) {
+            $qry->delete();
+            return response()->json(['status'=>'success','message'=>'Cliente Eliminado.']);
+        }else{
+            $qry->update(['tx_client_status'=>0]);
+            return response()->json(['status'=>'success','message'=>'Se desactivó el cliente.']);
+        }
     }
 }

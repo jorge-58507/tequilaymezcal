@@ -15,6 +15,13 @@
 // ___________________________
 /*####MOUSTACHED##PILOT####*/
 
+// $(function () {
+//   $('#requestFilter').keyboard();
+// });
+// $('#requestFilter').bind('accepted', function (e, keyboard, el) {
+//   document.getElementById('submit_login').click();
+// });
+
 // var url = '/client/';
 // var method = 'PUT';
 // var body = JSON.stringify({ });
@@ -27,7 +34,34 @@
 // }
 // cls_general.async_laravel_request(url, method, funcion, body);
 
-// document.getElementById("myBtn").addEventListener("click", displayDate)
+// document.getElementById("myBtn").addEventListener("click", () => { displayDate })
+
+{/* <div class="col-xs-12 v_scrollable bb_1 border_gray" style="height: 100vh;">
+  <nav>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+      <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#tab_ready" type="button" role="tab" aria-controls="nav-home" aria-selected="true">PENDIENTE</button>
+
+      <button class="nav-link" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#tab_notready" type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">TERMINADO</button>
+    </div>
+  </nav>
+  <div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="tab_ready" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+      <div class="row">
+        <div id="container_notready" class="col-sm-12">
+          READY
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab_notready" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+      <div class="row">
+        <div id="container_ready" class="col-sm-12">
+          NOT READY
+        </div>
+      </div>
+    </div>
+  </div>
+</div> */}
 
 class general_funct {
   test(){
@@ -263,11 +297,16 @@ class general_funct {
 
     return cls_general.date_converter('ymd','dmy',split[0]);
   }
-  time_converter(datetime) {
+  time_converter(datetime,ampm=0) {
     var split = datetime.split(' ');
     var time_splited = split[1].split(':');
-    return time_splited[0] + ':' +time_splited[1];
-    // return cls_general.date_converter('ymd', 'dmy', split[0]);
+    var H = (ampm === 1) ? cls_general.formatTimeShow(time_splited[0], time_splited[1]) : time_splited[0] + ':' + time_splited[1];
+    return H ;
+  }
+  formatTimeShow(h_24,min) {
+    var h = h_24 % 12;
+    if (h === 0) h = 12;
+    return (h < 10 ? '0' : '') + h + ':'+ min + (h_24 < 12 ? 'am' : 'pm');
   }
 
   //  ###### FUNCION DE REPORTE A PPT
@@ -343,11 +382,13 @@ class general_funct {
     var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
     return regex.test(email);
   }
-  disable_submit(button){
+  disable_submit(button,enable=1){
     button.disabled = true;
-    setTimeout(() => {
-      button.disabled = false;
-    }, 5000);
+    if (enable === 1) {
+      setTimeout(() => {
+        button.disabled = false;
+      }, 5000);
+    }
   }
   set_sidenav(url) {
   // #######    SETEA EL SIDENAV
@@ -428,7 +469,7 @@ class general_funct {
     var ans = isNaN(str)
     str = (ans) ? '' : str;
     if (str === '') { return '';	}
-    str = parseFloat(str);
+    str = parseFloat(str);          //convertirlo a decimal
     if (decimal > 0) {
       var pat = new RegExp('(^[-][0-9]{1}|^[0-9]+|[0-9]+)([.][0-9]{1,' + decimal + '})?$');
       if(!pat.test(str)) { return false; }
@@ -436,18 +477,22 @@ class general_funct {
     var str_splited = (str.toString()).split('.');
     var decimal_part = '';
     for (var i = 0; i < decimal; i++) { 	decimal_part+='0';	}
-    if(str_splited.length > 1) {
-      if(str_splited.length > 2) {
+    if(str_splited.length > 1) {        //SI STRING TIENE PARTE DECIMAL
+      if(str_splited.length > 2) {          //SI TIENE DOBLE PUNTO CORREGIR
         str_splited.splice(2);
       }
-      if (str_splited[0].length === 0) {
+      if (str_splited[0].length === 0) {    //SI NO TIENE NUMERO ENTERO, AGREGAR CERO
         str_splited[0]='0';
       }
-      if (refill === 1) {
-        str_splited[1]+=decimal_part;  // REFILL
+      if (refill === 1) {                   //SI RELLENAR ES 1, AGREGARLE CEROS ALFINAL
+        str_splited[1]+=decimal_part;       // REFILL
       }
-      if (split === 1) {
-        str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
+      if (split === 1) {                    //SI RECORTAR EL STRING ES 1, REALIZAR EL CORTE
+        str_splited[1] = parseFloat('0.' + str_splited[1]).toFixed(decimal)  // REDONDEO
+        str_splited[1] = str_splited[1].toString();                           //TRANSFORMAR EN STRING
+        var raw_split = str_splited[1].split('.');                            //CORTAR
+        str_splited[1] = raw_split[1];
+        // str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
       }
       str = (decimal > 0) ? str_splited[0] + '.' + str_splited[1] : str_splited[0];
     } else {
@@ -521,6 +566,8 @@ class general_funct {
     // calcular desc (redondear) RESTAR DESC
     // calcular imp (redondear) SUMAR IMPUESTO
     // MULTIPLICAR CNTIDAD
+    var ttl_nontaxable = 0;
+    var ttl_taxable = 0;
     var ttl_gross = 0;
     var ttl_discount = 0;
     var ttl_tax = 0;
@@ -534,6 +581,11 @@ class general_funct {
       tax = cls_general.val_dec(tax, 2, 1, 1);
       var price_tax = parseFloat(price_discount) + parseFloat(tax);
       
+      if (article.tax > 0) {
+        ttl_taxable += article.quantity * article.price;
+      }else{
+        ttl_nontaxable += article.quantity * article.price;
+      }
       ttl_gross += article.quantity * article.price;
       subtotal += article.quantity * price_discount;
       total += article.quantity * price_tax;
@@ -541,6 +593,8 @@ class general_funct {
       ttl_tax += article.quantity * tax;
     })
     return { 
+      taxable: cls_general.val_dec(ttl_taxable, 2, 1, 1),
+      nontaxable: cls_general.val_dec(ttl_nontaxable, 2, 1, 1),
       gross_total: cls_general.val_dec(ttl_gross, 2, 1, 1), 
       subtotal: cls_general.val_dec(subtotal, 2, 1, 1), 
       total: cls_general.val_dec(total, 2, 1, 1),

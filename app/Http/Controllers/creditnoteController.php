@@ -9,6 +9,7 @@ use App\tm_command;
 use App\tm_creditnote;
 use App\tm_commanddata;
 use App\tm_datacreditnote;
+use App\tm_payment;
 
 class creditnoteController extends Controller
 {
@@ -159,7 +160,9 @@ class creditnoteController extends Controller
         }
         $rs_creditnote = tm_creditnote::where('creditnote_ai_charge_id',$rs_charge['ai_charge_id'])->get();
 
-        return response()->json(['status'=>'success', 'message'=>'', 'data'=>['charge'=>$rs_charge, 'article'=>$raw_commanddata, 'creditnote'=>$rs_creditnote] ]);
+        $rs_payment = tm_payment::where('payment_ai_charge_id',$rs_charge['ai_charge_id'])->get();
+
+        return response()->json(['status'=>'success', 'message'=>'', 'data'=>['charge'=>$rs_charge, 'article'=>$raw_commanddata, 'creditnote'=>$rs_creditnote, 'payment'=>$rs_payment] ]);
     }
 
     public function getByCharge($charge_slug)

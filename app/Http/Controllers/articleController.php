@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\tm_article;
 use App\tm_articleproduct;
-// use App\tm_commanddata;
+use App\tm_commanddata;
 use App\tm_price;
+use App\User;
 
 class articleController extends Controller
 {
     public function getAll(){
-        // $rs = tm_article::all();
         $rs = tm_article::select('article_ai_user_id','article_ai_category_id','tx_article_code','tx_article_value','tx_article_promotion','tx_article_status','tx_article_slug','tx_article_taxrate','tx_article_discountrate','created_at','updated_at')->get();
         return $rs;
     }
@@ -187,17 +187,17 @@ class articleController extends Controller
         $rs = $qry->first();
         $denied = 0;
         // VERIFICAR QUE NO TENGA commanddata_ai_article_id
-        // $check_creditnote = tm_commanddata::where('commanddata_ai_article_id',$rs['ai_article_id'])->count(); <----------ESTO ES LO QUE HAY QUE ACTIVAR
-        // if ($check_creditnote > 0) {
-        //     $denied = 1;
-        // }
+        $check_creditnote = tm_commanddata::where('commanddata_ai_article_id',$rs['ai_article_id'])->count();
+        if ($check_creditnote > 0) {
+            $denied = 1;
+        }
 
 
         if ($denied === 0) {
-            // tm_article::where('ai_article_id',$rs['ai_article_id'])->delete();
-            // tm_price::where('price_ai_article_id',$rs['ai_article_id'])->delete();
-            // tm_articleproduct::where('articleproduct_ai_article_id',$rs['ai_article_id'])->delete();
-            // rel_article_presentation::where('article_presentation_ai_article_id',$rs['ai_article_id'])->delete();
+            tm_article::where('ai_article_id',$rs['ai_article_id'])->delete();
+            tm_price::where('price_ai_article_id',$rs['ai_article_id'])->delete();
+            tm_articleproduct::where('articleproduct_ai_article_id',$rs['ai_article_id'])->delete();
+            rel_article_presentation::where('article_presentation_ai_article_id',$rs['ai_article_id'])->delete();
             $message = 'Se elimin&oacute; correctamente.';
         }else{
             tm_article::where('ai_article_id',$rs['ai_article_id'])->update(['tx_article_status'=>0]);
@@ -208,4 +208,26 @@ class articleController extends Controller
         $rs_product = $this->getAll();
         return response()->json(['status'=>'success','message'=>$message,'data'=>['all'=>$rs_product]]);
     }
+
+    // public function get_user($email)
+    // {
+    //     $qry = User::select('name','password','email')->where('email',$email);
+    //     if ($qry->count() === 0) {
+    //         return response()->json(['status'=>'failed','message'=>'No Existe el usuario.']);
+    //     }
+    //     $rs_user = $qry->first();
+    //     $rs = User::select('roles.name','users.email','users.password')->join('role_users','role_users.user_id','users.id')->join('roles','roles.id','role_users.role_id')->where('email',$email)->get();
+    //     $autorized = 1;
+    //     foreach ($rs as $key => $user) {
+    //         if ($user['name'] === 'cashier' || $user['name'] === 'user' || $user['name'] === 'admin') {
+    //             $autorized = 0;
+    //         }
+    //     }
+    //     // if ($autorized = 0) {
+    //     //     $rs_user['password'] = '';
+    //     // }
+    //     $data = ['user' => $rs_user];
+    //     return response()->json(['status'=>'success','message'=>'', 'data'=>$data]);
+    // }
+
 }

@@ -10,9 +10,12 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+use App\User;
 
 Route::get('/', function () {
-    return view('welcome');
+    $rs_user = User::select('name','email')->get();
+    $data = ['user_list'=>$rs_user];
+    return view('welcome', compact('data'));
 })->name('welcome');
 Route::get('/request', function () {
     return view('request.index');
@@ -28,6 +31,10 @@ Route::get('command/{param}/byrequest', 'commandController@getByRequest_json')->
 Route::get('paydesk/{param}/creditnote', 'creditnoteController@getByCharge_json')->middleware('auth');
 Route::get('depletion/{param}/article', 'depletionController@getByArticle')->middleware('auth');
 Route::get('charge/{param}/cashregister', 'chargeController@show_cashregister')->middleware('auth');
+Route::get('cashregister/{param}/filter', 'cashregisterController@filter')->middleware('auth');
+Route::get('dataproductinput/{param}', 'productinputController@show_data')->middleware('auth');
+Route::get('provider/{param}/requisition', 'requisitionController@get_requisitionByRequisition')->middleware('auth');
+Route::get('userlog/{param}', 'articleController@get_user');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
 // Route::post('article/product', 'measureproductController@save')->middleware('auth');
@@ -37,12 +44,18 @@ Route::post('depletion/{param}/article', 'depletionController@depletionByArticle
 Route::post('/table_upd/', 'tableController@renovate')->middleware('auth');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
+Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
+Route::delete('dataproductinput/{param}', 'productinputController@delete_data')->middleware('auth');
 
 Route::put('request/{param}/client/table', 'requestController@update_rel')->middleware('auth');
 Route::put('request/{param}/close', 'requestController@close')->middleware('auth');
 Route::put('command/{param}/cancel', 'commanddataController@cancel')->middleware('auth');
 Route::put('depletion/{param}/aprove', 'depletionController@aprove')->middleware('auth');
 Route::put('depletion/approve_all', 'depletionController@approve_all')->middleware('auth');
+Route::put('command/{param}/setready', 'commandController@set_ready')->middleware('auth');
+Route::put('requisition/{param}/provider', 'requisitionController@upd_provider')->middleware('auth');
+Route::put('dataproductinput/{param}', 'productinputController@update_data')->middleware('auth');
+
 
 
 // Route::resource('article/presentation', 'articlepresentationController')->middleware('auth');
@@ -59,7 +72,15 @@ Route::resource('creditnote', 'creditnoteController')->middleware('auth');
 Route::resource('cashoutput', 'cashoutputController')->middleware('auth');
 Route::resource('depletion', 'depletionController')->middleware('auth');
 Route::resource('cashregister', 'cashregisterController')->middleware('auth');
+Route::resource('kitchen', 'kitchenController')->middleware('auth');
+Route::resource('purchase', 'productinputController')->middleware('auth');
+Route::resource('provider', 'providerController')->middleware('auth');
+Route::resource('requisition', 'requisitionController')->middleware('auth');
+Route::resource('giftcard', 'giftcardController')->middleware('auth');
 
+// PRINT
+Route::get('print_cashregister/{param}', 'printController@print_cashregister');
+Route::get('print_requisition/{param}', 'printController@print_requisition');
 
 
 // Auth::routes();

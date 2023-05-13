@@ -1,0 +1,490 @@
+@font-face {
+  font-family: 'sanson';
+  src: url(".../font/sanson.otf");
+}
+
+.print_header {
+  height: 100px;
+  padding-top: 10px;
+}
+
+.header_logo {
+  float: left;
+}
+
+.left_logo {
+  width: 115px;
+  height: 115px;
+}
+
+.header_title {
+  font-size: 28px;
+  /* float: left; */
+}
+
+.header_title_halfpage {
+  font-size: 17pt;
+  font-weight: bold;
+}
+
+.top_subLine_halfpage {
+  font-size: 6pt;
+}
+
+.bottom_subLine_halfpage {
+  font-size: 8pt;
+}
+
+.header_date {
+  height: 100px;
+  float: left;
+}
+
+.sanson_title {
+  font-family: 'sanson';
+  font-stretch: expanded;
+}
+
+.top_content {
+  height: 110px;
+}
+
+/* .print_bottom {
+} */
+.flex_horizontal {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+}
+
+.content_title {
+  font-weight: bolder;
+}
+
+.content_title_halfpage {
+  font-size: 14pt;
+  font-weight: bolder;
+}
+
+.col_5 {
+  width: 5%;
+}
+
+.col_10 {
+  width: 10%;
+}
+
+.col_15 {
+  width: 15%;
+}
+
+.col_20 {
+  width: 20%;
+}
+
+.col_25 {
+  width: 25%;
+}
+
+.col_30 {
+  width: 30%;
+}
+
+.col_35 {
+  width: 35%;
+}
+
+.col_40 {
+  width: 40%;
+}
+
+.col_45 {
+  width: 45%;
+}
+
+.col_50 {
+  width: 50%;
+}
+
+.col_55 {
+  width: 55%;
+}
+
+.col_60 {
+  width: 60%;
+}
+
+.col_65 {
+  width: 65%;
+}
+
+.col_70 {
+  width: 70%;
+}
+
+.col_75 {
+  width: 75%;
+}
+
+.col_80 {
+  width: 80%;
+}
+
+.col_85 {
+  width: 85%;
+}
+
+.col_90 {
+  width: 90%;
+}
+
+.col_95 {
+  width: 95%;
+}
+
+.col_100 {
+  width: 100%;
+}
+
+/* ########################     BORDER CLASS     ######################## */
+.bx_0 {
+  border-right: 0;
+  border-left: 0;
+}
+
+.by_0 {
+  border-bottom: 0;
+  border-top: 0;
+}
+
+.bx_1 {
+  border-right: solid 1px;
+  border-left: solid 1px;
+}
+
+.by_1 {
+  border-bottom: solid 1px;
+  border-top: solid 1px;
+}
+
+.bt_0 {
+  border-top: 0;
+}
+
+.bt_1 {
+  border-top: solid 1px;
+}
+
+.br_0 {
+  border-top: 0;
+}
+
+.br_1 {
+  border-right: solid 1px;
+}
+
+.bb_0 {
+  border-bottom: 0;
+}
+
+.bb_1 {
+  border-bottom: solid 1px;
+}
+
+.bl_0 {
+  border-left: 0;
+}
+
+.bl_1 {
+  border-left: solid 1px;
+}
+
+/* ########################     BORDER FORMAT     ######################## */
+.bs_2 {
+  border: solid 2px;
+}
+
+.bs_1 {
+  border: solid 1px;
+}
+
+.radius_5 {
+  border-radius: 5px;
+}
+
+.radius_10 {
+  border-radius: 10px;
+}
+
+.border_teal {
+  border-color: #4db6ac;
+}
+
+.border_gray {
+  border-color: #e0e0e0;
+}
+
+.border_black {
+  border-color: #000000;
+}
+
+/* ########################     PADDING CLASS     ######################## */
+.px_0 {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.px_5 {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.px_10 {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.py_0 {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.py_5 {
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+}
+
+.py_10 {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.pt_0 {
+  padding-top: 0;
+}
+
+.pt_5 {
+  padding-top: 5px !important;
+}
+
+.pt_10 {
+  padding-top: 10px !important;
+}
+
+.pt_15 {
+  padding-top: 15px !important;
+}
+
+.pr_0 {
+  padding-right: 0;
+}
+
+.pr_5 {
+  padding-right: 5px;
+}
+
+.pr_10 {
+  padding-right: 10px;
+}
+
+.pb_0 {
+  padding-bottom: 0;
+}
+
+.pb_5 {
+  padding-bottom: 5px;
+}
+
+.pb_10 {
+  padding-bottom: 10px;
+}
+
+.pl_0 {
+  padding-left: 0 !important;
+}
+
+.pl_5 {
+  padding-left: 5px;
+}
+
+.pl_10 {
+  padding-left: 10px;
+}
+
+.m_0 {
+  margin: 0;
+}
+
+.m_5 {
+  margin: 5px;
+}
+
+.m_10 {
+  margin: 10px;
+}
+
+.my_0 {
+  margin: 0 !important;
+}
+
+.my_5 {
+  margin: 5px !important;
+}
+
+.my_10 {
+  margin: 10px !important;
+}
+
+.mt_5 {
+  margin-top: 5px;
+}
+
+.mt_10 {
+  margin-top: 10px;
+}
+
+.mt_15 {
+  margin-top: 15px;
+}
+
+.mb_0 {
+  margin-bottom: 0px;
+}
+
+.mb_5 {
+  margin-bottom: 5px;
+}
+
+.mb_10 {
+  margin-bottom: 10px;
+}
+
+.mb_15 {
+  margin-bottom: 15px;
+}
+
+.mb_15 {
+  margin-bottom: 20px;
+}
+
+/* ########################     FONT CLASS     ######################## */
+.fs_20 {
+  font-size: 20px;
+}
+
+.fs_14 {
+  font-size: 20px;
+}
+
+.font_bolder {
+  font-weight: bolder;
+}
+
+/* ########################     FLEX WIDTH CLASS     ######################## */
+.w_100 {
+  width: 100px;
+}
+
+.w_200 {
+  width: 200px;
+}
+
+.w_300 {
+  width: 300px;
+}
+
+.w_400 {
+  width: 400px;
+}
+
+.w_500 {
+  width: 500px;
+}
+
+.w_100p {
+  width: 100%;
+}
+
+/* ########################     FLEX HEIGHT CLASS     ######################## */
+.h_10 {
+  height: 10px;
+}
+
+.h_20 {
+  height: 20px;
+}
+
+.h_30 {
+  height: 30px;
+}
+
+.h_50 {
+  height: 50px;
+}
+
+.h_60 {
+  height: 60px;
+}
+
+.h_70 {
+  height: 70px;
+}
+
+.h_80 {
+  height: 80px;
+}
+
+.h_90 {
+  height: 90px;
+}
+
+.h_100 {
+  height: 100px;
+}
+
+.h_150 {
+  height: 150px;
+}
+
+.h_200 {
+  height: 200px;
+}
+
+.h_300 {
+  height: 300px;
+}
+
+.h_400 {
+  height: 400px;
+}
+
+.h_500 {
+  height: 500px;
+}
+
+.vhp_middle_content {
+  height: 100px;
+  padding-top: 10px;
+}
+
+.vhp_top_content {
+  height: 60px;
+}
+
+.table-bordered th,.table-bordered td{
+  border: 1px solid black; 
+  border-collapse: collapse;
+}
+tr th{
+  text-align: center;;
+}
+
+.text_center{
+  text-align: center;
+}
+.text_left {
+  text-align: left;
+}
+.text_right {
+  text-align: right;
+}

@@ -426,18 +426,6 @@ class class_table {
       }
       cls_general.shot_toast_bs(obj.message);
     });
-
-
-
-    // var url = '/table/' + table_id; var method = 'PUT';
-    // var body = JSON.stringify({ a: description, b: code, c: status });
-    // var funcion = function (obj) {
-    //   if (obj.status != 'failed') {
-    //     cls_ubication.render_modal(obj.data.ubication, obj.data.table);
-    //   }
-    //   cls_general.shot_toast_bs(obj['message']);
-    // }
-    // cls_general.async_laravel_request(url, method, funcion, body);
   }
   delete(table_id) {
     var url = '/table/' + table_id; var method = 'DELETE';
@@ -481,7 +469,6 @@ class class_product{
     var content = cls_product.generate_list(filtered);
     document.getElementById('container_productList').innerHTML = content;
   }
-
   render() {
     var url = '/product'; var method = 'GET';
     var body = "";
@@ -541,7 +528,7 @@ class class_product{
         </div>
         <div class="row">
           <div class="col-lg-6 col-md-12">
-            <label for="productCode" class="form-label">% C&oacute;digo</label>
+            <label for="productCode" class="form-label">C&oacute;digo</label>
             <input type="text" class="form-control" id="productCode" value="${product['tx_product_code']}" onfocus="cls_general.validFranz(this.id, ['number'],'abcdefghijklmnñopqrstuvwxyzáéíóúABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ')" onkeyup="cls_general.limitText(this, 15, toast = 0)" onkeyup="cls_general.limitText(this, 15, toast = 0)" placeholder="00000000" >
           </div>
           <div class="col-lg-3 col-md-12">
@@ -641,7 +628,7 @@ class class_product{
           </div>
           <div class="row">
             <div class="col-lg-6 col-md-12">
-              <label for="productCode" class="form-label">% C&oacute;digo</label>
+              <label for="productCode" class="form-label">C&oacute;digo</label>
               <input type="text" class="form-control" id="productCode" value="" onfocus="cls_general.validFranz(this.id, ['number'],'abcdefghijklmnñopqrstuvwxyzáéíóúABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ')" onkeyup="cls_general.limitText(this, 15, toast = 0)" onkeyup="cls_general.limitText(this, 15, toast = 0)" placeholder="00000000" >
             </div>
             <div class="col-lg-3 col-md-12">
@@ -1723,6 +1710,454 @@ class class_presentation{
     this.presentation_list = presentation_list;
   }
 }
+class class_client {
+  constructor (list){
+    this.client_list = [];
+  }
+  render() {
+    var url = '/client'; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      cls_client.client_list = obj['data']['all'];
+      var client_list = obj['data']['all'];
+
+      var list = cls_client.generate_list(client_list,100)
+      var content = `
+        <div class="row">
+          <div class="col-xs-12 py-2 text-center">
+            <button type="button" class="btn btn-lg btn-primary" onclick="cls_client.create()">Crear Cliente</button>
+            &nbsp;
+          </div>
+          <div class="col-xs-12">
+            <h5>Listado de Clientes</h5>
+          </div>
+          <div class="col-xs-12 pb-1">
+            <input type="text" class="form-control" id="clientFilter" onfocus="cls_general.validFranz(this.id, ['word','number'],'-')" onkeyup="cls_client.filter(this.value,20)" placeholder="Buscar clientes por nombre o cédula" >
+          </div>
+          <div id="container_clientList" class="col-xs-12 border-top pt-1">
+            ${list}
+          </div>
+        </div>
+      `;
+      document.getElementById('container').innerHTML = content;
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_list(client_list,limit) {
+    var counter = 1;
+    var list = '<div class="list-group">';
+    for (const a in client_list) {
+      if (counter > limit) {  break;  }
+      var bg = (client_list[a]['tx_client_status'] == '0') ? 'text-bg-secondary' : '';
+      var inactive = (client_list[a]['tx_client_status'] == '0') ? ' (INACTIVO)' : '';
+
+      list += `<a href = "#" class="list-group-item list-group-item-action ${bg}" onclick="event.preventDefault(); cls_client.show('${client_list[a]['tx_client_slug']}')" >${client_list[a]['tx_client_name']} (${client_list[a]['tx_client_cif']}) ${inactive}</a>`;
+      counter++;
+    }
+    list += '</div>';
+    return list;
+  }
+  async filter(str,limit) {
+    document.getElementById('container_clientList').innerHTML = cls_client.generate_list(await cls_client.look_for(str, limit));
+  }
+  look_for(str, limit) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_client.client_list;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          if (i == limit) { break; }
+          var ocurrencys = 0;
+          for (const a in needles) {
+            if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+        resolve(raw_filtered)
+      }, 500)
+    });
+  }
+  show(client_slug){
+    var url = '/client/' + client_slug; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      var client = obj['data']['client'];
+      var exempt_checked = (client.tx_client_exempt === 1) ? 'checked' : '';
+      var status_checked = (client.tx_client_status === 1) ? 'checked' : '';
+      var dv = (cls_general.is_empty_var(client.tx_client_dv) === 0) ? '' : client.tx_client_dv;
+      var telephone = (cls_general.is_empty_var(client.tx_client_telephone) === 0) ? '' : client.tx_client_telephone;
+      var email = (cls_general.is_empty_var(client.tx_client_email) === 0) ? '' : client.tx_client_email;
+      var direction = (cls_general.is_empty_var(client.tx_client_direction) === 0) ? '' : client.tx_client_direction;
+      var content = `
+      <div class="row">
+        <div class="col">
+          <div class="row">
+            <div class="col-xs-12">
+              <h4>Modificar Cliente</h4>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label for="clientName" class="form-label">Nombre y Apellido</label>
+              <input type="text" id="clientName" name="${client.tx_client_slug}" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,120,1)" onblur="cls_general.limitText(this,120,1)" value="${client.tx_client_name}">
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientCIF" class="form-label">C&eacute;dula/Pasaporte</label>
+              <input type="text" id="clientCIF" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'],'-')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${client.tx_client_cif}">
+            </div>
+            <div class="col-md-12 col-lg-2">
+              <label for="clientDV" class="form-label">DV</label>
+              <input type="text" id="clientDV" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this,4,1)" onblur="cls_general.limitText(this,4,1)" value="${dv}">
+            </div>
+            <div class="col-md-12 col-lg-4">
+              <label for="clientTelephone" class="form-label">Teléfono</label>
+              <input type="text" id="clientTelephone" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'],' -')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${telephone}">
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientEmail" class="form-label">Correo E.</label>
+              <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="${email}">
+            </div>
+            <div class="col-md-12">
+              <label for="clientDirection" class="form-label">Dirección</label>
+              <input type="text" id="clientDirection" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,140,1)" onblur="cls_general.limitText(this,140,1)" value="${direction}">
+            </div>
+            <div class="col-md-12 col-lg-3">
+              <div class="form-check form-switch pt_35">
+                <input class="form-check-input" type="checkbox" role="switch" id="clientExempt" ${exempt_checked}>
+                <label class="form-check-label" for="clientExempt">Exento</label>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-3">
+              <div class="form-check form-switch pt_35">
+                <input class="form-check-input" type="checkbox" role="switch" id="clientStatus" ${status_checked}>
+                <label class="form-check-label" for="clientStatus">Activo</label>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientTaxpayer" class="form-label">Tipo de Cliente</label>
+              <select id="clientTaxpayer" class="form-select">
+                <option value="102">No Contribuyente</option>
+                <option value="101">Contribuyente</option>
+                <option value="201">Empresa</option>
+                <option value="203">Gobierno</option>
+                <option value="204">Extranjero</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+      var content_bottom = `
+        <div class="row">
+          <div class="col-lg-12 text-center pt-2">
+            <button type="button" class="btn btn-info" onclick="cls_giftcard.index('${client.tx_client_slug}');">Cupones</button>
+            <button type="button" class="btn btn-warning" onclick="cls_general.disable_submit(this); cls_client.delete('${client.tx_client_slug}');">Eliminar Cliente</button>
+            <button type="button" class="btn btn-secondary" onclick="cls_client.render()">Volver</button>
+            <button type="button" class="btn btn-success" onclick="cls_general.disable_submit(this); cls_client.update('${client.tx_client_slug}')">Guardar Cliente</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('container').innerHTML = content + content_bottom;
+      document.getElementById('clientTaxpayer').value = client.tx_client_taxpayer + '' +client.tx_client_type;
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  create(){
+    var content = `
+      <div class="row">
+        <div class="col">
+          <div class="row">
+            <div class="col-sm-12 text-center">
+              <h4>Nuevo Cliente</h4>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label for="clientName" class="form-label">Nombre y Apellido</label>
+              <input type="text" id="clientName" name="" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,120,1)" onblur="cls_general.limitText(this,120,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientCIF" class="form-label">C&eacute;dula/Pasaporte</label>
+              <input type="text" id="clientCIF" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'],'-')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-2">
+              <label for="clientDV" class="form-label">DV</label>
+              <input type="text" id="clientDV" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this,4,1)" onblur="cls_general.limitText(this,4,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-4">
+              <label for="clientTelephone" class="form-label">Teléfono</label>
+              <input type="text" id="clientTelephone" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'],' -')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientEmail" class="form-label">Correo E.</label>
+              <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="">
+            </div>
+            <div class="col-md-12">
+              <label for="clientDirection" class="form-label">Dirección</label>
+              <input type="text" id="clientDirection" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,140,1)" onblur="cls_general.limitText(this,140,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-3">
+              <div class="form-check form-switch pt_35">
+                <input class="form-check-input" type="checkbox" role="switch" id="clientExempt">
+                <label class="form-check-label" for="clientExempt">Exento</label>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-3">
+              <div class="form-check form-switch pt_35">
+                <input class="form-check-input" type="checkbox" role="switch" id="clientStatus" checked>
+                <label class="form-check-label" for="clientStatus">Activo</label>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientTaxpayer" class="form-label">Tipo de Cliente</label>
+              <select id="clientTaxpayer" class="form-select">
+                <option value="102">No Contribuyente</option>
+                <option value="101">Contribuyente</option>
+                <option value="201">Empresa</option>
+                <option value="203">Gobierno</option>
+                <option value="204">Extranjero</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    var content_bottom = `
+        <div class="row">
+          <div class="col-lg-12 text-center pt-2">
+            <button type="button" class="btn btn-secondary" onclick="cls_client.render()">Volver</button>
+            <button type="button" class="btn btn-success" onclick="cls_general.disable_submit(this); cls_client.save()">Guardar Cliente</button>
+          </div>
+        </div>
+      `;
+    document.getElementById('container').innerHTML = content + content_bottom;
+  }
+  save() {
+    var name = cls_general.set_name(document.getElementById('clientName').value);
+    var cif = document.getElementById('clientCIF').value;
+    var dv = document.getElementById('clientDV').value;
+    var telephone = document.getElementById('clientTelephone').value;
+    var email = document.getElementById('clientEmail').value;
+    var direction = document.getElementById('clientDirection').value;
+    var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
+    var taxpayer = document.getElementById('clientTaxpayer').value;
+    var status = (document.getElementById('clientStatus').checked) ? 1 : 0;
+
+    if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(cif) === 0) {
+      cls_general.shot_toast_bs('El campo nombre y C&eacute;dula no pueden estar vac&iacute;os', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (isNaN(dv)) {
+      cls_general.shot_toast_bs('D&iacute;gito verificador deben ser numeros', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (cls_general.is_empty_var(email) === 1 && cls_general.isEmail(email) != true) {
+      cls_general.shot_toast_bs('Verifique el Email', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (taxpayer != "102") {
+      var pattern = /\d/
+      if (cls_general.is_empty_var(dv) === 0) {
+        cls_general.shot_toast_bs('Falta ingresar el DV.', { bg: 'text-bg-warning' });
+        return false;
+      }
+      if (cls_general.is_empty_var(email) === 0) {
+        cls_general.shot_toast_bs('Debe ingresar el Email', { bg: 'text-bg-warning' });
+        return false;
+      }
+    } else {
+      var pattern = /^[1-9]-?\d{2,}-?\d{2,}$/
+    }
+    if (pattern.test(cif) != true) {
+      cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
+      return false;
+    }
+
+    var method = 'POST';
+    var url = '/client/';
+    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_client.render()
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  update(client_slug){
+    var name = cls_general.set_name(document.getElementById('clientName').value);
+    var cif = document.getElementById('clientCIF').value;
+    var dv = document.getElementById('clientDV').value;
+    var telephone = document.getElementById('clientTelephone').value;
+    var email = document.getElementById('clientEmail').value;
+    var direction = document.getElementById('clientDirection').value;
+    var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
+    var taxpayer = document.getElementById('clientTaxpayer').value;
+    var status = (document.getElementById('clientStatus').checked) ? 1 : 0;
+
+    if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(cif) === 0) {
+      cls_general.shot_toast_bs('El campo nombre y C&eacute;dula no pueden estar vac&iacute;os', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (isNaN(dv)) {
+      cls_general.shot_toast_bs('D&iacute;gito verificador deben ser numeros', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (cls_general.is_empty_var(email) === 1 && cls_general.isEmail(email) != true) {
+      cls_general.shot_toast_bs('Verifique el Email', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (taxpayer != "102") {
+      var pattern = /\d/
+      if (cls_general.is_empty_var(dv) === 0) {
+        cls_general.shot_toast_bs('Falta ingresar el DV.', { bg: 'text-bg-warning' });
+        return false;
+      }
+      if (cls_general.is_empty_var(email) === 0) {
+        cls_general.shot_toast_bs('Debe ingresar el Email', { bg: 'text-bg-warning' });
+        return false;
+      }
+    } else {
+      var pattern = /^[1-9]-?\d{2,}-?\d{2,}$/
+    }
+    if (pattern.test(cif) != true) {
+      cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
+      return false;
+    }
+
+    var method = 'PUT';
+    var url = '/client/' + client_slug;
+    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_client.render()
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+  }
+  delete(client_slug){
+    var url = '/client/' + client_slug; var method = 'DELETE';
+    var body = "";
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_client.render()
+        cls_general.shot_toast_bs(obj['message'], { bg: 'text-bg-success' });
+      }else{
+        cls_general.shot_toast_bs(obj['message'], { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+}
+class class_giftcard {
+  constructor(){
+    this.active = [];
+    this.inactive = [];
+  }
+  index(client_slug){
+    var url = '/client/'+client_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_giftcard.active   = [];
+        cls_giftcard.inactive = [];
+
+        obj.data.giftcard.map((giftcard) => {
+          if (giftcard.tx_giftcard_status === 1) {
+            cls_giftcard.active = giftcard;
+          }else{
+            cls_giftcard.inactive = giftcard;
+          }
+        })
+        const modal = new bootstrap.Modal('#giftcardModal', {})
+        modal.show();
+        document.getElementById('new_giftcard').name = obj.data.client.ai_client_id;
+        document.getElementById('container_giftcard_active').innerHTML   = cls_giftcard.generate_active(cls_giftcard.active);
+        document.getElementById('container_giftcard_inactive').innerHTML = cls_giftcard.generate_inactive(cls_giftcard.inactive);
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_active(raw_list){
+    var list = '<div class="list-group">';
+    raw_list.map((el) => {
+      list += `
+        <li class="list-group-item d-flex justify-content-between align-items-center text-bg-secondary">
+          ${el.tx_giftcard_number} (B/ ${el.tx_giftcard_amount})
+          <button class="btn btn-warning" type="button" onclick="cls_giftcard.delete(${el.ai_giftcard_id})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+              <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+            </svg>
+          </button>
+        </li>
+      `;
+    });
+    return list;
+  }
+  generate_inactive(raw_list){
+    var list = '<ul class="list-group">';
+    raw_list.map((el) => {
+      list += `<li class="list-group-item text-bg-secondary">${el.tx_giftcard_number} (B/ ${el.tx_giftcard_amount})</li>`;
+    })
+    list += '</ul>';
+    return list;
+  }
+  create(client_id){
+    const giftcardModal = bootstrap.Modal.getInstance('#giftcardModal');
+    giftcardModal.hide();
+
+    swal({
+      title: "Ingrese el monto del cupón",
+      text: "Se creará una entrada de efectivo.",
+      icon: "warning",
+
+      content: {
+        element: "input",
+        attributes: {
+          placeholder: "B/ ",
+          type: "text",
+        },
+      },
+    })
+      .then((amount) => {
+        if (cls_general.is_empty_var(amount) === 0) {
+          return swal("Debe ingresar un numero.");
+        }
+        if (isNaN(amount)) {
+          return swal("Debe ingresar un numero entero.");
+        }
+
+        var url = '/giftcard/';
+        var method = 'POST';
+        var body = JSON.stringify({a: amount, b: client_id});
+        var funcion = function (obj) {
+          if (obj.status === 'success') {
+            cls_giftcard.active = obj.data.active;
+
+            document.getElementById('container_giftcard_active').innerHTML = cls_giftcard.generate_active(cls_giftcard.active);
+            cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+          } else {
+            cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+          }
+        }
+        cls_general.async_laravel_request(url, method, funcion, body);
+        
+      });
+  }
+}
+
 
 // class class_articlepresentation {
 //   generate_list_saved(saved){

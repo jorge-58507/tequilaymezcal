@@ -71,21 +71,26 @@
                                         <button class="btn btn-primary btn_xl" onclick="window.location='/paydesk'" type="button">Caja</button>
                                     </div>
                                     <div class="col-sm-6 text-center d-grid gap-2">
-                                        <button class="btn btn-primary btn_xl" onclick="window.location='/purchase'" type="button">Compras</button>
+                                        <button class="btn btn-primary btn_xl" onclick="window.location='/kitchen'" type="button">Cocina</button>
                                     </div>
                                 </div>
                                 <div class="row py-3">
+                                    <div class="col-sm-6 text-center d-grid gap-2">
+                                        <button class="btn btn-primary btn_xl" onclick="window.location='/purchase'" type="button">Compras</button>
+                                    </div>
                                     <div class="col-sm-6 text-center d-grid gap-2">
                                         <button class="btn btn-primary btn_xl" onclick="window.location='/stock'" type="button">Inventario</button>
                                     </div>
-                                    <div class="col-sm-6 text-center d-grid gap-2">
-                                        <button class="btn btn-primary btn_xl" onclick="window.location='/report'" type="button">Reportes</button>
-                                    </div>
                                 </div>
                                 <div class="row py-3">
                                     <div class="col-sm-6 text-center d-grid gap-2">
+                                        <button class="btn btn-primary btn_xl" onclick="window.location='/report'" type="button">Reportes</button>
+                                    </div>
+                                    <div class="col-sm-6 text-center d-grid gap-2">
                                         <button class="btn btn-primary btn_xl" onclick="window.location='/configuration'" type="button">Opciones</button>
                                     </div>
+                                </div>
+                                <div class="row py-3">
                                     <div class="col-sm-6 text-center d-grid gap-2">
                                         <button class="btn btn-primary btn_xl" onclick="document.getElementById('form_logout').submit()" type="button">Salir</button>
                                     </div>
@@ -106,6 +111,19 @@
         <script src="{{ asset('attached/js/jquery.js') }}"></script>
         <script src="{{ asset('attached/js/validCampoFranz.js') }}"></script>
         <script src="{{ asset('attached/js/mp.js') }}"></script>
+
+        <script src="{{ asset('attached/js/jquery-ui.min_edit.js')}}"></script>
+        <link href="{{ asset('attached/dist/css/jquery-ui.css')}}" rel="stylesheet">
+        <!-- keyboard widget css & script -->
+        <link href="{{ asset('attached/dist/css/keyboard.min.css')}}" rel="stylesheet">
+        <script src="{{ asset('attached/dist/js/jquery.keyboard.js')}}"></script>
+
+        <!-- css for the preview keyset extension -->
+        <link href="{{ asset('attached/dist/css/keyboard-previewkeyset.min.css')}}" rel="stylesheet">
+
+        <!-- keyboard optional extensions - include ALL (includes mousewheel) -->
+        <script src="{{ asset('attached/dist/js/jquery.keyboard.extension-all.min.js')}}"></script>
+
         <script type="text/javascript">
             const cls_general = new general_funct();
         </script>

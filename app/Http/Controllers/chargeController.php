@@ -74,9 +74,15 @@ class chargeController extends Controller
         $raw_price = []; //[{PRICE,discount,tax, quantity}]
         foreach ($raw_commanddata as $key => $value) {
             if ($value['tx_commanddata_status'] === 1) {
-                array_push($raw_price,['price' => $value['tx_commanddata_price'],'discount' =>  $value['tx_commanddata_discountrate'],'tax' =>  $value['tx_commanddata_taxrate'],'quantity' =>  $value['tx_commanddata_quantity']]);
+                array_push($raw_price,[
+                    'price' => $value['tx_commanddata_price'],
+                    'discount' =>  $value['tx_commanddata_discountrate'],
+                    'tax' =>  $value['tx_commanddata_taxrate'],
+                    'quantity' =>  $value['tx_commanddata_quantity']
+                ]);
             }
         }
+        
         $price_sale = $this->calculate_sale($raw_price);
         $received = 0;
         foreach ($raw_payment as $key => $payment) {
@@ -146,8 +152,8 @@ class chargeController extends Controller
 
     public function get_cashregister($date,$user){
         // gross_sale la suma de la totalidad de las ventas sin descuentos, 
+        // Venta real: gross_sale - descuento
         // net_sale: gross_sale - descuento -  devolucion - anulado, 
-        // Venta real: netsale + devolucion + anulado
         $rs_charge = tm_charge::join('tm_payments','tm_payments.payment_ai_charge_id','tm_charges.ai_charge_id')->where('charge_ai_user_id',$user['id'])->where('charge_ai_cashregister_id',null)->get();
         $raw_payment = [];
         $gross_sale = 0;
@@ -173,16 +179,16 @@ class chargeController extends Controller
                 }
                 $gross_sale += $charge['tx_payment_amount'];
             }
-            if (in_array($charge['ai_charge_id'],$raw_ffid)) {
+            if (!in_array($charge['ai_charge_id'],$raw_ffid)) {
                 $ttl_discount += $charge['tx_charge_discount'];
                 $nontaxable += $charge['tx_charge_nontaxable'];
                 $taxable += $charge['tx_charge_taxable'];
                 $tax += $charge['tx_charge_tax'];
-            }else{
                 array_push($raw_ffid,$charge['ai_charge_id']);
                 $i++;
             }
         }
+        $gross_sale = $gross_sale+$ttl_discount;
 
         $rs_creditnote = tm_creditnote::where('creditnote_ai_user_id',$user['id'])->where('creditnote_ai_cashregister_id',null)->get();
         $nc_nontaxable=0; 

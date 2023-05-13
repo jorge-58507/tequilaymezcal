@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>Tequila y Mezcal</title>
 
@@ -70,12 +71,15 @@
         <div class="flex-center position-ref full-height">
             <div class="text-center">
                 <div class="title m-b-md tmred_text">
-                    Tequila y Mezcal
+                    <img src="{{ asset('attached/image/logo.png') }}" alt="" height="300">
+                </div>
+                <div class="row">
+                    <div id="container_userlist" class="col-sm-12 py-3"></div>
                 </div>
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="form-group row">
-                        <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('E-Mail Address') }}</label>
+                        <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('Correo E.') }}</label>
                         <div class="col-md-6 mb-3">
                             <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
                             @error('email')
@@ -86,7 +90,7 @@
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="password" class="col-md-4 col-form-label text-md-right">{{ __('Password') }}</label>
+                        <label for="password" class="col-md-4 col-form-label text-md-right">{{ __('Contraseña') }}</label>
                         <div class="col-md-6 mb-3">
                             <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
                             @error('password')
@@ -98,18 +102,58 @@
                     </div>
                     <div class="form-group row mb-0">
                         <div class="col-md-12 text-center">
-                            <button type="submit" class="btn tmgreen_bg">
+                            <button type="submit" id="submit_login" class="btn tmgreen_bg">
                                 {{ __('Ingresar') }}
                             </button>
                         </div>
                     </div>
                 </form>
-
-
             </div>
+            <div id="toast_container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
         </div>
 
+        <script src="{{ asset('attached/js/jquery.js') }}"></script>
         <script src="{{ asset('attached/js/bootstrap.min.js') }}"></script>
+        <script src="{{ asset('attached/js/mp.js') }}"></script>
+        
+        <script src="{{ asset('attached/js/jquery-ui.min_edit.js')}}"></script>
+        <link href="{{ asset('attached/dist/css/jquery-ui.css')}}" rel="stylesheet">
+        <!-- keyboard widget css & script -->
+        <link href="{{ asset('attached/dist/css/keyboard.min.css')}}" rel="stylesheet">
+        <script src="{{ asset('attached/dist/js/jquery.keyboard.js')}}"></script>
+
+        <!-- css for the preview keyset extension -->
+        <link href="{{ asset('attached/dist/css/keyboard-previewkeyset.min.css')}}" rel="stylesheet">
+
+        <!-- keyboard optional extensions - include ALL (includes mousewheel) -->
+        <script src="{{ asset('attached/dist/js/jquery.keyboard.extension-all.min.js')}}"></script>
+
+
+
+        <script type="text/javascript">
+
+            const cls_general = new general_funct();
+            var user_list = JSON.parse('<?php echo json_encode($data['user_list']) ?>');
+            var content = '';
+            user_list.map((user)=> {
+                content += `<button type="button" class="btn btn-primary btn-lg" onclick="login('${user.email}')">${user.name}</button>&nbsp;`;
+            });
+            document.getElementById('container_userlist').innerHTML = content;
+
+            function login (email){
+                document.getElementById('email').value = email;
+                document.getElementById('password').focus();
+            }
+
+            $(function(){
+                $('#password').keyboard();
+            });
+            $('#password').bind('accepted', function (e, keyboard, el) {
+                document.getElementById('submit_login').click();
+            });
+
+        </script>
     </body>
 </html>
 

@@ -89,7 +89,16 @@ class commandController extends Controller
      */
     public function show($id)
     {
-        //
+        $rs_command = tm_command::where('ai_command_id',$id)->first();
+        $rs_request = tm_command::select('tm_commands.ai_command_id','tm_requests.ai_request_id','tm_requests.tx_request_code','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.ai_request_id')
+        ->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')
+        ->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')
+        ->where('ai_command_id',$id)->first();
+        $rs_commanddata = tm_command::select('tm_commands.ai_command_id','tm_commands.created_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')
+        ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')
+        ->where('ai_command_id',$id)->get();
+
+        return response()->json(['status'=>'success','message'=>'','data'=>['info'=>$rs_command, 'request_info'=>$rs_request, 'commanddata'=>$rs_commanddata]]);
     }
     public function getByRequest($request_id)
     {
@@ -155,6 +164,15 @@ class commandController extends Controller
         // ANSWER
         $rs_command = $this->getByRequest($rs_request['ai_request_id']);
         return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command]]);
+    }
+    public function set_ready($id)
+    {
+        tm_command::where('ai_command_id',$id)->update(['tx_command_delivered' => 1]);
+
+        $kitchenController = new kitchenController;
+        $data = $kitchenController->all();
+        return response()->json(['status'=>'success','message'=>'Comanda Preparada.','data'=>$data]);
+
     }
     /**
      * Remove the specified resource from storage.

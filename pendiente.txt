@@ -1,21 +1,26 @@
-AL TERMINAR ACTIVAR LAS RESTRICCINES PARA ELIMINAR PRODUCTO productController->Destroy Y LOS MODELOS {tm_dataproductoutput, tm_datarequisition, tm_dataproductinput, tm_dataproductinputdevolution}
-AL TERMINAR ACTIVAR LAS RESTRICCINES PARA ELIMINAR ARTICLE articleController->Destroy Y LOS MODELOS { tm_commanddata, tm_price, rel_article_presentation}
-
-los botones de las comandas para reimprimir/anular la impresion de la anulacion de la comanda
-
-
+AL TERMINAR ACTIVAR LAS RESTRICCINES PARA ELIMINAR PRODUCTO productController->Destroy Y LOS MODELOS {tm_dataproductoutput, tm_dataproductinputdevolution}
 
 caja menuda, imprimir la hoja laravel dompdf 
-las funciones para inventario
-incluir giftcard
+
+ 
+incluir giftcard <-- esto hacerlo desde la interfaz opciones, crear boton llamado clientes, desde el cual se puede hacer CRUD a clientes y la giftcard, se regirá por un codigo utilizable por cualquiera
+
+
 las salidas de caja menuda van aparte
+FUNCIONES PÀRA LAS COMPRAS, CREA LAS BD Y EL CONTROLLER DE AHI EMPIEZA
+al hacer nc solo poder anular cuaquiera excepto el excepto la tarjeta debito o multipagos, y al hacer NC normal hacer salida en efectivo y reingresar como efectivo
 el cierre de caja
-conseguir la informacion de los campos que faltan
-
-
-
-
 merma restar d inventario
 as funciones para merma si el usuario es super que parezca un boton de aprobar a cada uno de los procesados y un botno de aprobar todos
 
+
+
         // "php": "^7.2",
+        "fzaninotto/faker": "^1.4",
+
+
+        3.55*17 = 60.45
+        pegamento 42.99
+        cewmento        14
+
+
