@@ -8,6 +8,7 @@ use App\tm_charge;
 use App\tm_creditnote;
 use App\tm_cashoutput;
 use App\tm_payment;
+use App\tm_giftcard;
 
 class cashregisterController extends Controller
 {
@@ -43,9 +44,10 @@ class cashregisterController extends Controller
         $user = auth()->user();
         $cashregister = $chargeController->get_cashregister(date('Y-m-d'),$user);
 
-        if (empty($cashregister['quantitydoc']) && empty($cashregister['returnquantitydoc'])) {
+        if (empty($cashregister['quantitydoc']) && empty($cashregister['returnquantitydoc']) && sizeof($cashregister['giftcard']) === 0) {
             return response()->json(['status'=>'failed','message'=>'No hay documentos.']);
         }
+            // return response()->json(['status'=>'failed','message'=>'No.', 'lala'=>$cashregister['giftcard']]);
 
         $tm_cashregister = new tm_cashregister;
         $tm_cashregister->cashregister_ai_user_id = $user['id'];
@@ -72,7 +74,7 @@ class cashregisterController extends Controller
         tm_charge::where('charge_ai_user_id',$user['id'])->where('charge_ai_cashregister_id',null)->update(['charge_ai_cashregister_id' => $cashregister_id]);
         tm_creditnote::where('creditnote_ai_user_id',$user['id'])->where('creditnote_ai_cashregister_id',null)->update(['creditnote_ai_cashregister_id' => $cashregister_id]);
         tm_cashoutput::where('cashoutput_ai_user_id',$user['id'])->where('cashoutput_ai_cashregister_id',null)->update(['cashoutput_ai_cashregister_id' => $cashregister_id]);
-
+        tm_giftcard::where('giftcard_ai_user_id',$user['id'])->where('giftcard_ai_cashregister_id',null)->update(['giftcard_ai_cashregister_id' => $cashregister_id]);
 
         // ANSWER
         $rs_cashregister = $this->get_by_date(date('Y-m-d'));
@@ -93,44 +95,9 @@ class cashregisterController extends Controller
 
     public function show($cashregister_id)
     {
-        // $rs_cashregister = tm_cashregister::where('ai_cashregister_id',$cashregister_id)->first();
-
-        // $rs_charge = tm_charge::join('tm_payments','tm_payments.payment_ai_charge_id','tm_charges.ai_charge_id')->where('charge_ai_cashregister_id',$cashregister_id)->get();
-        // $raw_payment = [];
-        // foreach ($rs_charge as $charge) {
-        //     if ($charge['payment_ai_paymentmethod_id'] === 1) {
-        //         if (empty($raw_payment[$charge['payment_ai_paymentmethod_id']])) {
-        //             $raw_payment[$charge['payment_ai_paymentmethod_id']] = $charge['tx_payment_amount'] - $charge['tx_charge_change'];
-        //         }else{
-        //             $raw_payment[$charge['payment_ai_paymentmethod_id']] += $charge['tx_payment_amount'] - $charge['tx_charge_change'];
-        //         }
-        //     }else{
-        //         if (empty($raw_payment[$charge['payment_ai_paymentmethod_id']])) {
-        //             $raw_payment[$charge['payment_ai_paymentmethod_id']] = $charge['tx_payment_amount'];
-        //         }else{
-        //             $raw_payment[$charge['payment_ai_paymentmethod_id']] += $charge['tx_payment_amount'];
-        //         }
-        //     }
-        // }
-
-        // $rs_creditnote = tm_creditnote::where('creditnote_ai_cashregister_id',$cashregister_id)->get();
-        // $raw_canceled = [];
-        // foreach ($rs_creditnote as $creditnote) {
-        //     if ($creditnote['tx_creditnote_nullification'] === 1) {
-        //         $rs_payment = tm_payment::where('payment_ai_charge_id',$creditnote['creditnote_ai_charge_id'])->get();
-        //         foreach ($rs_payment as $payment) {
-        //             if (empty($raw_canceled[$payment['payment_ai_paymentmethod_id']])) {
-        //                 $raw_canceled[$payment['payment_ai_paymentmethod_id']] = $payment['tx_payment_amount'];
-        //             }else{
-        //                 $raw_canceled[$payment['payment_ai_paymentmethod_id']] += $payment['tx_payment_amount'];
-        //             }
-        //         }
-        //     }
-        // }
         $data = $this->getit($cashregister_id);
 
         return response()->json(['status'=>'success','message'=>'','data'=>$data]);
-        // return response()->json(['status'=>'success','message'=>'','data'=>['cashregister'=>$rs_cashregister, 'payment'=>$raw_payment, 'canceled'=>$raw_canceled]]);
     }
 
     public function getit($cashregister_id)
@@ -170,8 +137,9 @@ class cashregisterController extends Controller
             }
         }
 
+        $rs_giftcard = tm_giftcard::where('giftcard_ai_cashregister_id',$cashregister_id)->get();
 
-        return ['cashregister'=>$rs_cashregister, 'payment'=>$raw_payment, 'canceled'=>$raw_canceled];
+        return ['cashregister'=>$rs_cashregister, 'payment'=>$raw_payment, 'canceled'=>$raw_canceled, 'giftcard'=>$rs_giftcard];
     }
     public function filter($date)
     {

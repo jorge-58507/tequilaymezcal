@@ -2057,104 +2057,251 @@ class class_client {
     cls_general.async_laravel_request(url, method, funcion, body);
   }
 }
-class class_giftcard {
-  constructor(){
-    this.active = [];
-    this.inactive = [];
+
+// class class_giftcard {
+//   constructor(){
+//     this.active = [];
+//     this.inactive = [];
+//   }
+//   index(client_slug){
+//     var url = '/client/'+client_slug;
+//     var method = 'GET';
+//     var body = '';
+//     var funcion = function (obj) {
+//       if (obj.status === 'success') {
+//         cls_giftcard.active   = [];
+//         cls_giftcard.inactive = [];
+
+//         document.getElementById('giftcardModal_content').innerHTML = `
+//           <div class="row">
+//             <div class="col-md-12 col-lg-6">
+//               <div class="row">
+//                 <h5>Cupones Activos</h5>
+//                 <div id="container_giftcard_active" class="col-sm-12 h_300">
+//                 </div>
+//               </div>
+//             </div>
+//             <div class="col-md-12 col-lg-6">
+//               <div class="row">
+//                 <h5>Cupones Inactivos</h5>
+//                 <div id="container_giftcard_inactive" class="col-sm-12 h_100">
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         `;
+//         document.getElementById('giftcardModal_footer').innerHTML = `
+//           <button type="button" class="btn btn-success" id="new_giftcard" name="" onclick="cls_giftcard.create(${client_slug})">Crear Cup&oacute;n</button>
+//           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+//         `;
+//         obj.data.giftcard.map((giftcard) => {
+//           if (giftcard.tx_giftcard_status === 1) {
+//             cls_giftcard.active.push(giftcard);
+//           }else{
+//             cls_giftcard.inactive.push(giftcard);
+//           }
+//         })
+//         const modal = new bootstrap.Modal('#giftcardModal', {})
+//         modal.show();
+
+//         document.getElementById('new_giftcard').name = obj.data.client.ai_client_id;
+//         document.getElementById('container_giftcard_active').innerHTML   = cls_giftcard.generate_active(cls_giftcard.active);
+//         document.getElementById('container_giftcard_inactive').innerHTML = cls_giftcard.generate_inactive(cls_giftcard.inactive);
+
+//       } else {
+//         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+//       }
+//     }
+//     cls_general.async_laravel_request(url, method, funcion, body);
+//   }
+//   generate_active(raw_list){
+//     var list = '<div class="list-group">';
+//     raw_list.map((el) => {
+//       list += `
+//         <li class="list-group-item d-flex justify-content-between align-items-center">
+//           ${el.tx_giftcard_number} (B/ ${el.tx_giftcard_amount})
+//           <button class="btn btn-warning" type="button" onclick="cls_giftcard.delete(${el.ai_giftcard_id})">
+//             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+//               <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+//             </svg>
+//           </button>
+//         </li>
+//       `;
+//     });
+//     return list;
+//   }
+//   generate_inactive(raw_list){
+//     var list = '<ul class="list-group">';
+//     raw_list.map((el) => {
+//       list += `<li class="list-group-item text-bg-secondary">${el.tx_giftcard_number} (B/ ${el.tx_giftcard_amount})</li>`;
+//     })
+//     list += '</ul>';
+//     return list;
+//   }
+//   create(client_slug){
+//     var paymentmethod = ``;
+//     cls_payment.payment_method.map((method) => {
+//       paymentmethod += `
+//         <div class="col-md-6 col-lg-3 d-grid gap-2 pb-4">
+//           <button type="button" class="btn btn-info h_50" onclick="cls_payment.add(${method.ai_paymentmethod_id})">${method.tx_paymentmethod_value}</button>
+//         </div>
+//       `;
+//     })
+//     document.getElementById('giftcardModal_content').innerHTML = `
+//       <div class="row">
+//         <div class="col-sm-6 pb-2">
+//           <label class="form-label" for="paymentNumber">Numero</label>
+//           <input type="text" id="paymentNumber" class="form-control ui-keyboard-input ui-widget-content ui-corner-all" onfocus="cls_general.validFranz(this.id,['number','word'],',.-()')" value="" aria-haspopup="true" role="textbox">
+//         </div>
+//         <div class="col-sm-6 pb-2">
+//           <label class="form-label" for="paymentAmount">Monto</label>
+//           <input type="text" id="paymentAmount" class="form-control ui-keyboard-input ui-widget-content ui-corner-all" onfocus="cls_general.validFranz(this.id,['number'],'.')" value="" aria-haspopup="true" role="textbox">
+//         </div>
+//         <div class="col-sm-12 p-1">
+//           <div id="container_paymentMethod" class="row v_scrollable" style="height: 20vh">
+//             ${paymentmethod}
+//           </div>
+//         </div>
+//         <div class="col-sm-12 bs_1 border_gray radius_10">
+//           <div id="container_payment" class="row radius_10" style="height: 30vh">
+//           </div>
+//         </div>
+//       </div>
+//     `;
+
+//     document.getElementById('giftcardModal_footer').innerHTML = `
+//       <button type="button" id="btn_paymentProcess" class="btn btn-success btn-lg display_none" onclick="cls_general.disable_submit(this,1); cls_giftcard.save('${client_slug}')">Procesar</button>
+//       &nbsp;
+//       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+//     `;
+//   }
+//   save(client_slug){
+//     var raw_payment = cls_payment.payment;
+//     let received = 0
+//     raw_payment.map((payment) => { received += payment.amount; });
+//     received = parseFloat(received);
+//     if (received < 0.25) {
+//       cls_general.shot_toast_bs('Debe ingresar un monto superior a 0.25', { bg: 'text-bg-warning' });
+//       return false;
+//     }
+//     var url = '/giftcard/';
+//     var method = 'POST';
+//     var body = JSON.stringify({ a: client_slug, b: raw_payment });
+//     var funcion = function (obj) {
+//       if (obj.status === 'success') {
+//         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+//         cls_payment.payment = [];
+
+//         const ubicationModal = bootstrap.Modal.getInstance('#giftcardModal');
+//         ubicationModal.hide();
+
+//         cls_giftcard.index(client_slug);
+//       } else {
+//         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+//       }
+//     }
+//     cls_general.async_laravel_request(url, method, funcion, body);
+
+    
+//   }
+//   delete(giftcard_id){
+//     var url = '/giftcard/' + giftcard_id;
+//     var method = 'DELETE';
+//     var body = '';
+//     var funcion = function (obj) {
+//       if (obj.status === 'success') {
+//         cls_giftcard.active = obj.data.active;
+//         cls_giftcard.inactive = obj.data.inactive;
+
+//         document.getElementById('container_giftcard_active').innerHTML    = cls_giftcard.generate_active(cls_giftcard.active);
+//         document.getElementById('container_giftcard_inactive').innerHTML  = cls_giftcard.generate_inactive(cls_giftcard.inactive);
+
+//         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+//       } else {
+//         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+//       }
+//     }
+//     cls_general.async_laravel_request(url, method, funcion, body);
+//   }
+// }
+
+class class_payment {
+  constructor(method) {
+    this.payment_method = method;
+    this.payment = [];
   }
-  index(client_slug){
-    var url = '/client/'+client_slug;
-    var method = 'GET';
-    var body = '';
-    var funcion = function (obj) {
-      if (obj.status === 'success') {
-        cls_giftcard.active   = [];
-        cls_giftcard.inactive = [];
+  add(method) {
+    let number = document.getElementById('paymentNumber').value;
+    let amount = parseFloat(document.getElementById('paymentAmount').value);
 
-        obj.data.giftcard.map((giftcard) => {
-          if (giftcard.tx_giftcard_status === 1) {
-            cls_giftcard.active = giftcard;
-          }else{
-            cls_giftcard.inactive = giftcard;
-          }
-        })
-        const modal = new bootstrap.Modal('#giftcardModal', {})
-        modal.show();
-        document.getElementById('new_giftcard').name = obj.data.client.ai_client_id;
-        document.getElementById('container_giftcard_active').innerHTML   = cls_giftcard.generate_active(cls_giftcard.active);
-        document.getElementById('container_giftcard_inactive').innerHTML = cls_giftcard.generate_inactive(cls_giftcard.inactive);
-
-      } else {
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-      }
+    var check_method = cls_payment.payment_method.find((pmethod) => { return pmethod.ai_paymentmethod_id === method })
+    if (cls_general.is_empty_var(amount) === 0) {
+      cls_general.shot_toast_bs('Ingrese el monto.', { bg: 'text-bg-warning' }); return false;
     }
-    cls_general.async_laravel_request(url, method, funcion, body);
+    if (cls_general.is_empty_var(check_method) === 0) {
+      cls_general.shot_toast_bs('M&eacute;todo erroneo.', { bg: 'text-bg-warning' }); return false;
+    }
+    if (isNaN(amount)) {
+      cls_general.shot_toast_bs('Monto erroneo.', { bg: 'text-bg-warning' }); return false;
+    }    
+    var taked_id = []; var taked_amount = 0;
+    cls_payment.payment.map((pay, index) => { if (pay.method_id === method) { taked_id.push(index); taked_amount = parseFloat(pay.amount) } })
+    if (taked_id.length > 0) {
+      cls_payment.payment.splice(taked_id, 1, { method_id: method, method_name: check_method.tx_paymentmethod_value, number: number, amount: parseFloat(amount) + taked_amount })
+    } else {
+      cls_payment.payment.push({ method_id: method, method_name: check_method.tx_paymentmethod_value, number: number, amount: amount });
+    }
+    cls_payment.render();
   }
-  generate_active(raw_list){
-    var list = '<div class="list-group">';
-    raw_list.map((el) => {
-      list += `
-        <li class="list-group-item d-flex justify-content-between align-items-center text-bg-secondary">
-          ${el.tx_giftcard_number} (B/ ${el.tx_giftcard_amount})
-          <button class="btn btn-warning" type="button" onclick="cls_giftcard.delete(${el.ai_giftcard_id})">
+  render() {
+    let content_payment = cls_payment.generate_payment_list(cls_payment.payment);
+    if (cls_payment.payment.length > 0) {
+      document.getElementById('btn_paymentProcess').classList.remove('display_none');
+    } else {
+      document.getElementById('btn_paymentProcess').classList.add('display_none');
+    }
+    document.getElementById('container_payment').innerHTML = content_payment;
+    document.getElementById('paymentAmount').value = '';
+    document.getElementById('paymentAmount').focus();
+    document.getElementById('paymentNumber').value = '';
+  }
+  generate_payment_list(raw_payment) {
+    var payment_list = '';
+    let received = 0;
+    raw_payment.map((payment, index) => {
+      var number = (cls_general.is_empty_var(payment.number) === 0) ? '' : '(' + payment.number + ')';
+      payment_list += `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          ${cls_general.val_price(payment.amount, 2, 1, 1)} ${number} ${payment.method_name}
+          <button class="btn btn-warning" type="button" onclick="cls_payment.erase(${index})">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
               <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
             </svg>
           </button>
         </li>
-      `;
-    });
-    return list;
-  }
-  generate_inactive(raw_list){
-    var list = '<ul class="list-group">';
-    raw_list.map((el) => {
-      list += `<li class="list-group-item text-bg-secondary">${el.tx_giftcard_number} (B/ ${el.tx_giftcard_amount})</li>`;
+      `
+      received += parseFloat(payment.amount);
     })
-    list += '</ul>';
-    return list;
+    var content = `
+      <div class="col-sm-4">
+        <div class="row border-end mhp_100">
+          <div class="col-sm-12 text-success bs_1 border_gray">
+            <span class="font_bolder">Recibido</span><br/>
+            <span class="fs_20">B/ ${cls_general.val_price(received, 2, 1, 1)}</span>
+          </div>
+        </div>
+      </div >
+      <div class="col-sm-8 v_scrollable mhp_100">
+        <ul class="list-group list-group-flush list-group-numbered">
+          ${payment_list}
+        </ul>
+      </div>
+    `;
+    return content;
   }
-  create(client_id){
-    const giftcardModal = bootstrap.Modal.getInstance('#giftcardModal');
-    giftcardModal.hide();
-
-    swal({
-      title: "Ingrese el monto del cupón",
-      text: "Se creará una entrada de efectivo.",
-      icon: "warning",
-
-      content: {
-        element: "input",
-        attributes: {
-          placeholder: "B/ ",
-          type: "text",
-        },
-      },
-    })
-      .then((amount) => {
-        if (cls_general.is_empty_var(amount) === 0) {
-          return swal("Debe ingresar un numero.");
-        }
-        if (isNaN(amount)) {
-          return swal("Debe ingresar un numero entero.");
-        }
-
-        var url = '/giftcard/';
-        var method = 'POST';
-        var body = JSON.stringify({a: amount, b: client_id});
-        var funcion = function (obj) {
-          if (obj.status === 'success') {
-            cls_giftcard.active = obj.data.active;
-
-            document.getElementById('container_giftcard_active').innerHTML = cls_giftcard.generate_active(cls_giftcard.active);
-            cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-          } else {
-            cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-          }
-        }
-        cls_general.async_laravel_request(url, method, funcion, body);
-        
-      });
+  erase(i) {
+    cls_payment.payment.splice(i, 1);
+    cls_payment.render();
   }
 }
 

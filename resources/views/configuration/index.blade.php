@@ -101,40 +101,6 @@
     </div>
   </div>
 
-  <!-- Modal GIFTCARD -->
-  <div class="modal fade" id="giftcardModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="giftcardModal_title">Cupones</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div id="giftcardModal_content" class="modal-body">
-          <div class="row">
-            <div class="col-md-12 col-lg-6">
-              <div class="row">
-                <h5>Cupones Activos</h5>
-                <div id="container_giftcard_active" class="col-sm-12 h_100">
-                </div>
-              </div>
-            </div>
-            <div class="col-md-12 col-lg-6">
-              <div class="row">
-                <h5>Cupones Inactivos</h5>
-                <div id="container_giftcard_inactive" class="col-sm-12 h_100">
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id="giftcardModal_footer" class="modal-footer">
-          <button type="button" class="btn btn-success" id="new_giftcard" name="" onclick="cls_giftcard.create(this.name)">Crear Cup&oacute;n</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="row">
     <div class="col-xs-12 col-md-3">
       <div class="row">
@@ -196,6 +162,8 @@
     const cls_presentation = new class_presentation(raw_presentation);
     const cls_client = new class_client;
     const cls_giftcard = new class_giftcard;
+    var raw_paymentmethod = JSON.parse('<?php echo json_encode($data['paymentmethod_list']) ?>')    
+    const cls_payment = new class_payment(raw_paymentmethod);
 
   </script>
     {{-- ##############    JQUERY   ############### --}}

@@ -272,6 +272,20 @@ class printController extends Controller
 		$incomeCoupon = (empty($rs_cashregister['payment'][7])) 	? 0 : $rs_cashregister['payment'][7];
 		$returnCoupon = (empty($rs_cashregister['canceled'][7])) ? 0 : $rs_cashregister['canceled'][7];
 
+		$total_giftcard = ['active' => 0, 'inactive' => 0];
+		foreach ($rs_cashregister['giftcard'] as $giftcard) {
+			$ttl_giftcard = 0;
+			$giftcard_payment = json_decode($giftcard['tx_giftcard_payment'],true);
+			foreach ($giftcard_payment as $key => $gcp) {
+				$ttl_giftcard += $gcp['amount'];
+			}
+			if ($giftcard['tx_giftcard_status'] === 0) {
+				$total_giftcard['inactive'] += $ttl_giftcard;
+			}else{
+				$total_giftcard['active'] += $ttl_giftcard;
+			}
+		}
+
 		$content = '
 
 			<div class="row">
@@ -333,6 +347,27 @@ class printController extends Controller
 							</tr>
 						</tbody>
 					</table>
+
+					<table class="table table-bordered">
+						<thead>
+							<tr class="table-success text-center">
+								<th colspan="4">Venta de Cupones</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<th>Activos</th>
+								<td>'.number_format($total_giftcard['active'], 2).'</td>
+								<td colspan="2"></td>
+							</tr>
+							<tr>
+								<th>Inactivos</th>
+								<td>'.number_format($total_giftcard['inactive'], 2).'</td>
+								<td colspan="2"></td>
+							</tr>
+						</tbody>
+					</table>
+
 				</div>
 				<div class="col-md-12 col-lg-6">
 					<table class="table table-bordered">

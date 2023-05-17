@@ -180,6 +180,7 @@ class class_charge{
         </button>
         <ul class="dropdown-menu fs_30">
           <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashoutput.openmodal();" >Caja Menuda</a></li>
+          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_client.index();"       >Clientes</a></li>
           <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashregister.create();"  >Cierre de Caja</a></li>
         </ul>
       </div>
@@ -287,9 +288,16 @@ class class_charge{
         </div>
       </div>
     </div>`;
+    
     document.getElementById('container_request').innerHTML = content;
+    cls_request.render('open', cls_request.open_request.slice(0, 10));
+    cls_request.render('closed', cls_request.closed_request.slice(0, 10));
+    cls_request.render('canceled', cls_charge.charge_list.slice(0, 10));
   }
   show(request_slug){
+    document.getElementById('giftcardModal_content').innerHTML = '';
+    document.getElementById('giftcardModal_footer').innerHTML = '';
+    cls_payment.payment = [];    
     var url = '/command/' + request_slug + '/byrequest';
     var method = 'GET';
     var body = '';
@@ -350,7 +358,7 @@ class class_charge{
             </div>
           </div>
           <div class="col-sm-12 text-center pt-1">
-            <button type="button" class="btn btn-secondary btn-lg" onclick="window.location.reload()">Volver</button>
+            <button type="button" class="btn btn-secondary btn-lg" onclick="cls_charge.index()">Volver</button>
             &nbsp;
             <button type="button" id="btn_paymentProcess" class="btn btn-success btn-lg display_none">Procesar</button>
           </div>
@@ -586,7 +594,11 @@ class class_paymentmethod{
     this.paymentmethod = raw_paymentmethod;
   }
   render(){
-    document.getElementById('container_paymentMethod').innerHTML = cls_paymentmethod.generate_paymentbutton(cls_paymentmethod.paymentmethod);
+    document.getElementById('container_paymentMethod').innerHTML = cls_paymentmethod.generate_paymentbutton(cls_paymentmethod.paymentmethod) + `
+      <div class="col-md-6 col-lg-3 d-grid gap-2 pb-4">
+        <button type="button" class="btn btn-secondary h_90" onclick="cls_giftcard.select_giftcard()">Cup&oacute;n</button>
+      </div>    
+    `;
   }
   generate_paymentbutton(paymentmethod){
     var content = '';
@@ -603,23 +615,49 @@ class class_paymentmethod{
 class class_payment{
   constructor(){
     this.payment = [];
+    this.giftcard = [];
+  }
+  add_giftcard(giftcard, amount){
+    if (cls_general.is_empty_var(amount) === 0) {  //VERIFICA QUE EL MONTO INGRESADO NO ESTE VACIO
+      cls_general.shot_toast_bs('Ingrese el monto.', { bg: 'text-bg-warning' }); return false;
+    }
+    if (isNaN(amount)) {  //VERIFICA EL MONTO INGRESADO ES UN NUMERO
+      cls_general.shot_toast_bs('Monto erroneo.', { bg: 'text-bg-warning' }); return false;
+    }
+    var received = 0;
+    cls_payment.payment.map((pay) => { received += parseFloat(pay.amount) })
+    cls_payment.giftcard.map((pay) => { received += parseFloat(pay.amount) })
+    var total = cls_general.val_dec(cls_charge.charge_request.total, 2, 1, 1);
+    total = parseFloat(total);
+    if (total <= received) {
+      cls_general.shot_toast_bs('Ya se complet&oacute; el pago.', { bg: 'text-bg-warning' }); return false;
+    } else {
+      if ((received + amount) > total) {
+        cls_general.shot_toast_bs('M&eacute;todo de pago, no admite cambio.', { bg: 'text-bg-warning' }); return false;
+      }
+    }
+    cls_payment.giftcard.push({ giftcard_id: giftcard.ai_giftcard_id, giftcard_number: giftcard.tx_giftcard_number, method_name: "Cupon", amount: amount });
+    
+    cls_payment.render();
+    // LAS GIFTCARD SE AGREGAN AL ARRAY DE PAYMENT Y SE MUESTRA EN LA LISTA, AL PASAR A PROCESAR BAJAR LOS MONTOS DE CADA GIFTCARD
   }
   add(method){
     let number = document.getElementById('paymentNumber').value;
     let amount = parseFloat(document.getElementById('paymentAmount').value);
 
     var check_method = cls_paymentmethod.paymentmethod.find((pmethod) => { return pmethod.ai_paymentmethod_id === method })
-    if (cls_general.is_empty_var(amount) === 0 ) {
+    if (cls_general.is_empty_var(amount) === 0 ) {  //VERIFICA QUE EL MONTO INGRESADO NO ESTE VACIO
       cls_general.shot_toast_bs('Ingrese el monto.', { bg: 'text-bg-warning' }); return false;
     }
-    if (cls_general.is_empty_var(check_method) === 0) {
+    if (cls_general.is_empty_var(check_method) === 0) { //VERIFICA QUE EL METODO INGRESADO EXISTA
       cls_general.shot_toast_bs('M&eacute;todo erroneo.', { bg: 'text-bg-warning' }); return false;
     }
-    if (isNaN(amount)) {
+    if (isNaN(amount)) {  //VERIFICA EL MONTO INGRESADO ES UN NUMERO
       cls_general.shot_toast_bs('Monto erroneo.', { bg: 'text-bg-warning' }); return false;
     }
     var received = 0;
-    cls_payment.payment.map((pay) => { received += parseFloat(pay.amount)  })
+    cls_payment.payment.map((pay) => { received += parseFloat(pay.amount) })
+    cls_payment.giftcard.map((pay) => { received += parseFloat(pay.amount) })
     var total = cls_general.val_dec(cls_charge.charge_request.total,2,1,1);
     total = parseFloat(total);
     if (total <= received) {
@@ -641,8 +679,8 @@ class class_payment{
     cls_payment.render();
   }
   render(){
-    let content_payment = cls_payment.generate_payment_list(cls_payment.payment);
-    if (cls_payment.payment.length > 0) {
+    let content_payment = cls_payment.generate_payment_list(cls_payment.payment, cls_payment.giftcard);
+    if (cls_payment.payment.length > 0 || cls_payment.giftcard.length > 0) {
       document.getElementById('btn_paymentProcess').classList.remove('display_none');
     } else {
       document.getElementById('btn_paymentProcess').classList.add('display_none');
@@ -652,7 +690,7 @@ class class_payment{
     document.getElementById('paymentAmount').focus();
     document.getElementById('paymentNumber').value = '';
   }
-  generate_payment_list(raw_payment){
+  generate_payment_list(raw_payment,raw_giftcard){
     var payment_list = '';
     let received = 0;
     raw_payment.map((payment,index)=>{
@@ -669,6 +707,22 @@ class class_payment{
       `
       received += parseFloat(payment.amount);
     })
+
+    raw_giftcard.map((giftcard, index) => {
+      var number = (cls_general.is_empty_var(giftcard.giftcard_number) === 0) ? '' : '(' + giftcard.giftcard_number + ')';
+      payment_list += `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          ${cls_general.val_price(giftcard.amount, 2, 1, 1)} ${number} ${giftcard.method_name}
+          <button class="btn btn-warning" type="button" onclick="cls_payment.erase_giftcard(${index})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+              <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+            </svg>
+          </button>
+        </li>
+      `
+      received += parseFloat(giftcard.amount);
+    })
+
     if (parseFloat(cls_charge.charge_request.total) > received) {
       var diference = (parseFloat(cls_charge.charge_request.total) - parseFloat(received)).toFixed(2);
       var change = 0;
@@ -710,22 +764,28 @@ class class_payment{
     cls_payment.payment.splice(i, 1);
     cls_payment.render();
   }
+  erase_giftcard(i) {
+    cls_payment.giftcard.splice(i, 1);
+    cls_payment.render();
+  }
   process(btn,request_slug){
     cls_general.disable_submit(btn)
     var raw_payment = cls_payment.payment;
     let received = 0
     raw_payment.map((payment) => { received += payment.amount; });
+    cls_payment.giftcard.map((payment) => { received += payment.amount; });
     let total_request = parseFloat(cls_charge.charge_request.total);
     if (total_request > received) {
       cls_general.shot_toast_bs('Aun existe diferencia.',{bg: 'text-bg-warning'}); return false;
     }
     var url = '/paydesk/';
     var method = 'POST';
-    var body = JSON.stringify({ a: request_slug, b: raw_payment });
+    var body = JSON.stringify({ a: request_slug, b: raw_payment, c: cls_payment.giftcard });
     var funcion = function (obj) {
       if (obj.status === 'success') {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
         cls_payment.payment = [];
+        cls_payment.giftcard = [];
         window.location.reload();
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
@@ -745,7 +805,6 @@ class class_creditnote{
     var article_charge = cls_creditnote.generate_articlecharge(raw_article);
     var creditnote_list = cls_creditnote.generate_creditnote(raw_creditnote);
     var check_methoddebit = payment.find((pay) => { return pay.payment_ai_paymentmethod_id === 3 })
-    console.log(check_methoddebit);
     var btn_nullify = (raw_creditnote.length === 0 && payment.length === 1 && check_methoddebit === undefined) ? `<button type="button" id="btn_creditnoteNullify" class="btn btn-danger btn-lg" onclick="cls_creditnote.nullify('${charge_slug}')">Anular</button>` : '';
 
     var content = `
@@ -1170,6 +1229,23 @@ class class_cashregister{
         document.getElementById('span_incomeAnother').innerHTML     = 'B/ ' + cls_general.val_price(incomeAnother, 2, 1, 1);
         document.getElementById('span_returnAnother').innerHTML     = 'B/ ' + cls_general.val_price(returnAnother, 2, 1, 1);
         
+        var total_giftcardinactive = 0;
+        var total_giftcardactive = 0;
+        obj.data.cashregister.giftcard.map((giftcard) => {
+          var giftcard_payment = JSON.parse(giftcard.tx_giftcard_payment);
+          var ttl_giftcard = 0;
+          giftcard_payment.map((gp) => {  ttl_giftcard += gp.amount  })
+          if (giftcard.tx_giftcard_status === 0) {
+            total_giftcardinactive += ttl_giftcard;
+          }else{
+            total_giftcardactive += ttl_giftcard;
+          }
+        })
+        var activeGiftcard = (cls_general.is_empty_var(total_giftcardactive) === 0) ? 0 : total_giftcardactive;
+        var inactiveGiftcard = (cls_general.is_empty_var(total_giftcardinactive) === 0) ? 0 : total_giftcardinactive;
+        document.getElementById('span_giftcardactive').innerHTML    = '<p>Cupones Activos</p>B/ ' + cls_general.val_price(activeGiftcard, 2, 1, 1);
+        document.getElementById('span_giftcardinactive').innerHTML  = '<p>Cupones inactivos</p>B/ ' + cls_general.val_price(inactiveGiftcard, 2, 1, 1);
+
         document.getElementById('span_totaldiscount').innerHTML   = 'B/ ' + cls_general.val_price(obj.data.cashregister.discount, 2, 1, 1);
         document.getElementById('span_totalnull').innerHTML       = 'B/ ' + cls_general.val_price(obj.data.cashregister.canceled, 2, 1, 1);
         document.getElementById('span_totalcashback').innerHTML   = 'B/ ' + cls_general.val_price(obj.data.cashregister.cashback, 2, 1, 1);
@@ -1242,7 +1318,7 @@ class class_cashregister{
   }
   print(cashregister_id){
   }
-  generate_inspectedCR(cashregister,payment,canceled){
+  generate_inspectedCR(cashregister,payment,canceled,giftcard){
     var title = 'Arqueo del '+cls_general.datetime_converter(cashregister.created_at)+' a las '+cls_general.time_converter(cashregister.created_at);
     var income_cash = (cls_general.is_empty_var(payment[1]) === 1)    ? payment[1] : 0;
     var outcome_cash = (cls_general.is_empty_var(canceled[1]) === 1)  ? payment[1] : 0;
@@ -1392,6 +1468,23 @@ class class_cashregister{
             </tr>
           </tbody>
         </table>
+        <table class="table table-bordered">
+          <thead>
+            <tr class="table-success text-center">
+              <th colspan="4">Venta de Cupones</th>
+            </tr>
+            <tr class="table-success text-center">
+              <th scope="col">Activos</th>
+              <th scope="col">Inactivos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${cls_general.val_price(giftcard.active, 2, 1, 1)}</td>
+              <td>${cls_general.val_price(giftcard.inactive, 2, 1, 1)}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
     `;
@@ -1404,21 +1497,589 @@ class class_cashregister{
     var body = '';
     var funcion = function (obj) {
       if (obj.status === 'success') {
-        var raw_inspected = cls_cashregister.generate_inspectedCR(obj.data.cashregister, obj.data.payment, obj.data.canceled)
+        var total_giftcard = {active: 0, inactive: 0};
+        obj.data.giftcard.map((gc) => {
+          var ttl_giftcard = 0;
+          var giftcard_payment = JSON.parse(gc.tx_giftcard_payment);
+          giftcard_payment.map((gcp) => {
+            ttl_giftcard += gcp.amount;
+          })
+          if (gc.tx_giftcard_status === 0) {
+            total_giftcard.inactive += ttl_giftcard;
+          }else{
+            total_giftcard.active += ttl_giftcard;
+          }
+        })
+        var raw_inspected = cls_cashregister.generate_inspectedCR(obj.data.cashregister, obj.data.payment, obj.data.canceled, total_giftcard)
         document.getElementById('inspectCR_title').innerHTML = raw_inspected.title;
         document.getElementById('inspectCR_container').innerHTML = raw_inspected.content;
 
-
         const modal = new bootstrap.Modal('#inspectCRModal', {})
         modal.show();
-
-        // ABRIR OTRO MODAL PARA MOSTRAR EL INSPECT DEL CIERRE ELGIDO, EN EL MODAL SE DEBE MOSTRAR LA INFORMACIÓN DE LOS COBROS Y UN ISTADO DE LAS FACTURAS Y NOTAS DE CREDITO
-        // document.getElementById('container_cashregisterFiltered').innerHTML = '<span>Listado de Cierres de Caja</span>' + cls_cashregister.generate_list(obj.data.all);
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
+  }
+}
+class class_client{
+  constructor(client_list){
+    this.client_list = client_list;
+  }
+  index() {
+    var list = cls_client.generate_list(cls_client.client_list, 100)
+    var content = `
+      <div class="row">
+        <div class="col-xs-12 py-2 text-center">
+          <button type="button" class="btn btn-lg btn-primary" onclick="cls_client.create()">Crear Cliente</button>
+          &nbsp;
+          <button type="button" class="btn btn-secondary" onclick="cls_charge.index()">Volver</button>
+        </div>
+        <div class="col-xs-12">
+          <h5>Listado de Clientes</h5>
+        </div>
+        <div class="col-xs-12 pb-1">
+          <input type="text" class="form-control" id="clientFilter" onfocus="cls_general.validFranz(this.id, ['word','number'],'-')" onkeyup="cls_client.filter(this.value,20)" placeholder="Buscar clientes por nombre o cédula" >
+        </div>
+        <div id="container_clientList" class="col-xs-12 border-top pt-1">
+          ${list}
+        </div>
+      </div>
+    `;
+    document.getElementById('container_request').innerHTML = content;
+  }
+  generate_list(client_list, limit) {
+    var counter = 1;
+    var list = '<div class="list-group">';
+    for (const a in client_list) {
+      if (counter > limit) { break; }
+      var bg = (client_list[a]['tx_client_status'] == '0') ? 'text-bg-secondary' : '';
+      var inactive = (client_list[a]['tx_client_status'] == '0') ? ' (INACTIVO)' : '';
+
+      list += `<a href = "#" class="list-group-item list-group-item-action ${bg}" onclick="event.preventDefault(); cls_client.show('${client_list[a]['tx_client_slug']}')" >${client_list[a]['tx_client_name']} (${client_list[a]['tx_client_cif']}) ${inactive}</a>`;
+      counter++;
+    }
+    list += '</div>';
+    return list;
+  }
+  async filter(str, limit) {
+    document.getElementById('container_clientList').innerHTML = cls_client.generate_list(await cls_client.look_for(str, limit));
+  }
+  look_for(str, limit) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_client.client_list;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          if (i == limit) { break; }
+          var ocurrencys = 0;
+          for (const a in needles) {
+            if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+        resolve(raw_filtered)
+      }, 500)
+    });
+  }
+  show(client_slug) {
+    var url = '/client/' + client_slug; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      var client = obj['data']['client'];
+      var exempt_checked = (client.tx_client_exempt === 1) ? 'checked' : '';
+      var status_checked = (client.tx_client_status === 1) ? 'checked' : '';
+      var dv = (cls_general.is_empty_var(client.tx_client_dv) === 0) ? '' : client.tx_client_dv;
+      var telephone = (cls_general.is_empty_var(client.tx_client_telephone) === 0) ? '' : client.tx_client_telephone;
+      var email = (cls_general.is_empty_var(client.tx_client_email) === 0) ? '' : client.tx_client_email;
+      var direction = (cls_general.is_empty_var(client.tx_client_direction) === 0) ? '' : client.tx_client_direction;
+      var content = `
+        <div class="row">
+          <div class="col">
+            <div class="row">
+              <div class="col-xs-12">
+                <h4>Modificar Cliente</h4>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <label for="clientName" class="form-label">Nombre y Apellido</label>
+                <input type="text" readonly id="clientName" name="${client.tx_client_slug}" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,120,1)" onblur="cls_general.limitText(this,120,1)" value="${client.tx_client_name}">
+              </div>
+              <div class="col-md-12 col-lg-6">
+                <label for="clientCIF" class="form-label">C&eacute;dula/Pasaporte</label>
+                <input type="text" readonly id="clientCIF" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'],'-')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${client.tx_client_cif}">
+              </div>
+              <div class="col-md-12 col-lg-2">
+                <label for="clientDV" class="form-label">DV</label>
+                <input type="text" id="clientDV" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this,4,1)" onblur="cls_general.limitText(this,4,1)" value="${dv}">
+              </div>
+              <div class="col-md-12 col-lg-4">
+                <label for="clientTelephone" class="form-label">Teléfono</label>
+                <input type="text" id="clientTelephone" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'],' -')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${telephone}">
+              </div>
+              <div class="col-md-12 col-lg-6">
+                <label for="clientEmail" class="form-label">Correo E.</label>
+                <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="${email}">
+              </div>
+              <div class="col-md-12">
+                <label for="clientDirection" class="form-label">Dirección</label>
+                <input type="text" id="clientDirection" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,140,1)" onblur="cls_general.limitText(this,140,1)" value="${direction}">
+              </div>
+              <div class="col-md-12 col-lg-3">
+                <div class="form-check form-switch pt_35 display_none">
+                  <input class="form-check-input " type="checkbox" role="switch" id="clientExempt" ${exempt_checked} >
+                  <label class="form-check-label" for="clientExempt">Exento</label>
+                </div>
+              </div>
+              <div class="col-md-12 col-lg-3">
+                <div class="form-check form-switch pt_35 display_none">
+                  <input class="form-check-input" type="checkbox" role="switch" id="clientStatus" ${status_checked}>
+                  <label class="form-check-label" for="clientStatus">Activo</label>
+                </div>
+              </div>
+              <div class="col-md-12 col-lg-6">
+                <label for="clientTaxpayer" class="form-label">Tipo de Cliente</label>
+                <select id="clientTaxpayer" class="form-select">
+                  <option value="102">No Contribuyente</option>
+                  <option value="101">Contribuyente</option>
+                  <option value="201">Empresa</option>
+                  <option value="203">Gobierno</option>
+                  <option value="204">Extranjero</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      var content_bottom = `
+        <div class="row">
+          <div class="col-lg-12 text-center pt-2">
+            <button type="button" class="btn btn-info" onclick="cls_giftcard.index('${client.tx_client_slug}');">Cupones</button>
+            <button type="button" class="btn btn-warning" onclick="cls_general.disable_submit(this); cls_client.delete('${client.tx_client_slug}');">Eliminar Cliente</button>
+            <button type="button" class="btn btn-secondary" onclick="cls_client.index()">Volver</button>
+            <button type="button" class="btn btn-success" onclick="cls_general.disable_submit(this); cls_client.update('${client.tx_client_slug}')">Guardar Cliente</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('container_request').innerHTML = content + content_bottom;
+      document.getElementById('clientTaxpayer').value = client.tx_client_taxpayer + '' + client.tx_client_type;
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  create() {
+    var content = `
+      <div class="row">
+        <div class="col">
+          <div class="row">
+            <div class="col-sm-12 text-center">
+              <h4>Nuevo Cliente</h4>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label for="clientName" class="form-label">Nombre y Apellido</label>
+              <input type="text" id="clientName" name="" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,120,1)" onblur="cls_general.limitText(this,120,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientCIF" class="form-label">C&eacute;dula/Pasaporte</label>
+              <input type="text" id="clientCIF" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'],'-')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-2">
+              <label for="clientDV" class="form-label">DV</label>
+              <input type="text" id="clientDV" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this,4,1)" onblur="cls_general.limitText(this,4,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-4">
+              <label for="clientTelephone" class="form-label">Teléfono</label>
+              <input type="text" id="clientTelephone" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'],' -')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientEmail" class="form-label">Correo E.</label>
+              <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="">
+            </div>
+            <div class="col-md-12">
+              <label for="clientDirection" class="form-label">Dirección</label>
+              <input type="text" id="clientDirection" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,140,1)" onblur="cls_general.limitText(this,140,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-3">
+              <div class="form-check form-switch pt_35 display_none">
+                <input class="form-check-input" type="checkbox" role="switch" id="clientExempt">
+                <label class="form-check-label" for="clientExempt">Exento</label>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-3">
+              <div class="form-check form-switch pt_35 display_none">
+                <input class="form-check-input" type="checkbox" role="switch" id="clientStatus" checked>
+                <label class="form-check-label" for="clientStatus">Activo</label>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientTaxpayer" class="form-label">Tipo de Cliente</label>
+              <select id="clientTaxpayer" class="form-select">
+                <option value="102">No Contribuyente</option>
+                <option value="101">Contribuyente</option>
+                <option value="201">Empresa</option>
+                <option value="203">Gobierno</option>
+                <option value="204">Extranjero</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    var content_bottom = `
+        <div class="row">
+          <div class="col-lg-12 text-center pt-2">
+            <button type="button" class="btn btn-secondary" onclick="cls_client.index()">Volver</button>
+            <button type="button" class="btn btn-success" onclick="cls_general.disable_submit(this); cls_client.save()">Guardar Cliente</button>
+          </div>
+        </div>
+      `;
+    document.getElementById('container_request').innerHTML = content + content_bottom;
+  }
+  save() {
+    var name = cls_general.set_name(document.getElementById('clientName').value);
+    var cif = document.getElementById('clientCIF').value;
+    var dv = document.getElementById('clientDV').value;
+    var telephone = document.getElementById('clientTelephone').value;
+    var email = document.getElementById('clientEmail').value;
+    var direction = document.getElementById('clientDirection').value;
+    var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
+    var taxpayer = document.getElementById('clientTaxpayer').value;
+    var status = (document.getElementById('clientStatus').checked) ? 1 : 0;
+
+    if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(cif) === 0) {
+      cls_general.shot_toast_bs('El campo nombre y C&eacute;dula no pueden estar vac&iacute;os', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (isNaN(dv)) {
+      cls_general.shot_toast_bs('D&iacute;gito verificador deben ser numeros', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (cls_general.is_empty_var(email) === 1 && cls_general.isEmail(email) != true) {
+      cls_general.shot_toast_bs('Verifique el Email', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (taxpayer != "102") {
+      var pattern = /\d/
+      if (cls_general.is_empty_var(dv) === 0) {
+        cls_general.shot_toast_bs('Falta ingresar el DV.', { bg: 'text-bg-warning' });
+        return false;
+      }
+      if (cls_general.is_empty_var(email) === 0) {
+        cls_general.shot_toast_bs('Debe ingresar el Email', { bg: 'text-bg-warning' });
+        return false;
+      }
+    } else {
+      var pattern = /^[1-9]-?\d{2,}-?\d{2,}$/
+    }
+    if (pattern.test(cif) != true) {
+      cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
+      return false;
+    }
+
+    var method = 'POST';
+    var url = '/client/';
+    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_client.client_list = obj.data.client_list;
+        cls_client.index()
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  update(client_slug) {
+    var name = cls_general.set_name(document.getElementById('clientName').value);
+    var cif = document.getElementById('clientCIF').value;
+    var dv = document.getElementById('clientDV').value;
+    var telephone = document.getElementById('clientTelephone').value;
+    var email = document.getElementById('clientEmail').value;
+    var direction = document.getElementById('clientDirection').value;
+    var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
+    var taxpayer = document.getElementById('clientTaxpayer').value;
+    var status = (document.getElementById('clientStatus').checked) ? 1 : 0;
+
+    if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(cif) === 0) {
+      cls_general.shot_toast_bs('El campo nombre y C&eacute;dula no pueden estar vac&iacute;os', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (isNaN(dv)) {
+      cls_general.shot_toast_bs('D&iacute;gito verificador deben ser numeros', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (cls_general.is_empty_var(email) === 1 && cls_general.isEmail(email) != true) {
+      cls_general.shot_toast_bs('Verifique el Email', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (taxpayer != "102") {
+      var pattern = /\d/
+      if (cls_general.is_empty_var(dv) === 0) {
+        cls_general.shot_toast_bs('Falta ingresar el DV.', { bg: 'text-bg-warning' });
+        return false;
+      }
+      if (cls_general.is_empty_var(email) === 0) {
+        cls_general.shot_toast_bs('Debe ingresar el Email', { bg: 'text-bg-warning' });
+        return false;
+      }
+    } else {
+      var pattern = /^[1-9]-?\d{2,}-?\d{2,}$/
+    }
+    if (pattern.test(cif) != true) {
+      cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
+      return false;
+    }
+
+    var method = 'PUT';
+    var url = '/client/' + client_slug;
+    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_client.client_list = obj.data.client_list;
+        cls_client.index()
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+  }
+  delete(client_slug) {
+    var url = '/client/' + client_slug; var method = 'DELETE';
+    var body = "";
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_client.client_list = obj.data.client_list;
+        cls_client.index()
+        cls_general.shot_toast_bs(obj['message'], { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj['message'], { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+}
+class class_giftcard {
+  constructor() {
+    this.active = [];
+    this.inactive = [];
+  }
+  index(client_slug) {
+    var url = '/client/' + client_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_giftcard.active = obj.data.giftcard.active;
+        cls_giftcard.inactive = obj.data.giftcard.inactive;
+
+        document.getElementById('giftcardModal_content').innerHTML = `
+          <div class="row">
+            <div class="col-md-12 col-lg-6">
+              <div class="row">
+                <h5>Cupones Activos</h5>
+                <div id="container_giftcard_active" class="col-sm-12 h_300">
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <div class="row">
+                <h5>Cupones Inactivos</h5>
+                <div id="container_giftcard_inactive" class="col-sm-12 h_100">
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.getElementById('giftcardModal_footer').innerHTML = `
+          <button type="button" class="btn btn-success" id="new_giftcard" name="" onclick="cls_giftcard.create(${client_slug})">Crear Cup&oacute;n</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        `;
+        const modal = new bootstrap.Modal('#giftcardModal', {})
+        modal.show();
+
+        document.getElementById('new_giftcard').name = obj.data.client.ai_client_id;
+        document.getElementById('container_giftcard_active').innerHTML = cls_giftcard.generate_active(cls_giftcard.active);
+        document.getElementById('container_giftcard_inactive').innerHTML = cls_giftcard.generate_inactive(cls_giftcard.inactive);
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_active(raw_list) {
+    var list = '<div class="list-group">';
+    raw_list.map((el) => {
+      list += `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          ${el.tx_giftcard_number} (B/ ${el.tx_giftcard_amount})
+          <button class="btn btn-warning" type="button" onclick="cls_giftcard.delete(${el.ai_giftcard_id})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+              <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+            </svg>
+          </button>
+        </li>
+      `;
+    });
+    return list;
+  }
+  generate_inactive(raw_list) {
+    var list = '<ul class="list-group">';
+    raw_list.map((el) => {
+      list += `<li class="list-group-item text-bg-secondary">${el.tx_giftcard_number} (B/ ${el.tx_giftcard_amount})</li>`;
+    })
+    list += '</ul>';
+    return list;
+  }
+  create(client_slug) {
+    cls_payment.payment = [];
+    cls_charge.charge_request = [];
+    var paymentmethod = ``;
+    cls_paymentmethod.paymentmethod.map((method) => {
+      paymentmethod += `
+        <div class="col-md-6 col-lg-3 d-grid gap-2 pb-4">
+          <button type="button" class="btn btn-info h_50" onclick="cls_payment.add(${method.ai_paymentmethod_id})">${method.tx_paymentmethod_value}</button>
+        </div>
+      `;
+    })
+    document.getElementById('giftcardModal_content').innerHTML = `
+      <div class="row">
+        <div class="col-sm-6 pb-2">
+          <label class="form-label" for="paymentNumber">Numero</label>
+          <input type="text" id="paymentNumber" class="form-control ui-keyboard-input ui-widget-content ui-corner-all" onfocus="cls_general.validFranz(this.id,['number','word'],',.-()')" value="" aria-haspopup="true" role="textbox">
+        </div>
+        <div class="col-sm-6 pb-2">
+          <label class="form-label" for="paymentAmount">Monto</label>
+          <input type="text" id="paymentAmount" class="form-control ui-keyboard-input ui-widget-content ui-corner-all" onfocus="cls_general.validFranz(this.id,['number'],'.')" value="" aria-haspopup="true" role="textbox">
+        </div>
+        <div class="col-sm-12 p-1">
+          <div id="container_paymentMethod" class="row v_scrollable" style="height: 20vh">
+            ${paymentmethod}
+          </div>
+        </div>
+        <div class="col-sm-12 bs_1 border_gray radius_10">
+          <div id="container_payment" class="row radius_10" style="height: 30vh">
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('giftcardModal_footer').innerHTML = `
+      <button type="button" id="btn_paymentProcess" class="btn btn-success btn-lg display_none" onclick="cls_general.disable_submit(this,1); cls_giftcard.save('${client_slug}')">Procesar</button>
+      &nbsp;
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+    `;
+  }
+  save(client_slug) {
+    var raw_payment = cls_payment.payment;
+    let received = 0
+    raw_payment.map((payment) => { received += payment.amount; });
+    received = parseFloat(received);
+    if (received < 0.25) {
+      cls_general.shot_toast_bs('Debe ingresar un monto superior a 0.25', { bg: 'text-bg-warning' });
+      return false;
+    }
+    var url = '/giftcard/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: client_slug, b: raw_payment });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+        cls_payment.payment = [];
+
+        const ubicationModal = bootstrap.Modal.getInstance('#giftcardModal');
+        ubicationModal.hide();
+
+        cls_giftcard.index(client_slug);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+
+  }
+  delete(giftcard_id) {
+    var url = '/giftcard/' + giftcard_id;
+    var method = 'DELETE';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_giftcard.active = obj.data.active;
+        cls_giftcard.inactive = obj.data.inactive;
+
+        document.getElementById('container_giftcard_active').innerHTML = cls_giftcard.generate_active(cls_giftcard.active);
+        document.getElementById('container_giftcard_inactive').innerHTML = cls_giftcard.generate_inactive(cls_giftcard.inactive);
+
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  select_giftcard(){
+    let amount = parseFloat(document.getElementById('paymentAmount').value);
+
+    if (cls_general.is_empty_var(amount) === 0) {
+      cls_general.shot_toast_bs('Ingrese el monto.', { bg: 'text-bg-warning' }); return false;
+    }
+
+    if (isNaN(amount)) {
+      cls_general.shot_toast_bs('Monto erroneo.', { bg: 'text-bg-warning' }); return false;
+    }
+
+    swal({
+      title: "Ingrese el numero de la giftcard",
+      text: "No coloque el espacio, solo los 6 numeros.",
+
+      content: {
+        element: "input",
+        attributes: {
+          placeholder: "######",
+          type: "text",
+        },
+      },
+    })
+    .then((number) => {
+      if (cls_general.is_empty_var(number) === 0) {
+        return swal("Debe ingresar un numero.");
+      }
+      if (isNaN(number)) {
+        return swal("Debe ingresar un numero de 6 d&iacute;gitos.");
+      }
+      var check_duplicity = cls_payment.giftcard.find((payment) => {  return payment.giftcard_number === number })
+      if(check_duplicity != undefined) {
+        return swal("El cupon ya fue ingresado.");
+      }
+
+      var url = '/giftcard/' + number;
+      var method = 'GET';
+      var body = '';
+      var funcion = function (obj) {
+        if (obj.status === 'success') {
+          if (amount > obj.data.info.tx_giftcard_amount) {
+            cls_general.shot_toast_bs(`No alcanza el saldo disponible. (Disponible: ${cls_general.val_dec(obj.data.info.tx_giftcard_amount,2,1,1)})`, { bg: 'text-bg-warning' }); return false;
+          }
+          cls_payment.add_giftcard(obj.data.info,amount);
+        } else {
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+      cls_general.async_laravel_request(url, method, funcion, body);
+
+
+    });
+
   }
 }
 

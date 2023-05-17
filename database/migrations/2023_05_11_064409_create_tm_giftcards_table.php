@@ -17,6 +17,8 @@ class CreateTmGiftcardsTable extends Migration
             $table->bigIncrements('ai_giftcard_id');
             $table->integer('giftcard_ai_user_id');
             $table->integer('giftcard_ai_client_id');
+            $table->integer('giftcard_ai_cashregister_id')->nullable();
+            $table->longtext('tx_giftcard_payment');
             $table->string('tx_giftcard_number');
             $table->float('tx_giftcard_amount');
             $table->integer('tx_giftcard_status');

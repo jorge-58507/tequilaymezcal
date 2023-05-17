@@ -178,6 +178,12 @@
                         <td><span id="span_incomeAnother"></span></td>
                         <td><span id="span_returnAnother"></span></td>
                       </tr>
+                      <tr>
+                        <th>Venta de Cupones</th>
+                        <td>&nbsp;</td>
+                        <td><span id="span_giftcardactive"></span></td>
+                        <td><span id="span_giftcardinactive"></span></td>
+                      </tr>
                     </tbody>
                     <tfoot>
                       <tr class="table-success">
@@ -356,6 +362,22 @@
     </div>
   </div>
 
+  <!-- Modal GIFTCARD -->
+  <div class="modal fade" id="giftcardModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="giftcardModal_title">Cupones</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="giftcardModal_content" class="modal-body">
+        </div>
+        <div id="giftcardModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
 	<div id="container_request" class="row"></div>
 
 @endsection
@@ -385,12 +407,18 @@
     const cls_cashoutput = new class_cashoutput;
 
     const cls_cashregister = new class_cashregister;
+
+    const cls_giftcard = new class_giftcard;
+
+    var client_list = JSON.parse('<?php echo json_encode($data['client_list']) ?>');
+		const cls_client = new class_client(client_list);
+
     
 		document.addEventListener('DOMContentLoaded', function() {
       cls_charge.index();
-      cls_request.render('open',cls_request.open_request.slice(0,10));
-      cls_request.render('closed',cls_request.closed_request.slice(0,10));
-      cls_request.render('canceled',cls_charge.charge_list.slice(0,10));
+      // cls_request.render('open',cls_request.open_request.slice(0,10));
+      // cls_request.render('closed',cls_request.closed_request.slice(0,10));
+      // cls_request.render('canceled',cls_charge.charge_list.slice(0,10));
 		});
     var fecha = cls_general.getDate()
     document.getElementById('cashoutputDatefilter').value = cls_general.date_converter('ymd','dmy', fecha[0]);

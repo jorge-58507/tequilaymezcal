@@ -17,10 +17,10 @@ class giftcardController extends Controller
     {
         //
     }
-    public function get_all()
+    public function get_all_by_client($client_id)
     {
-        $rs_active = tm_giftcard::where('tx_giftcard_status',1)->get();
-        $rs_inactive = tm_giftcard::where('tx_giftcard_status',0)->get();
+        $rs_active = tm_giftcard::where('tx_giftcard_status',1)->where('giftcard_ai_client_id',$client_id)->get();
+        $rs_inactive = tm_giftcard::where('tx_giftcard_status',0)->where('giftcard_ai_client_id',$client_id)->get();
 
         return ['active'=>$rs_active, 'inactive'=>$rs_inactive];
     }
@@ -46,7 +46,7 @@ class giftcardController extends Controller
     }
     public function random_number(){
         $number = $this->generate_number();
-        $check = tm_giftcard::where('tx_giftcard_number',$number);
+        $check = tm_giftcard::where('tx_giftcard_number',$number)->where('tx_giftcard_status',1);
         if($check->count() > 0) {
             $this->random_number();
         }else{
@@ -55,25 +55,31 @@ class giftcardController extends Controller
     }
     public function store(Request $request)
     {
-        $check_client = tm_client::where('ai_client_id',$request->input('b'))->count();
-        if ($check_client === 0) {
+        $qry_client = tm_client::where('tx_client_slug',$request->input('a'));
+        if ($qry_client->count() === 0) {
             return response()->json(['status'=>'failed','message'=>'Cliente no existe.']);
+        }
+        $rs_client = $qry_client->first();
+
+        $raw_payment = $request->input('b');
+        $received = 0;
+        foreach ($raw_payment as $value) {
+            $received += $value['amount'];
         }
         $number = $this->random_number();
 
         $user = $request->user();
         $tm_giftcard = new tm_giftcard;
         $tm_giftcard->giftcard_ai_user_id = $user['id'];
-        $tm_giftcard->giftcard_ai_client_id = $request->input('b');
+        $tm_giftcard->giftcard_ai_client_id = $rs_client['ai_client_id'];
+        $tm_giftcard->tx_giftcard_payment = json_encode($request->input('b'));
         $tm_giftcard->tx_giftcard_number = $number;
-        $tm_giftcard->tx_giftcard_amount = $request->input('a');
+        $tm_giftcard->tx_giftcard_amount = $received;
         $tm_giftcard->tx_giftcard_status = 1;
-        $tm_giftcard->save();
-
-        // CREAR ENTRADA DE DINERO EN ¿EFECTIVO?
+        $tm_giftcard->save();        
 
         // ANSWER
-        $rs_giftcard = $this->get_all();
+        $rs_giftcard = $this->get_all_by_client($rs_client['ai_client_id']);
         return response()->json(['status'=>'success','message'=>'Cupon creado.', 'data' => ['active' => $rs_giftcard['active'], 'inactive' => $rs_giftcard['inactive'] ]]);
     }
 
@@ -83,9 +89,16 @@ class giftcardController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($number)
     {
-        //
+        $number = str_replace(" ","",$number);
+        $qry = tm_giftcard::where('tx_giftcard_status',1)->where('tx_giftcard_number',$number);
+        if ($qry->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'Cupón Inexistente.']);
+        }
+        $rs = $qry->first();
+
+        return response()->json(['status'=>'success','message'=>'', 'data' => ['info' => $rs]]);
     }
 
     /**
@@ -119,6 +132,15 @@ class giftcardController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $qry = tm_giftcard::where('ai_giftcard_id',$id);
+        if($qry->count() === 0){
+            return response()->json(['status'=>'failed','message'=>'Cupón Inexistente.']);
+        }
+        $qry->update(['tx_giftcard_status'=>0]);
+        
+        // ANSWER
+        $rs = $qry->first();
+        $rs_giftcard = $this->get_all_by_client($rs['giftcard_ai_client_id']);
+        return response()->json(['status'=>'success','message'=>'Cupon desactivado.', 'data' => ['active' => $rs_giftcard['active'], 'inactive' => $rs_giftcard['inactive'] ]]);
     }
 }

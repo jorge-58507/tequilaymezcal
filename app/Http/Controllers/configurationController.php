@@ -7,10 +7,15 @@ use App\tm_productcategory;
 use App\tm_option;
 use App\tm_measure;
 use App\tm_category;
+use App\tm_paymentmethod;
 
 class configurationController extends Controller
 {
     public function index(){
+        if ( auth()->user()->hasAnyRole(['admin','super','cashier']) != true){ 
+            return redirect() -> route('request.index');
+        }
+
         $rs_productcategoryList = tm_productcategory::where('tx_productcategory_status',1)->orderby('tx_productcategory_value')->get();
         $rs_categoryList = tm_category::where('tx_category_status',1)->orderby('tx_category_value')->get();
         $rs_option = tm_option::all();
@@ -25,6 +30,7 @@ class configurationController extends Controller
         $rs_article = $articleController->getAll();
         $presentationController = new presentationController;
         $rs_presentation = $presentationController->getAll();
+        $rs_paymentmethod = tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
        $data = [
             'productcategory_list' => $rs_productcategoryList,
             'category_list' => $rs_categoryList,
@@ -32,7 +38,8 @@ class configurationController extends Controller
             'measure_list' => $rs_measure,
             'product_list' => $rs_product,
             'article_list' => $rs_article,
-            'presentation_list' => $rs_presentation
+            'presentation_list' => $rs_presentation,
+            'paymentmethod_list' => $rs_paymentmethod
         ];
 
         return view('configuration.index', compact('data'));

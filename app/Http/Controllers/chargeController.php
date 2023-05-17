@@ -10,6 +10,8 @@ use App\tm_payment;
 use App\tm_creditnote;
 use App\tm_cashoutput;
 use App\tm_cashregister;
+use App\tm_client;
+use App\tm_giftcard;
 
 class chargeController extends Controller
 {
@@ -24,17 +26,20 @@ class chargeController extends Controller
             return redirect() -> route('request.index');
         }
         $requestController = new requestController;
+        $clientController = new clientController;
         
         $rs_openrequest =       $requestController->getOpenRequest();
         $rs_closedrequest =     $requestController->getClosedRequest();
         $rs_canceledrequest =   $requestController->getCanceledRequest();
         $rs_paymentmethod =     tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
+        $rs_client =            $clientController->getAll();
 
         $data = [
             'closed_request'    => $rs_closedrequest,
             'open_request'      => $rs_openrequest,
             'canceled_request'  => $rs_canceledrequest,
-            'paymentmethod'     => $rs_paymentmethod
+            'paymentmethod'     => $rs_paymentmethod,
+            'client_list'       => $rs_client
         ];
         return view('charge.index', compact('data'));
     }
@@ -63,6 +68,7 @@ class chargeController extends Controller
 
         $request_slug = $request->input('a');
         $raw_payment = $request->input('b');
+        $raw_giftcard = $request->input('c');
 
         $qry_request = tm_request::where('tx_request_slug',$request_slug);
         if ($qry_request->count() < 1) {
@@ -88,8 +94,11 @@ class chargeController extends Controller
         foreach ($raw_payment as $key => $payment) {
             $received += $payment['amount'];
         }
+        foreach ($raw_giftcard as $key => $payment) {
+            $received += $payment['amount'];
+        }
         if ($price_sale['total'] > $received) {
-            return response()->json(['status'=>'failed','message'=>'Faltan pagos.'.$price_sale['total'].' pp '.$received]);
+            return response()->json(['status'=>'failed','message'=>'Faltan pagos.']);
         }
 
         $change = ($price_sale['total'] === $received) ? 0.00 : $received - $price_sale['total'];
@@ -115,9 +124,13 @@ class chargeController extends Controller
         $paymentController->save($raw_payment, $charge_id, $user['id']);
 
         $qry_request->update(['tx_request_status'=>2, 'request_ai_charge_id'=>$charge_id]);
-                
-        return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.']);
+        foreach ($raw_giftcard as $key => $payment) {
+            $qry_giftcard = tm_giftcard::where('ai_giftcard_id',$payment['giftcard_id']);
+            $rs_giftcard = $qry_giftcard->first();
+            $qry_giftcard->update(['tx_giftcard_amount' => ($rs_giftcard['tx_giftcard_amount'] - $payment['amount'])]);
+        }
 
+        return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.']);
     }
 
     /**
@@ -239,6 +252,7 @@ class chargeController extends Controller
 
         $cashregisterController = new cashregisterController;
         $rs_cashregister = $cashregisterController->get_by_date(date('Y-m-d'));
+        $rs_giftcard = tm_giftcard::where('giftcard_ai_user_id',$user['id'])->where('giftcard_ai_cashregister_id',null)->get();
         return [
             'payment' => $raw_payment, //array
             'returnpayment' => $raw_canceled, //array
@@ -257,7 +271,8 @@ class chargeController extends Controller
             'cashback' => $cashback,
             'canceled' => $canceled,
             'cashoutput' => ['in' => $income_cashoutput, 'out' => $outcome_cashoutput, 'nullified' => $nullified_cashoutput],
-            'cashregister_list' => $rs_cashregister
+            'cashregister_list' => $rs_cashregister,
+            'giftcard' => $rs_giftcard
         ];
     }
     /**

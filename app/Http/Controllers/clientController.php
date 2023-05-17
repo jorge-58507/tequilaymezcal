@@ -86,7 +86,9 @@ class clientController extends Controller
         $qry = tm_client::where('tx_client_slug',$slug);
         if ($qry->count() > 0) {
             $rs = $qry->first();
-            $rs_giftcard = tm_giftcard::where('giftcard_ai_client_id',$rs['ai_client_id'])->get();
+            $giftcardController = new giftcardController;
+            $rs_giftcard = $giftcardController->get_all_by_client($rs['ai_client_id']);
+
             return response()->json(['status'=>'success','message'=>'','data'=>['client'=>$rs, 'giftcard'=>$rs_giftcard]]);
         }else{
             return response()->json(['status'=>'failed','message'=>'No existe.']);
@@ -163,12 +165,15 @@ class clientController extends Controller
         }
         $rs = $qry->first();
         $check_request = tm_request::where('request_ai_client_id',$rs['ai_client_id'])->count();
-        if ($check_request === 0) {
+        $check_giftcard = tm_giftcard::where('giftcard_ai_client_id',$rs['ai_client_id'])->count();
+        if ($check_request === 0 && $check_giftcard === 0) {
             $qry->delete();
-            return response()->json(['status'=>'success','message'=>'Cliente Eliminado.']);
+            $rs_clientlist = $this->getAll();
+            return response()->json(['status'=>'success','message'=>'Cliente Eliminado.','data'=>['client_list'=>$rs_clientlist]]);
         }else{
             $qry->update(['tx_client_status'=>0]);
-            return response()->json(['status'=>'success','message'=>'Se desactivó el cliente.']);
+            $rs_clientlist = $this->getAll();
+            return response()->json(['status'=>'success','message'=>'Se desactivó el cliente.','data'=>['client_list'=>$rs_clientlist]]);
         }
     }
 }
