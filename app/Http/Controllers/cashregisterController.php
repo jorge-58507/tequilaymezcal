@@ -47,7 +47,6 @@ class cashregisterController extends Controller
         if (empty($cashregister['quantitydoc']) && empty($cashregister['returnquantitydoc']) && sizeof($cashregister['giftcard']) === 0) {
             return response()->json(['status'=>'failed','message'=>'No hay documentos.']);
         }
-            // return response()->json(['status'=>'failed','message'=>'No.', 'lala'=>$cashregister['giftcard']]);
 
         $tm_cashregister = new tm_cashregister;
         $tm_cashregister->cashregister_ai_user_id = $user['id'];

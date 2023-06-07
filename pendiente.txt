@@ -1,20 +1,21 @@
 AL TERMINAR ACTIVAR LAS RESTRICCINES PARA ELIMINAR PRODUCTO productController->Destroy Y LOS MODELOS {tm_dataproductoutput, tm_dataproductinputdevolution}
 
-caja menuda, imprimir la hoja laravel dompdf 
 
- 
+
+Los reportes: Reporte de Compras, Reporte de Ventas,  Reporte Compras totales, Reporte Ventas totales, Reporte Notas de Credito, Compras por proveedores
+para la interfaz de reporte poner dons campos de fechas y hacer un select y un boton de procesar, mostrarlo en el contenedor de abajo y un boton de imprimir
+
+
 incluir giftcard <-- esto hacerlo desde la interfaz opciones, crear boton llamado clientes, desde el cual se puede hacer CRUD a clientes y la giftcard, se regirá por un codigo utilizable por cualquiera
-
-
 las salidas de caja menuda van aparte
 FUNCIONES PÀRA LAS COMPRAS, CREA LAS BD Y EL CONTROLLER DE AHI EMPIEZA
 al hacer nc solo poder anular cuaquiera excepto el excepto la tarjeta debito o multipagos, y al hacer NC normal hacer salida en efectivo y reingresar como efectivo
 el cierre de caja
 merma restar d inventario
 as funciones para merma si el usuario es super que parezca un boton de aprobar a cada uno de los procesados y un botno de aprobar todos
-
-
-
+Inventario: CRUD de proeedores, Salida diaria de productos, Pagar ordenes de compra(pago adelantado), Pago de entradas de productos
+caja menuda, imprimir la hoja laravel dompdf 
+imprimir recibo
         // "php": "^7.2",
         "fzaninotto/faker": "^1.4",
 

@@ -27,19 +27,22 @@ class chargeController extends Controller
         }
         $requestController = new requestController;
         $clientController = new clientController;
+        $creditnoteController = new creditnoteController;
         
         $rs_openrequest =       $requestController->getOpenRequest();
         $rs_closedrequest =     $requestController->getClosedRequest();
         $rs_canceledrequest =   $requestController->getCanceledRequest();
         $rs_paymentmethod =     tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
         $rs_client =            $clientController->getAll();
+        $rs_creditnote =        $creditnoteController->getAll();
 
         $data = [
             'closed_request'    => $rs_closedrequest,
             'open_request'      => $rs_openrequest,
             'canceled_request'  => $rs_canceledrequest,
             'paymentmethod'     => $rs_paymentmethod,
-            'client_list'       => $rs_client
+            'client_list'       => $rs_client,
+            'creditnote_list'   => $rs_creditnote
         ];
         return view('charge.index', compact('data'));
     }
@@ -122,6 +125,7 @@ class chargeController extends Controller
 
         $paymentController = new paymentController;
         $paymentController->save($raw_payment, $charge_id, $user['id']);
+        $paymentController->save_giftcard($raw_giftcard, $charge_id, $user['id']);
 
         $qry_request->update(['tx_request_status'=>2, 'request_ai_charge_id'=>$charge_id]);
         foreach ($raw_giftcard as $key => $payment) {
@@ -148,6 +152,20 @@ class chargeController extends Controller
         if ($qry->count() < 1) {
             return response()->json(['status'=>'failed','message'=>'Factura no existe.']);
         }
+        $rs = $this->showIt($slug);
+        return response()->json(['status'=>'success','message'=>'','data'=>['charge'=>$rs['charge'], 'payment'=>$rs['payment'], 'article'=>$rs['article']]]);
+    }
+    public function showIt($slug){
+        $qry = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_clients.tx_client_direction','tm_clients.tx_client_telephone','tm_clients.tx_client_email',
+        'tm_tables.tx_table_value',
+        'users.name as user_name',
+        'tm_charges.ai_charge_id','tm_charges.charge_ai_user_id','tm_charges.charge_ai_cashregister_id','tm_charges.charge_ai_paydesk_id','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable',
+        'tm_charges.tx_charge_taxable','tm_charges.tx_charge_discount','tm_charges.tx_charge_tax','tm_charges.tx_charge_total','tm_charges.tx_charge_change',
+        'tm_charges.tx_charge_status','tm_charges.tx_charge_ticket','tm_charges.tx_charge_note','tm_charges.tx_charge_slug','tm_charges.created_at')
+        ->join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')
+        ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')
+        ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
+        ->join('users','users.id','tm_charges.charge_ai_user_id')->where('tx_charge_slug',$slug);
         $rs = $qry->first();
 
         $rs_payment = tm_payment::join('tm_paymentmethods','tm_paymentmethods.ai_paymentmethod_id','tm_payments.payment_ai_paymentmethod_id')->where('payment_ai_charge_id',$rs['ai_charge_id'])->get();
@@ -155,7 +173,7 @@ class chargeController extends Controller
 
         $rs_article = $commandController->getByCharge($rs['ai_charge_id']);
 
-        return response()->json(['status'=>'success','message'=>'','data'=>['charge'=>$rs, 'payment'=>$rs_payment, 'article'=>$rs_article]]);
+        return ['charge'=>$rs, 'payment'=>$rs_payment, 'article'=>$rs_article];
     }
     public function show_cashregister($date){
         $user = auth()->user();
@@ -342,5 +360,15 @@ class chargeController extends Controller
             'discount' =>  round($ttl_discount,2), 
             'tax' =>  round($ttl_tax,2)
         ];
+    }
+
+    public function report ($from,$to){
+        $rs = tm_charge::where('created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
+        $rs_paymentmethod = tm_charge::select('tm_payments.payment_ai_paymentmethod_id','tm_payments.tx_payment_amount','tm_payments.tx_payment_number','tm_charges.created_at')->join('tm_payments','tm_payments.payment_ai_charge_id','tm_charges.ai_charge_id')->where('tm_charges.created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('tm_charges.created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
+
+        return [ 'list' => $rs, 'paymentmethod' => $rs_paymentmethod ];
+        
+
+
     }
 }

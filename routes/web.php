@@ -20,6 +20,10 @@ Route::get('/', function () {
 Route::get('/request', function () {
     return view('request.index');
 })->name('request')->middleware('auth');
+Route::get('/report', function () {
+    return view('report.index');
+})->middleware('auth');
+
 
 Route::get('configuration', 'configurationController@index')->middleware('auth');
 Route::get('product/{param}/count', 'productController@show_quantity')->middleware('auth');
@@ -42,6 +46,8 @@ Route::post('product/{param}/count', 'productController@update_quantity')->middl
 Route::post('creditnote/{param}/nullify', 'creditnoteController@nullify')->middleware('auth');
 Route::post('depletion/{param}/article', 'depletionController@depletionByArticle')->middleware('auth');
 Route::post('/table_upd/', 'tableController@renovate')->middleware('auth');
+Route::post('/paymentprovider/productinput', 'paymentproviderController@create')->middleware('auth');
+Route::post('/report/show', 'reportController@show');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
@@ -77,10 +83,18 @@ Route::resource('purchase', 'productinputController')->middleware('auth');
 Route::resource('provider', 'providerController')->middleware('auth');
 Route::resource('requisition', 'requisitionController')->middleware('auth');
 Route::resource('giftcard', 'giftcardController')->middleware('auth');
+Route::resource('stock', 'stockController')->middleware('auth');
+Route::resource('paymentprovider', 'paymentproviderController')->middleware('auth');
+Route::resource('datapaymentprovider', 'datapaymentproviderController')->middleware('auth');
+Route::resource('productoutput', 'productoutputController')->middleware('auth');
 
 // PRINT
 Route::get('print_cashregister/{param}', 'printController@print_cashregister');
 Route::get('print_requisition/{param}', 'printController@print_requisition');
+Route::get('print_productoutput/{param}', 'printController@print_productoutput');
+Route::get('print_paymentprovider/{param}', 'printController@print_paymentprovider');
+Route::get('print_charge/{param}', 'printController@print_charge');
+
 
 
 // Auth::routes();

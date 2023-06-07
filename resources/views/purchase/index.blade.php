@@ -181,9 +181,6 @@
     
     document.addEventListener('DOMContentLoaded', function() {
       cls_purchase.index();
-
-      // cls_requisition.render();
-      // cls_productinput.render();
     });
     document.getElementById('addproductRequisition').addEventListener('click', function() {
       cls_general.disable_submit(this,1)
@@ -201,9 +198,6 @@
 	</script>
 	{{-- ##############    JQUERY   ############### --}}
 	<script type="text/javascript">
-    $( function() {
-      // $( "#cashregisterDatefilter" ).datepicker();
-      // $( "#cashoutputDatefilter" ).datepicker();
-    } );
-	</script>
+
+  </script>
 @endsection

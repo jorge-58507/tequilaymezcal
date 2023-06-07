@@ -130,14 +130,6 @@ class class_request {
       </div>
     `;
     document.getElementById('container_request').innerHTML = content;
-    // $(function () {
-    //   $('#requestFilter').keyboard();
-    // });
-    // $('#requestFilter').bind('accepted', function (e, keyboard, el) {
-    //   cls_request.filter(el.value)
-    // });
-
-
   }
   render(target,raw){
     switch (target) {

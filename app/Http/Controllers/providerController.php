@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\tm_provider;
 use App\tm_requisition;
+use App\tm_productinput;
 
 class providerController extends Controller
 {
@@ -19,9 +20,10 @@ class providerController extends Controller
     }
 
     public function getAll(){
-        $rs_active = tm_provider::where('tx_provider_status',1)->get();
+        $rs_all = tm_provider::orderby('tx_provider_value','ASC')->get();
+        $rs_active = tm_provider::where('tx_provider_status',1)->orderby('tx_provider_value','ASC')->get();
 
-        return ['active' => $rs_active];
+        return ['active' => $rs_active, 'all' => $rs_all];
     }
 
     /**
@@ -66,20 +68,12 @@ class providerController extends Controller
         $tm_provider->tx_provider_slug = $provider_slug;
         $tm_provider->tx_provider_status = 1;
         $tm_provider->save();
+
         // ANSWER
-        $providerController = new providerController;
-        $rs_provider = $providerController->getAll();
+        $rs_provider = $this->getAll();
 
-        return response()->json(['status'=>'success','message'=>'Guardado Correctamente.','data'=>['active'=>$rs_provider['active'], 'provider'=>['tx_provider_slug'=>$provider_slug,'tx_provider_value'=>$request->input('a')]]]);
+        return response()->json(['status'=>'success','message'=>'Guardado Correctamente.','data'=>['all'=>$rs_provider['all'], 'active'=>$rs_provider['active'], 'provider'=>['tx_provider_slug'=>$provider_slug,'tx_provider_value'=>$request->input('a')]]]);
     }
-
-
-
-
-
-
-
-
 
     /**
      * Display the specified resource.
@@ -87,9 +81,23 @@ class providerController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($provider_slug)
     {
-        //
+        $check = tm_provider::where('tx_provider_slug',$provider_slug)->count();
+        if($check === 0){
+            return response()->json(['status'=>'failed','message'=>'El proveedor no existe']);
+        }
+        $rs = $this->showIt($provider_slug);
+
+        return response()->json(['status'=>'success','message'=>'', 'data' => ['info' => $rs['info'], 'productinput_unpaid' => $rs['unpaid'], 'productinput_paidup' => $rs['paidup'] ]]);
+    }
+    public function showIt($provider_slug)
+    {
+        $rs_info = tm_provider::where('tx_provider_slug',$provider_slug)->first();
+        $rs_unpaid = tm_productinput::where('productinput_ai_provider_id',$rs_info['ai_provider_id'])->where('tx_productinput_status',1)->get();
+        $rs_paidup = tm_productinput::where('productinput_ai_provider_id',$rs_info['ai_provider_id'])->where('tx_productinput_status',2)->get();
+
+        return ['info' => $rs_info, 'unpaid' => $rs_unpaid, 'paidup' => $rs_paidup ];
     }
 
     /**
@@ -110,9 +118,31 @@ class providerController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $slug)
     {
-        //
+        $qry = tm_provider::where('tx_provider_slug',$slug);
+        if($qry->count() === 0){
+            return response()->json(['status'=>'failed','message'=>'El proveedor no existe.']);
+        }
+        $check_ruc = tm_provider::where('tx_provider_ruc',$request->input('b'))->where('tx_provider_slug','!=',$slug)->count();
+        if($check_ruc > 0) {
+            return response()->json(['status'=>'failed','message'=>'El RUC ingresado ya existe.']);
+        }
+
+        $qry->update([
+            'tx_provider_value' => $request->input('a'),
+            'tx_provider_ruc' => $request->input('b'),
+            'tx_provider_dv' => $request->input('c'),
+            'tx_provider_telephone' => $request->input('e'),
+            'tx_provider_direction' => $request->input('f'),
+            'tx_provider_observation' => $request->input('g'),
+            'tx_provider_status' => $request->input('h')
+        ]);
+        
+        // ANSWER
+        $rs_provider = $this->getAll();
+
+        return response()->json(['status'=>'success','message'=>'Guardado Correctamente.','data'=>['all'=>$rs_provider['all'], 'active'=>$rs_provider['active'] ]]);
     }
 
     /**
@@ -121,9 +151,30 @@ class providerController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($slug)
     {
-        //
+        $qry = tm_provider::where("tx_provider_slug",$slug);
+        if ($qry->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'El proveedor no existe.']);
+        }
+        $rs = $qry->first();
+
+        $check_productinput = tm_productinput::where('productinput_ai_provider_id',$rs['ai_provider_id'])->count();
+        $check_requisition  = tm_requisition::where('requisition_ai_provider_id',$rs['ai_provider_id'])->count();
+        $check_paymentprovider  = tm_paymentprovider::where('paymentprovider_ai_provider_id',$rs['ai_provider_id'])->count();
+
+        if ($check_productinput > 0 || $check_requisition > 0 || $check_paymentprovider > 0) {
+            $qry->update(['tx_provider_status'=>0]);
+            $message = 'Se desactivó el proveedor.';
+        }else{
+            $qry->delete();
+            $message = 'Proveedor eliminado.';
+        }
+
+        // ANSWER
+        $rs_provider = $this->getAll();
+
+        return response()->json(['status'=>'success','message'=>$message,'data'=>['all'=>$rs_provider['all'], 'active'=>$rs_provider['active'] ]]);
     }
 
 

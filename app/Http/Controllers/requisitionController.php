@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\tm_requisition;
 use App\tm_datarequisition;
 use App\tm_provider;
+use App\tm_paymentprovider;
 
 class requisitionController extends Controller
 {
@@ -22,8 +23,9 @@ class requisitionController extends Controller
     {
         $rs_notprocesed = tm_requisition::join('tm_providers','tm_providers.ai_provider_id','tm_requisitions.requisition_ai_provider_id')->orderby('ai_requisition_id','DESC')->where('tx_requisition_status',0)->get();
         $rs_procesed    = tm_requisition::join('tm_providers','tm_providers.ai_provider_id','tm_requisitions.requisition_ai_provider_id')->orderby('ai_requisition_id','DESC')->where('tx_requisition_status',1)->get();
+        $rs             = tm_requisition::join('tm_providers','tm_providers.ai_provider_id','tm_requisitions.requisition_ai_provider_id')->orderby('ai_requisition_id','DESC')->get();
 
-        return ['notprocesed'=>$rs_notprocesed, 'procesed'=>$rs_procesed];
+        return ['all'=>$rs, 'notprocesed'=>$rs_notprocesed, 'procesed'=>$rs_procesed];
     }
     /**
      * Show the form for creating a new resource.
@@ -105,16 +107,23 @@ class requisitionController extends Controller
         if ($qry->count() === 0) {
             return response()->json(['status'=>'failed','message'=>'La orden de compra no existe.']);
         }
-        // $rs_datarequisition = tm_requisition::join('tm_datarequisitions','tm_datarequisitions.datarequisition_ai_requisition_id','tm_requisitions.ai_requisition_id')->where('tx_requisition_slug',$slug)->get();
         $data = $this->showit($slug);
-        return response()->json(['status'=>'success','message'=>'', 'data'=>$data]);
+
+        return response()->json(['status'=>'success','message'=>'', 'data'=>['requisition'=>$data['requisition'], 'datarequisition'=>$data['datarequisition'], 'data_related'=>$data['data_related'] ]]);
     }
     public function showit($slug)
     {
         $qry = tm_requisition::join('tm_providers','tm_providers.ai_provider_id','tm_requisitions.requisition_ai_provider_id')->where('tx_requisition_slug',$slug);
         $rs_datarequisition = tm_requisition::join('tm_datarequisitions','tm_datarequisitions.datarequisition_ai_requisition_id','tm_requisitions.ai_requisition_id')->join('tm_measures','tm_measures.ai_measure_id','tm_datarequisitions.datarequisition_ai_measurement_id')->where('tx_requisition_slug',$slug)->get();
+        $rs_dataproductinput = tm_paymentprovider::select('tm_paymentproviders.ai_paymentprovider_id','tm_paymentproviders.paymentprovider_ai_user_id','tm_paymentproviders.tx_paymentprovider_number','tm_paymentproviders.tx_paymentprovider_total','tm_paymentproviders.created_at  as paymentprovider_date',
+        'tm_productinputs.tx_productinput_number','tm_productinputs.tx_productinput_total','tm_productinputs.tx_productinput_due','tm_productinputs.tx_productinput_date','tm_productinputs.tx_productinput_slug','tm_productinputs.created_at as productinput_date', 'rel_paymentprovider_productinputs.tx_paymentprovider_productinput_payment',
+        'tm_requisitions.tx_requisition_slug','tm_requisitions.tx_requisition_number','tm_requisitions.tx_requisition_total','tm_requisitions.created_at as requisition_date')
+        ->join('rel_paymentprovider_productinputs','rel_paymentprovider_productinputs.paymentprovider_productinput_ai_paymentprovider_id','tm_paymentproviders.ai_paymentprovider_id')
+        ->join('tm_productinputs','tm_productinputs.ai_productinput_id','rel_paymentprovider_productinputs.paymentprovider_productinput_ai_productinput_id')
+        ->join('rel_requisition_productinputs','rel_requisition_productinputs.requisition_productinput_ai_productinput_id','tm_productinputs.ai_productinput_id')
+        ->join('tm_requisitions','rel_requisition_productinputs.requisition_productinput_ai_requisition_id','tm_requisitions.ai_requisition_id')->where('tm_requisitions.tx_requisition_slug',$slug)->get();
 
-        return ['requisition'=>$qry->first(), 'datarequisition'=>$rs_datarequisition];
+        return ['requisition'=>$qry->first(), 'datarequisition'=>$rs_datarequisition, 'data_related'=>$rs_dataproductinput];
     }
     public function get_requisitionByRequisition($slug){
         $qry = tm_requisition::where('tx_requisition_slug',$slug);
@@ -123,7 +132,7 @@ class requisitionController extends Controller
         }
         $rs = $qry->first();
 
-        $rs_requisition = tm_requisition::join('tm_providers','tm_providers.ai_provider_id','tm_requisitions.requisition_ai_provider_id')->where('requisition_ai_provider_id',$rs['requisition_ai_provider_id'])->get();
+        $rs_requisition = tm_requisition::join('tm_providers','tm_providers.ai_provider_id','tm_requisitions.requisition_ai_provider_id')->where('requisition_ai_provider_id',$rs['requisition_ai_provider_id'])->where('tx_requisition_status',0)->get();
         return response()->json(['status'=>'success','message'=>'', 'data'=>['list'=>$rs_requisition]]);
     }
     
@@ -189,7 +198,7 @@ class requisitionController extends Controller
 
         // ANSWER
         $rs_all = $this->getAll();
-        return response()->json(['status'=>'success','message'=>'Orden de compra eliminada.','data' => ['notprocesed'=>$rs_all['notprocesed'], 'procesed'=>$rs_all['procesed']]]);
+        return response()->json(['status'=>'success','message'=>'Orden de compra eliminada.','data' => ['all'=>$rs_all['all'], 'notprocesed'=>$rs_all['notprocesed'], 'procesed'=>$rs_all['procesed']]]);
 
     }
 }

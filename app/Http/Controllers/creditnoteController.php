@@ -22,6 +22,13 @@ class creditnoteController extends Controller
     {
         //
     }
+    public function getAll()
+    {
+        $rs_active = tm_creditnote::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_creditnotes.ai_creditnote_id','tm_creditnotes.created_at','tm_creditnotes.tx_creditnote_retentionrate','tm_creditnotes.tx_creditnote_number','tm_creditnotes.tx_creditnote_nontaxable','tm_creditnotes.tx_creditnote_taxable','tm_creditnotes.tx_creditnote_tax','tm_creditnotes.tx_creditnote_reason')->join('tm_requests','tm_requests.request_ai_charge_id','tm_creditnotes.creditnote_ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tx_creditnote_status',1)->orderby('ai_creditnote_id','DESC')->get();
+        $rs_inactive = tm_creditnote::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_creditnotes.ai_creditnote_id','tm_creditnotes.created_at','tm_creditnotes.tx_creditnote_retentionrate','tm_creditnotes.tx_creditnote_number','tm_creditnotes.tx_creditnote_nontaxable','tm_creditnotes.tx_creditnote_taxable','tm_creditnotes.tx_creditnote_tax','tm_creditnotes.tx_creditnote_reason')->join('tm_requests','tm_requests.request_ai_charge_id','tm_creditnotes.creditnote_ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tx_creditnote_status',0)->orderby('ai_creditnote_id','DESC')->get();
+
+        return ['active'=>$rs_active, 'inactive'=>$rs_inactive];
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -102,9 +109,24 @@ class creditnoteController extends Controller
      */
     public function show($id)
     {
-        //
+        $qry = tm_creditnote::where('ai_creditnote_id',$id);
+        if ($qry->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'La nota de crédito no existe.']);
+        }
+
+        $rs_creditnote = $this->show_it($id);
+
+        return response()->json(['status'=>'success','message'=>'','data'=>[ 'info'=>$rs_creditnote['info'], 'article'=>$rs_creditnote['article'] ]]);
     }
 
+    public function show_it($id)
+    {
+        $rs = tm_creditnote::select('tm_creditnotes.ai_creditnote_id','tm_creditnotes.tx_creditnote_retentionrate','tm_creditnotes.tx_creditnote_nullification','tm_creditnotes.tx_creditnote_number','tm_creditnotes.tx_creditnote_nontaxable','tm_creditnotes.tx_creditnote_taxable','tm_creditnotes.tx_creditnote_tax','tm_creditnotes.tx_creditnote_reason','tm_creditnotes.created_at','tm_clients.tx_client_name')->join('tm_requests','tm_requests.request_ai_charge_id','tm_creditnotes.creditnote_ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('ai_creditnote_id',$id)->first();
+        $data = tm_datacreditnote::join('tm_commanddatas','tm_commanddatas.ai_commanddata_id','tm_datacreditnotes.datacreditnote_ai_commanddata_id')->where('datacreditnote_ai_creditnote_id',$id)->get();
+
+        return [ 'info'=>$rs, 'article'=>$data ];
+    }
+    
     /**
      * Show the form for editing the specified resource.
      *
@@ -252,4 +274,10 @@ class creditnoteController extends Controller
 
     }
     
+    public function report($from, $to){
+        $rs = tm_creditnote::where('created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
+
+        return [ 'list' => $rs ];
+    }
+
 }

@@ -112,6 +112,7 @@ class commandController extends Controller
         ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
         ->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')
         ->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')
+        ->join('users','users.id','tm_commanddatas.commanddata_ai_user_id')
         ->where('ai_charge_id',$charge_id)
         ->orderby('tx_commanddata_status','DESC')->orderby('ai_command_id','ASC')->get();
 

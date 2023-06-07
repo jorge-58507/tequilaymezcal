@@ -179,6 +179,12 @@
                         <td><span id="span_returnAnother"></span></td>
                       </tr>
                       <tr>
+                        <th>Cupones</th>
+                        <td class="table-secondary"><span id="span_totalGiftcard"></span></td>
+                        <td><span id="span_incomeGiftcard"></span></td>
+                        <td><span id="span_returnGiftcard"></span></td>
+                      </tr>
+                      <tr>
                         <th>Venta de Cupones</th>
                         <td>&nbsp;</td>
                         <td><span id="span_giftcardactive"></span></td>
@@ -390,7 +396,7 @@
 	<script type="text/javascript">
 		var open_request = JSON.parse('<?php echo json_encode($data['open_request']) ?>');
 		var closed_request = JSON.parse('<?php echo json_encode($data['closed_request']) ?>');
-    const cls_request = new class_request(open_request,closed_request,canceled_request);
+    const cls_request = new class_request(open_request,closed_request);
 
 		var canceled_request = JSON.parse('<?php echo json_encode($data['canceled_request']) ?>');
     const cls_charge = new class_charge(canceled_request);
@@ -402,7 +408,8 @@
 
 		const cls_payment = new class_payment;
 
-    const cls_creditnote = new class_creditnote;
+		var creditnote = JSON.parse('<?php echo json_encode($data['creditnote_list']) ?>');
+    const cls_creditnote = new class_creditnote(creditnote.active, creditnote.inactive);
 
     const cls_cashoutput = new class_cashoutput;
 

@@ -365,9 +365,6 @@ class class_productinput{
     var funcion = function (obj) {
       if (obj.status === 'success') {
         var opened = obj.data.productinput.opened;
-        console.log(opened);
-
-
         // LLENAR ESTE CONTENT
         var data_productinput = cls_productinput.generate_productlist(opened.dataproductinput,0);
 

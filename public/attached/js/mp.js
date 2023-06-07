@@ -452,7 +452,12 @@ class general_funct {
         str_splited[1] += decimal_part;  // REFILL
       }
       if (split === 1) {
-        str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
+        str_splited[1] = parseFloat('0.' + str_splited[1]).toFixed(decimal)  // REDONDEO
+        str_splited[1] = str_splited[1].toString();                           //TRANSFORMAR EN STRING
+        var raw_split = str_splited[1].split('.');                            //CORTAR
+        str_splited[1] = raw_split[1];
+
+        // str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
       }
       str = (decimal > 0) ? str_splited[0].replace(/(.)(?=(\d{3})+$)/g, '$1,') + '.' + str_splited[1] : str_splited[0];
     } else {

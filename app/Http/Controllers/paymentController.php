@@ -18,6 +18,19 @@ class paymentController extends Controller
             $tm_payment->save();
         }
     }
+
+    public function save_giftcard($raw_giftcard,$charge_id,$user_id){
+        foreach ($raw_giftcard as $key => $payment) {
+            $tm_payment = new tm_payment;
+            $tm_payment->payment_ai_charge_id = $charge_id;
+            $tm_payment->payment_ai_user_id = $user_id;
+            $tm_payment->payment_ai_paymentmethod_id = 8;
+            $tm_payment->tx_payment_amount = $payment['amount'];
+            $tm_payment->tx_payment_number = $payment['giftcard_number'];
+            $tm_payment->save();
+        }
+    }
+
 }
 
 

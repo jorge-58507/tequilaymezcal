@@ -180,7 +180,8 @@ class class_charge{
         </button>
         <ul class="dropdown-menu fs_30">
           <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashoutput.openmodal();" >Caja Menuda</a></li>
-          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_client.index();"       >Clientes</a></li>
+          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_client.index();"         >Clientes</a></li>
+          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_creditnote.index();"     >Notas de Cr&eacute;dito</a></li>
           <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashregister.create();"  >Cierre de Caja</a></li>
         </ul>
       </div>
@@ -200,10 +201,8 @@ class class_charge{
           </li>
         </ul>
       </div>
-
       <div class="tab-content row" id="">
         <div class="tab-pane fade show active v_scrollable col-sm-12" id="tab_closedrequest"    role="tabpanel" aria-labelledby="home-tab" tabindex="0" style="max-height: 80vh;">
-
           <div class="row">
             <div class="col-md-12 col-lg-6">
               <div class="input-group my-3">
@@ -226,16 +225,14 @@ class class_charge{
               </div>
             </div>
             <div id='container_closedrequest' class="col-md-12">
-
             </div>
           </div>
-
         </div>
         <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_openrequest"      role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
         	<div class="row">
             <div class="col-md-12 col-lg-6">
               <div class="input-group my-3">
-                <input type="text" id="filter_openrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('open',this.value).value)">
+                <input type="text" id="filter_openrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('open',this.value)">
                 <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('open',document.getElementById('filter_openrequest').value)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
@@ -481,7 +478,9 @@ class class_charge{
           <div class="col-md-6 col-lg-3 d-grid gap-2 py-2">
             <button id="btn_chargeCreditnote" class="btn btn-lg btn-warning text-truncate">Nota de Cr&eacute;dito</button>
           </div>
-
+          <div class="col-md-6 col-lg-3 d-grid gap-2 py-2">
+            <button id="btn_chargePrint" class="btn btn-lg btn-info text-truncate">Imprimir</button>
+          </div>
         </div>
         <div class="row">
           <div class="col-sm-6">
@@ -525,6 +524,7 @@ class class_charge{
     document.getElementById('inspectModal_title').innerHTML = 'Inspeccionar Venta';
 
     document.getElementById('btn_chargeCreditnote').addEventListener('click', () => { cls_charge.make_creditnote(charge_slug); });
+    document.getElementById('btn_chargePrint').addEventListener('click', () => { cls_charge.print(charge_slug); });
   }
   make_creditnote(charge_slug){
     var url = '/paydesk/' + charge_slug +'/creditnote';
@@ -561,6 +561,9 @@ class class_charge{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
 
+  }
+  print(charge_slug){
+    cls_general.print_html('/print_charge/' + charge_slug);
   }
 }
 class class_command{
@@ -796,10 +799,202 @@ class class_payment{
   }
 }
 class class_creditnote{
-  constructor(){
+  constructor(active,inactive){
     this.creditnote_charge = [];
     this.selected = [];
+    this.active_list = active;
+    this.inactive_list = inactive;
   }
+  index(){
+    var content = `
+    
+      <div class="row">
+        <div class="col-sm-12 text-center">
+          <div class="dropdown">
+            <button class="btn btn-success dropdown-toggle btn-lg" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Caja
+            </button>
+            <ul class="dropdown-menu fs_30">
+              <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashoutput.openmodal();" >Caja Menuda</a></li>
+              <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_client.index();"         >Clientes</a></li>
+              <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_charge.index();"         >Caja</a></li>
+              <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashregister.create();"  >Cierre de Caja</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-sm-12">
+          <h5>Notas de Cr&eacute;dito</h5>
+        </div>
+        <div class="col-md-12 col-lg-6">
+          <div class="input-group my-3">
+            <input type="text" id="filter_creditnote" class="form-control" placeholder="Buscar por Cliente o Numero." onkeyup="cls_creditnote.filter(this.value,document.getElementById('creditnoteLimit').value)">
+            <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_creditnote.filter(document.getElementById('filter_creditnote').value,document.getElementById('creditnoteLimit').value)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-12 col-lg-6 pt-3">
+          <div class="input-group mb-3">
+            <label class="input-group-text" for="creditnoteLimit">Mostrar</label>
+            <select id="creditnoteLimit" class="form-select">
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
+        <div id="container_creditnote" class="col-md-12 v_scrollable" style="max-height: 60vh;">
+        </div>
+      </div>
+    `;
+
+    document.getElementById('container_request').innerHTML = content;
+    cls_creditnote.filter('', document.getElementById('creditnoteLimit').value)
+  }
+  generate_list(raw_active){
+    var active_list = '<ul class="list-group">';
+    for (const a in raw_active) {
+      active_list += `
+        <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_creditnote.inspect(${raw_active[a].ai_creditnote_id})">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold"><h5>${raw_active[a].tx_creditnote_number} - ${raw_active[a].tx_client_name}</h5></div>
+          </div>
+          <span class="badge bg-secondary fs_20">B/ ${(raw_active[a].tx_creditnote_nontaxable + raw_active[a].tx_creditnote_taxable + raw_active[a].tx_creditnote_tax).toFixed(2)}</span>
+          &nbsp;&nbsp;&nbsp;
+          <span>${cls_general.datetime_converter(raw_active[a].created_at)}</span>
+        </li>
+      `;
+    }
+    active_list += '</ul>';
+
+    return active_list;
+  }
+  inspect(creditnote_id) {
+    var url = '/creditnote/'+creditnote_id;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var info = obj.data.info;
+        var raw_data = obj.data.article;
+
+        cls_creditnote.render_inspect(info,raw_data);
+
+        const modal = new bootstrap.Modal('#inspectModal', {})
+        modal.show();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  render_inspect(info,raw_data) {
+    var article_list = '';
+    raw_data.map((article) => {
+      var discount = ((article.tx_commanddata_discountrate * article.tx_commanddata_price) / 100); discount = discount.toFixed(2);
+      var price = article.tx_commanddata_price - parseFloat(discount);
+      article_list += `
+        <li class="list-group-item d-flex justify-content-between align-items-start fs_20">
+          <div class="ms-2 me-auto text-truncate">
+            ${article.tx_datacreditnote_quantity} - ${article.tx_commanddata_description}
+          </div>
+          <span class="badge bg-secondary fs_20">${cls_general.val_price(price, 2, 1, 1)}</span>
+        </li>
+      `;
+    })
+    var content = `
+    	<div class="col-sm-12" style="height: 60vh;">
+        <div class="row">
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="">Numero</label>
+            <input type="text" id="" class="form-control" value="${info.tx_creditnote_number}" readonly>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="">Fecha</label>
+            <input type="text" id="" class="form-control" value="${cls_general.datetime_converter(info.created_at)}" readonly>
+          </div>
+          <div class="col-md-12 col-lg-6">
+            <label class="form-label" for="">Cliente</label>
+            <input type="text" id="" class="form-control" value="${info.tx_client_name}" readonly>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="">No imponible</label>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(info.tx_creditnote_nontaxable, 2, 1, 1)}" readonly>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="">Imponible</label>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(info.tx_creditnote_taxable, 2, 1, 1)}" readonly>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="">Impuesto</label>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(info.tx_creditnote_tax, 2, 1, 1)}" readonly>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="">Total</label>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price((info.tx_creditnote_nontaxable + info.tx_creditnote_taxable + info.tx_creditnote_tax).toFixed(2), 2, 1, 1)}" readonly>
+          </div>
+          <div class="col-md-12 col-lg-6">
+            <label class="form-label" for="">Motivo</label>
+            <input type="text" id="" class="form-control" value="${info.tx_creditnote_reason}" readonly>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="row">
+              <div class="col-sm-12">
+                <span>Productos Relacionados</span>
+              </div>
+              <div class="col-sm-12">
+                <ul class="list-group">
+                  ${article_list}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    var footer = `
+        <div class="row">
+          <div class="col-sm-12">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      `;
+
+    document.getElementById('inspectModal_content').innerHTML = content;
+    document.getElementById('inspectModal_footer').innerHTML = footer;
+    document.getElementById('inspectModal_title').innerHTML = 'Inspeccionar Nota de Cr&eacute;dito';
+  }
+  async filter(str, limit) {
+    document.getElementById('container_creditnote').innerHTML = cls_creditnote.generate_list(await cls_creditnote.look_for(str, limit));
+  }
+  look_for(str, limit) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_creditnote.active_list;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          if (i == limit) { break; }
+          var ocurrencys = 0;
+          for (const a in needles) {
+            if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_creditnote_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+        resolve(raw_filtered)
+      }, 500)
+    });
+  }
+
+
 
   render(charge_slug,number,date,client,raw_article,raw_creditnote, payment){
     var article_charge = cls_creditnote.generate_articlecharge(raw_article);
@@ -1229,6 +1424,12 @@ class class_cashregister{
         document.getElementById('span_incomeAnother').innerHTML     = 'B/ ' + cls_general.val_price(incomeAnother, 2, 1, 1);
         document.getElementById('span_returnAnother').innerHTML     = 'B/ ' + cls_general.val_price(returnAnother, 2, 1, 1);
         
+        var incomeGiftcard = (cls_general.is_empty_var(obj.data.cashregister.payment[8]) === 0) ? 0 : obj.data.cashregister.payment[8];
+        var returnGiftcard = (cls_general.is_empty_var(obj.data.cashregister.returnpayment[8]) === 0) ? 0 : obj.data.cashregister.returnpayment[8];
+        document.getElementById('span_totalGiftcard').innerHTML     = 'B/ ' + cls_general.val_price(incomeGiftcard - returnGiftcard, 2, 1, 1);
+        document.getElementById('span_incomeGiftcard').innerHTML    = 'B/ ' + cls_general.val_price(incomeGiftcard, 2, 1, 1);
+        document.getElementById('span_returnGiftcard').innerHTML    = 'B/ ' + cls_general.val_price(returnGiftcard, 2, 1, 1);
+
         var total_giftcardinactive = 0;
         var total_giftcardactive = 0;
         obj.data.cashregister.giftcard.map((giftcard) => {
@@ -1338,8 +1539,11 @@ class class_cashregister{
     var income_nequi = (cls_general.is_empty_var(payment[6]) === 1) ? payment[6] : 0;
     var outcome_nequi = (cls_general.is_empty_var(canceled[6]) === 1) ? payment[6] : 0;
 
-    var income_coupon = (cls_general.is_empty_var(payment[7]) === 1) ? payment[7] : 0;
-    var outcome_coupon = (cls_general.is_empty_var(canceled[7]) === 1) ? payment[7] : 0;
+    var income_another = (cls_general.is_empty_var(payment[7]) === 1) ? payment[7] : 0;
+    var outcome_another = (cls_general.is_empty_var(canceled[7]) === 1) ? payment[7] : 0;
+
+    var income_giftcard = (cls_general.is_empty_var(payment[8]) === 1) ? payment[8] : 0;
+    var outcome_giftcard = (cls_general.is_empty_var(canceled[8]) === 1) ? payment[8] : 0;
 
 
     var content = `
@@ -1461,10 +1665,16 @@ class class_cashregister{
               <td>${cls_general.val_price(outcome_nequi, 2, 1, 1) }</td>
             </tr>
             <tr>
+              <th>Otro</th>
+              <td class="table-secondary">${cls_general.val_price(income_another - outcome_another, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(income_another, 2, 1, 1) }</td>
+              <td>${cls_general.val_price(outcome_another, 2, 1, 1) }</td>
+            </tr>
+            <tr>
               <th>Cup&oacute;n</th>
-              <td class="table-secondary">${cls_general.val_price(income_coupon - outcome_coupon, 2, 1, 1) }</td>
-              <td>${cls_general.val_price(income_coupon, 2, 1, 1) }</td>
-              <td>${cls_general.val_price(outcome_coupon, 2, 1, 1) }</td>
+              <td class="table-secondary">${cls_general.val_price(income_giftcard - outcome_giftcard, 2, 1, 1)}</td>
+              <td>${cls_general.val_price(income_giftcard, 2, 1, 1)}</td>
+              <td>${cls_general.val_price(outcome_giftcard, 2, 1, 1) }</td>
             </tr>
           </tbody>
         </table>

@@ -96,7 +96,7 @@ class productController extends Controller
         $rs_product = tm_product::where('tx_product_slug',$slug)->first();
         $rs_measure = tm_product::select('tm_measures.ai_measure_id','tm_products.tx_product_slug','tm_measures.tx_measure_value','rel_measure_products.tx_measure_product_relation','rel_measure_products.ai_measure_product_id')->join('rel_measure_products','rel_measure_products.measure_product_ai_product_id','=','tm_products.ai_product_id')
         ->join('tm_measures','rel_measure_products.measure_product_ai_measure_id','=','tm_measures.ai_measure_id')->where('tx_product_slug',$slug)->where('tx_measure_status',1)->get();
-        $rs_dataproductinput = tm_dataproductinput::select('tm_providers.tx_provider_value','tm_dataproductinputs.created_at','tm_dataproductinputs.tx_dataproductinput_price')->join('tm_productinputs','tm_productinputs.ai_productinput_id','tm_dataproductinputs.dataproductinput_ai_productinput_id')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->where('dataproductinput_ai_product_id',$rs_product['ai_product_id'])->where('tx_productinput_status',1)->get();
+        $rs_dataproductinput = tm_dataproductinput::select('tm_providers.tx_provider_value','tm_dataproductinputs.created_at','tm_dataproductinputs.tx_dataproductinput_price','tm_dataproductinputs.tx_dataproductinput_discountrate','tm_dataproductinputs.tx_dataproductinput_taxrate','tm_dataproductinputs.dataproductinput_ai_measurement_id','tm_productinputs.tx_productinput_date')->join('tm_productinputs','tm_productinputs.ai_productinput_id','tm_dataproductinputs.dataproductinput_ai_productinput_id')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->where('dataproductinput_ai_product_id',$rs_product['ai_product_id'])->where('tx_productinput_status',1)->orderby('tm_productinputs.tx_productinput_date', 'DESC')->get();
 
         return response()->json(['status'=>'success','data'=>['product'=>$rs_product, 'measure_list'=>$rs_measure, 'dataproductinput' => $rs_dataproductinput ]]);
     }
@@ -180,10 +180,10 @@ class productController extends Controller
         $rs_product = $qry->first();
         $denied = 0;
 
-        // $check_output = tm_dataproductoutput::where('dataproductoutput_ai_product_id',$rs_product['ai_product_id'])->count();
-        // if ($check_output > 0) {
-        // $denied = 1;
-        // }
+        $check_output = tm_dataproductoutput::where('dataproductoutput_ai_product_id',$rs_product['ai_product_id'])->count();
+        if ($check_output > 0) {
+        $denied = 1;
+        }
         $check_requisition = tm_datarequisition::where('datarequisition_ai_product_id',$rs_product['ai_product_id'])->count();
         if ($check_requisition > 0) {
         $denied = 1;

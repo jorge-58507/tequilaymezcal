@@ -13,6 +13,7 @@ use App\rel_requisition_productinput;
 use App\tm_measure;
 use App\tm_datarequisition;
 use App\rel_measure_product;
+use App\tm_paymentprovider;
 
 class productinputController extends Controller
 {
@@ -23,6 +24,10 @@ class productinputController extends Controller
      */
     public function index()
     {
+        if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
+            return redirect() -> route('request.index');
+        }
+
         $providerController = new providerController;
         $rs_provider = $providerController->getAll();
         
@@ -113,6 +118,8 @@ class productinputController extends Controller
         $tm_productinput->tx_productinput_discount   = $discount;
         $tm_productinput->tx_productinput_tax        = $tax;
         $tm_productinput->tx_productinput_total      = $total;
+        $tm_productinput->tx_productinput_due        = $total;
+        $tm_productinput->tx_productinput_date       = date('Y-m-d');
         $productinput_slug = time().str_replace(' ','',$number);
         $tm_productinput->tx_productinput_slug       = $productinput_slug;
         $tm_productinput->save();
@@ -173,12 +180,22 @@ class productinputController extends Controller
     {
         $productinput_all = $this->getAll();
         $rs_productinput = $this->showit($productinput_slug);
+        $rs_dataproductinput = tm_paymentprovider::select('tm_paymentproviders.ai_paymentprovider_id','tm_paymentproviders.paymentprovider_ai_user_id','tm_paymentproviders.tx_paymentprovider_number','tm_paymentproviders.tx_paymentprovider_total','tm_paymentproviders.created_at  as paymentprovider_date',
+        'tm_productinputs.tx_productinput_number','tm_productinputs.tx_productinput_total','tm_productinputs.tx_productinput_due','tm_productinputs.tx_productinput_date','tm_productinputs.tx_productinput_slug','tm_productinputs.created_at as productinput_date', 'rel_paymentprovider_productinputs.tx_paymentprovider_productinput_payment',
+        'tm_requisitions.tx_requisition_slug','tm_requisitions.tx_requisition_number','tm_requisitions.tx_requisition_total','tm_requisitions.created_at as requisition_date')
+        ->join('rel_paymentprovider_productinputs','rel_paymentprovider_productinputs.paymentprovider_productinput_ai_paymentprovider_id','tm_paymentproviders.ai_paymentprovider_id')
+        ->join('tm_productinputs','tm_productinputs.ai_productinput_id','rel_paymentprovider_productinputs.paymentprovider_productinput_ai_productinput_id')
+        ->join('rel_requisition_productinputs','rel_requisition_productinputs.requisition_productinput_ai_productinput_id','tm_productinputs.ai_productinput_id')
+        ->join('tm_requisitions','rel_requisition_productinputs.requisition_productinput_ai_requisition_id','tm_requisitions.ai_requisition_id')->where('tm_productinputs.tx_productinput_slug',$productinput_slug)->get();
+
         return response()->json(['status'=>'success','message'=>'', 
         'data'=>
-        ['productinput'=>[
-            'notprocesed'=> $productinput_all['notprocesed'],
-            'opened'=>['info' => $rs_productinput['info'], 'dataproductinput'=>$rs_productinput['dataproductinput'] ]
-        ] ]]);
+            ['productinput'=>[
+                    'notprocesed'=> $productinput_all['notprocesed'],
+                    'opened'=>['info' => $rs_productinput['info'], 'dataproductinput'=>$rs_productinput['dataproductinput'], 'data_related' => $rs_dataproductinput ]
+                ] 
+            ]
+        ]);
     }
     public function showit($slug)
     {
@@ -393,6 +410,13 @@ class productinputController extends Controller
         $rs_productinput = $this->showit($rs['tx_productinput_slug']);
 
         return response()->json(['status'=>'success','message'=>'Eliminado correctamente.','data'=>['opened'=>['info'=>$rs_productinput['info'], 'dataproductinput'=>$rs_productinput['dataproductinput']]]]);
+    }
+
+
+    public function report($from, $to){
+        $rs = tm_productinput::where('created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
+        
+        return [ 'list' => $rs ];
     }
 
 }
