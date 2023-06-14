@@ -522,7 +522,7 @@ class class_product{
             </div>
             <div class="col-md-4 d-grid gap-2">
               <label for="" class="form-label m_0">Conteo</label>
-              <button type="button" class="btn btn-info" onclick="cls_product.count_product('${product['tx_product_slug']}')" >${product['tx_product_quantity']}</button>
+              <button type="button" class="btn btn-info" onclick="cls_product.count_product('${product['tx_product_slug']}')" >${cls_general.val_dec(product['tx_product_quantity'],2,1,1)}</button>
             </div>
           </div>
         </div>
@@ -1854,7 +1854,6 @@ class class_client {
       var content_bottom = `
         <div class="row">
           <div class="col-lg-12 text-center pt-2">
-            <button type="button" class="btn btn-info" onclick="cls_giftcard.index('${client.tx_client_slug}');">Cupones</button>
             <button type="button" class="btn btn-warning" onclick="cls_general.disable_submit(this); cls_client.delete('${client.tx_client_slug}');">Eliminar Cliente</button>
             <button type="button" class="btn btn-secondary" onclick="cls_client.render()">Volver</button>
             <button type="button" class="btn btn-success" onclick="cls_general.disable_submit(this); cls_client.update('${client.tx_client_slug}')">Guardar Cliente</button>

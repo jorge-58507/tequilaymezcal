@@ -163,7 +163,11 @@ class clientController extends Controller
         if ($qry->count() === 0) {
             return response()->json(['status'=>'failed','message'=>'No existe.']);
         }
+
         $rs = $qry->first();
+        if ($rs['ai_client_id'] === 1) {
+            return response()->json(['status'=>'failed','message'=>'No se puede eliminar.']);
+        }
         $check_request = tm_request::where('request_ai_client_id',$rs['ai_client_id'])->count();
         $check_giftcard = tm_giftcard::where('giftcard_ai_client_id',$rs['ai_client_id'])->count();
         if ($check_request === 0 && $check_giftcard === 0) {

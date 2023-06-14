@@ -218,6 +218,9 @@ class class_request {
     var url = '/request/' + request_slug; var method = 'GET';
     var body = "";
     var funcion = function (obj) {
+      if (obj.data.command_procesed.length === 0) {
+        cls_general.shot_toast_bs('El pedido ya fue cerrado.', { bg: 'text-bg-warning' }); return false;
+      }
       var table_slug = obj.data.table.tx_table_slug;
       cls_command.command_procesed = obj.data.command_procesed;
       cls_request.render_request(obj.data.request, table_slug);
@@ -808,19 +811,23 @@ class class_command{
     var url = '/command/'; var method = 'POST';
     var body = JSON.stringify({a: command_list, b: table_slug, c: client.name, d: 'Ped.'+client.value.replace(' ',''), e: consumption, f: observation });
     var funcion = function (obj) {
-      document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
-      document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
-      cls_command.command_procesed = obj.data.command_procesed;
-      cls_command.command_list = [];
-      var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
-      cls_command.render_articleselected();
-      var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+      if (obj.status === 'success') {
+        document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
+        document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
+        cls_command.command_procesed = obj.data.command_procesed;
+        cls_command.command_list = [];
+        var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
+        cls_command.render_articleselected();
+        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
 
-      document.getElementById('commandList').innerHTML = content_command_procesed.content;
-      document.getElementById('requestTotal').innerHTML = 'B/ '+cls_general.val_price(total_sale.total,2,1,1);
+        document.getElementById('commandList').innerHTML = content_command_procesed.content;
+        document.getElementById('requestTotal').innerHTML = 'B/ '+cls_general.val_price(total_sale.total,2,1,1);
 
-      const Modal = bootstrap.Modal.getInstance('#commandModal');
-      Modal.hide();
+        const Modal = bootstrap.Modal.getInstance('#commandModal');
+        Modal.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
@@ -832,17 +839,21 @@ class class_command{
     var url = '/command/'+request_slug; var method = 'PUT';
     var body = JSON.stringify({ a: command_list, e: consumption, f: observation });
     var funcion = function (obj) {
-      cls_command.command_procesed = obj.data.command_procesed;
-      cls_command.command_list = [];
-      var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
-      cls_command.render_articleselected();
-      var total_sale = cls_general.calculate_sale(content_command_procesed.price);
-      
-      document.getElementById('commandList').innerHTML = content_command_procesed.content;
-      document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
+      if (obj.status === 'success') {
+        cls_command.command_procesed = obj.data.command_procesed;
+        cls_command.command_list = [];
+        var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
+        cls_command.render_articleselected();
+        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        
+        document.getElementById('commandList').innerHTML = content_command_procesed.content;
+        document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
 
-      const Modal = bootstrap.Modal.getInstance('#commandModal');
-      Modal.hide();
+        const Modal = bootstrap.Modal.getInstance('#commandModal');
+        Modal.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }

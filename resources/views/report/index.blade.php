@@ -66,6 +66,7 @@
             numberOfMonths: 1
           })
           .on( "change", function() {
+            // to.datepicker( "option", "maxDate", '+30d' );
             to.datepicker( "option", "minDate", getDate( this ) );
           }),
         to = $( "#reportToDatefilter" ).datepicker({
@@ -75,6 +76,7 @@
         })
         .on( "change", function() {
           from.datepicker( "option", "maxDate", getDate( this ) );
+          // from.datepicker( "option", "minDate", '-30d' );
         });
   
       function getDate( element ) {

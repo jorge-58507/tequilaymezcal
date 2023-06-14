@@ -15,7 +15,7 @@ class clientSeeder extends Seeder
         $tm_client = new tm_client;
         $tm_client->client_ai_user_id = 1;
         $tm_client->tx_client_name = 'Contado';
-        $tm_client->tx_client_cif = 0-000-000;
+        $tm_client->tx_client_cif = '0-000-000';
         $tm_client->tx_client_dv = '';
         $tm_client->tx_client_direction = 'NO INDICA';
         $tm_client->tx_client_telephone = '';

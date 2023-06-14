@@ -563,6 +563,7 @@ class class_charge{
 
   }
   print(charge_slug){
+
     cls_general.print_html('/print_charge/' + charge_slug);
   }
 }

@@ -275,7 +275,7 @@ class creditnoteController extends Controller
     }
     
     public function report($from, $to){
-        $rs = tm_creditnote::where('created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
+        $rs = tm_creditnote::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_creditnotes.tx_creditnote_number','tm_creditnotes.tx_creditnote_nontaxable','tm_creditnotes.tx_creditnote_taxable','tm_creditnotes.tx_creditnote_tax','tm_creditnotes.created_at')->join('tm_charges','tm_charges.ai_charge_id','tm_creditnotes.creditnote_ai_charge_id')->join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tm_creditnotes.created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('tm_creditnotes.created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
 
         return [ 'list' => $rs ];
     }

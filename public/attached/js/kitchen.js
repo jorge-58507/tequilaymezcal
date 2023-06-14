@@ -25,12 +25,13 @@ class class_command
     var raw_ready = [];
     var array_command = [];
     ready.map((command) => {
-      if (command_id != command.ai_command_id && command_id > 0) {
+      array_command.push(command);
+      // if (command_id != command.ai_command_id && command_id > 0) {
+      if (command_id != command.ai_command_id || command_id === 0) {
         raw_ready.push(array_command);
         array_command = [];
+        command_id = command.ai_command_id;
       }
-      array_command.push(command);
-      command_id = command.ai_command_id;
     })
     raw_ready.map((ready) => {
       var command_id = '';
@@ -76,13 +77,13 @@ class class_command
     var raw_notready = [];
     var array_command = [];
     notready.map((command) => {
-      if (command_id != command.ai_command_id && command_id > 0) {
+      array_command.push(command);
+      // if (command_id != command.ai_command_id && command_id > 0) {
+      if (command_id != command.ai_command_id || command_id === 0) {
         raw_notready.push(array_command);
         array_command = [];
+        command_id = command.ai_command_id;
       }
-      array_command.push(command);
-      command_id = command.ai_command_id;
-
     })
     raw_notready.map((notready) => {
       var command_id = '';

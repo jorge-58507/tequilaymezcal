@@ -17,7 +17,11 @@ class printController extends Controller
 				break;
 			case 'vertical_halfPage':
 				$pdf->loadHTML($this->vertical_half_page($raw_page))->setPaper('letter'); 			
+				break;
+			case 'roll_page':
+				$pdf->loadHTML($this->roll_page($raw_page)); 			
 				break;			
+
 			default:
 				$pdf->loadHTML($this->full_page($raw_page))->setPaper('letter');
 				break;
@@ -245,6 +249,52 @@ class printController extends Controller
 			<div class="vhp_middle_content px_10">'.$content.'</div>
 		</div>        ';
 		return $output;
+	}
+	function roll_page ($raw_page){
+		$content='';
+		foreach ($raw_page['content'] as $key => $value) {
+			$content .= ($value != end($raw_page['content'])) ? $value.'<span style="page-break-after: always"></span>' : $value;
+		}
+		$output = '
+		<link type="text/css" rel="stylesheet" href="attached/css/print.css"  media="screen,projection"/>
+		<link type="text/css" rel="stylesheet" href="attached/css/bootstrap.css"  media="screen,projection">
+		<link type="text/css" rel="stylesheet" href="attached/js/bootstrap.css"  media="screen,projection">
+		<script src="attached/js/bootstrap.min.js"></script>
+
+		<title>'.$raw_page['title_page'].'</title>
+		<style>
+			@page { margin: 25px 25px 25px 25px;}
+			@page { size: 8cm 80cm; }
+			.print_header { position: fixed; top: -30px; left: 0px; right: 0px; height: 50px; }
+			.print_page { position: fixed; top: 130px; left: 0px; right: 0px; height: 50px; }
+			.print_bottom { position: fixed; bottom: -50px; left: 0px; right: 0px; height: 50px; }
+		</style>
+		<div class="print_header">
+				<div class="text-center col_25" style="height: 100px; float: left;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				<div class="text-center col_50" style="height: 100px; float: left;">
+					<img width="85px" height="85px" src="./attached/image/logo_print.svg">
+					<br/>
+					<br/>
+					<p style="font-size: 10px;">Boulevard Penonomé, Via Interamericana</p>
+				</div>
+				<div class="text-center col_25" style="height: 100px; float: left; text-align: right; font-size: 10px;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
+		</div>
+		<div class="print_page">
+			<div class="top_content">
+				<div class="col_100 text-center h_30" >
+					<span class="content_title sanson_title fs_14">
+						'.$raw_page['title'].'
+					</span>
+				</div>
+			</div>
+			<div class="px_10">'.$content.'</div>
+		</div>
+		<div class="print_bottom">
+			'.$raw_page['bottom'].'
+		</div>
+				';
+		return $output;
+
 	}
 
 	public function print_cashregister ($cashregister_id){
@@ -700,6 +750,114 @@ class printController extends Controller
 		return $pdf->stream();
 	}
 
+	// public function print_charge ($charge_slug){
+	// 	$chargeController = new chargeController;
+	// 	$rs_charge = $chargeController->showit($charge_slug);
+
+	// 	$data_content = '';
+	// 	foreach ($rs_charge['article'] as $value) {
+	// 		$data_content .= '
+	// 			<tr class="bs_1">
+	// 				<td class="text_center">'.$value['tx_article_code'].'</td>
+	// 				<td class="text_center">'.$value['tx_article_value'].'</td>
+	// 				<td class="text_center">'.$value['tx_commanddata_quantity'].'</td>
+	// 				<td class="text_center">'.number_format($value['tx_commanddata_price'],2).'</td>
+	// 			</tr>
+	// 		';
+	// 	}
+	// 	$data_payment = '';
+	// 	foreach ($rs_charge['payment'] as $key => $value) {
+	// 		$data_payment .= '
+	// 			<tr class="bs_1">
+	// 				<td class="text_center">'.$value['tx_paymentmethod_value'].'</td>
+	// 				<td class="text_center">'.$value['tx_payment_amount'].'</td>
+	// 				<td class="text_center">'.$value['tx_payment_number'].'</td>
+	// 			</tr>
+	// 		';
+	// 	}
+	// 	$content = '
+	// 		<div>
+	// 			<table class="table bs_1 h_70">
+	// 				<tbody>
+	// 					<tr>
+	// 						<td class="text_left px_10 h_30"><strong>Cliente:</strong> '.$rs_charge['charge']['tx_client_name'].'</td>
+	// 						<td class="text_right px_10"><strong>RUC:</strong>'.$rs_charge['charge']['tx_client_cif'].$rs_charge['charge']['tx_client_dv'].'</td>
+	// 					</tr>
+	// 					<tr>
+	// 						<td class="text_left px_10 h_30" colspan="2"><strong>Dirección:</strong> '.$rs_charge['charge']['tx_client_direction'].'</td>
+	// 					</tr>
+	// 				</tbody>
+	// 			</table>
+	// 			<table class="table bs_1 h_70">
+	// 				<tbody>
+	// 					<tr>
+	// 						<td class="text_left px_10 h_30"><strong>Cajera:</strong> '.$rs_charge['charge']['user_name'].'</td>
+	// 						<td class="text_left px_10"><strong>Fecha:</strong>'.date('d-m-Y', strtotime($rs_charge['charge']['created_at'])).'</td>
+	// 						<td class="text_left px_10" colspan="2"><strong>Hora:</strong>'.date('h:i a', strtotime($rs_charge['charge']['created_at'])).'</td>
+	// 					</tr>
+	// 					<tr>
+	// 						<td class="text_left px_10 h_30"><strong>Factura:</strong>#'.$rs_charge['charge']['tx_charge_number'].'</td>
+	// 						<td class="text_left px_10" colspan="3"><strong>Total:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_total'],2).'</td>
+	// 					</tr>
+	// 					<tr>
+	// 						<td class="text_left px_10 h_30"><strong>Descuento:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_discount'],2).'</td>
+	// 						<td class="text_left px_10"><strong>No Imponible:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_nontaxable'],2).'</td>
+	// 						<td class="text_left px_10"><strong>Imponible:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_taxable'],2).'</td>
+	// 						<td class="text_left px_10"><strong>Impuesto:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_tax'],2).'</td>
+	// 					</tr>
+	// 				</tbody>
+	// 			</table>
+
+	// 			<table class="table h_70">
+	// 				<caption>Artículos Relacionados</caption>
+	// 				<thead style="background-color: #ccc">
+	// 					<tr class="bs_1">
+	// 						<th>Código</td>
+	// 						<th>Detalle</td>
+	// 						<th>Cantidad</td>
+	// 						<th>Precio</td>
+	// 					</tr>
+	// 				</thead>
+	// 				<tbody>
+	// 					'.$data_content.'
+	// 				</tbody>
+	// 				<tfoot>
+	// 					<tr class="bs_1">
+	// 						<td colspan="3"></td>
+	// 						<td class="text_right"><strong>Total:</strong> '.number_format($rs_charge['charge']['tx_charge_total'],2).'</td>
+	// 					</tr>
+	// 				</tfoot>
+	// 			</table>
+	// 			<table class="table h_70">
+	// 				<caption>Pagos Asociados</caption>
+	// 				<thead style="background-color: #ccc">
+	// 					<tr class="bs_1">
+	// 						<th>Método</td>
+	// 						<th>Monto</td>
+	// 						<th>Numero</td>
+	// 					</tr>
+	// 				</thead>
+	// 				<tbody>
+	// 					'.$data_payment.'
+	// 				</tbody>
+	// 			</table>
+
+	// 		</div>
+	// 	';
+	// 	$content_bottom = '';
+
+	// 	$raw_page = [
+	// 		'date' => date('d-m-Y'),
+	// 		'title'=>'Factura #'.$rs_charge['charge']['tx_charge_number'],
+	// 		'content'=>[$content],
+	// 		'bottom'=>$content_bottom,
+	// 		'title_page'=>"Información de Pago"
+	// 	];
+	// 	$pdf = \App::make('dompdf.wrapper');
+	// 	$pdf->loadHTML($this->full_page($raw_page));
+	// 	return $pdf->stream();
+	// }
+
 	public function print_charge ($charge_slug){
 		$chargeController = new chargeController;
 		$rs_charge = $chargeController->showit($charge_slug);
@@ -727,38 +885,38 @@ class printController extends Controller
 		}
 		$content = '
 			<div>
-				<table class="table bs_1 h_70">
+				<table class="table bs_1 h_70 fs_12">
 					<tbody>
 						<tr>
-							<td class="text_left px_10 h_30"><strong>Cliente:</strong> '.$rs_charge['charge']['tx_client_name'].'</td>
-							<td class="text_right px_10"><strong>RUC:</strong>'.$rs_charge['charge']['tx_client_cif'].$rs_charge['charge']['tx_client_dv'].'</td>
+							<td class="px_10 fs_12"><strong>Cliente:</strong> '.$rs_charge['charge']['tx_client_name'].'</td>
 						</tr>
 						<tr>
-							<td class="text_left px_10 h_30" colspan="2"><strong>Dirección:</strong> '.$rs_charge['charge']['tx_client_direction'].'</td>
-						</tr>
-					</tbody>
-				</table>
-				<table class="table bs_1 h_70">
-					<tbody>
-						<tr>
-							<td class="text_left px_10 h_30"><strong>Cajera:</strong> '.$rs_charge['charge']['user_name'].'</td>
-							<td class="text_left px_10"><strong>Fecha:</strong>'.date('d-m-Y', strtotime($rs_charge['charge']['created_at'])).'</td>
-							<td class="text_left px_10" colspan="2"><strong>Hora:</strong>'.date('h:i a', strtotime($rs_charge['charge']['created_at'])).'</td>
+							<td class="px_10 fs_12"><strong>RUC:</strong> '.$rs_charge['charge']['tx_client_cif'].$rs_charge['charge']['tx_client_dv'].'</td>
 						</tr>
 						<tr>
-							<td class="text_left px_10 h_30"><strong>Factura:</strong>#'.$rs_charge['charge']['tx_charge_number'].'</td>
-							<td class="text_left px_10" colspan="3"><strong>Total:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_total'],2).'</td>
-						</tr>
-						<tr>
-							<td class="text_left px_10 h_30"><strong>Descuento:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_discount'],2).'</td>
-							<td class="text_left px_10"><strong>No Imponible:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_nontaxable'],2).'</td>
-							<td class="text_left px_10"><strong>Imponible:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_taxable'],2).'</td>
-							<td class="text_left px_10"><strong>Impuesto:</strong>B/ '.number_format($rs_charge['charge']['tx_charge_tax'],2).'</td>
+							<td class="px_10 fs_12"><strong>Dirección:</strong> '.$rs_charge['charge']['tx_client_direction'].'</td>
 						</tr>
 					</tbody>
 				</table>
 
-				<table class="table h_70">
+				<table class="table bs_1 h_70 fs_12">
+					<tbody>
+						<tr>
+							<td class="text_left px_10"><strong>Fecha:</strong> '.date('d-m-Y h:i:s a', strtotime($rs_charge['charge']['created_at'])).'</td>
+						</tr>
+						<tr>
+							<td class="text_left px_10"><strong>Cajera:</strong> '.$rs_charge['charge']['user_name'].'</td>
+						</tr>
+						<tr>
+							<td class="text_left px_10"><strong>Factura:</strong> #'.$rs_charge['charge']['tx_charge_number'].'</td>
+						</tr>
+						<tr>
+							<td class="text_left px_10"><strong>Total:</strong> B/ '.number_format($rs_charge['charge']['tx_charge_total'],2).'</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<table class="table h_70b fs_12">
 					<caption>Artículos Relacionados</caption>
 					<thead style="background-color: #ccc">
 						<tr class="bs_1">
@@ -778,7 +936,8 @@ class printController extends Controller
 						</tr>
 					</tfoot>
 				</table>
-				<table class="table h_70">
+
+				<table class="table h_70 fs_12">
 					<caption>Pagos Asociados</caption>
 					<thead style="background-color: #ccc">
 						<tr class="bs_1">
@@ -804,9 +963,7 @@ class printController extends Controller
 			'title_page'=>"Información de Pago"
 		];
 		$pdf = \App::make('dompdf.wrapper');
-		$pdf->loadHTML($this->full_page($raw_page));
+		$pdf->loadHTML($this->roll_page($raw_page));
 		return $pdf->stream();
 	}
-
-
 }
