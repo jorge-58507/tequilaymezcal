@@ -109,6 +109,7 @@ class chargeController extends Controller
         $number = tm_charge::count() + 55;
         $user = $request->user();
         $tm_charge = new tm_charge;
+        $charge_slug =  time().str_replace('.','',$price_sale['total']);
         $tm_charge->charge_ai_user_id       = $user['id'];
         $tm_charge->charge_ai_paydesk_id    = 0;
         $tm_charge->tx_charge_number        = substr('0000000000'.$number,-10);
@@ -119,7 +120,7 @@ class chargeController extends Controller
         $tm_charge->tx_charge_total         = $price_sale['total'];
         $tm_charge->tx_charge_change        = $change;
         $tm_charge->tx_charge_status        = 1;
-        $tm_charge->tx_charge_slug          = time().str_replace('.','',$price_sale['total']);
+        $tm_charge->tx_charge_slug          = $charge_slug;
         $tm_charge->save();
         $charge_id = $tm_charge->ai_charge_id;
 
@@ -134,7 +135,7 @@ class chargeController extends Controller
             $qry_giftcard->update(['tx_giftcard_amount' => ($rs_giftcard['tx_giftcard_amount'] - $payment['amount'])]);
         }
 
-        return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.']);
+        return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
 
     /**
@@ -367,14 +368,5 @@ class chargeController extends Controller
         $rs_paymentmethod = tm_charge::select('tm_payments.payment_ai_paymentmethod_id','tm_payments.tx_payment_amount','tm_payments.tx_payment_number','tm_charges.created_at')->join('tm_payments','tm_payments.payment_ai_charge_id','tm_charges.ai_charge_id')->where('tm_charges.created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('tm_charges.created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
 
         return [ 'list' => $rs, 'paymentmethod' => $rs_paymentmethod ];
-        
-
-
-
-
-
-
-
-
     }
 }

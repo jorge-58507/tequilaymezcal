@@ -263,25 +263,25 @@ class printController extends Controller
 
 		<title>'.$raw_page['title_page'].'</title>
 		<style>
-			@page { margin: 25px 25px 25px 25px;}
-			@page { size: 8cm 80cm; }
+			@page { margin: 25px 5px 5px 5px;}
+			@page { size: 10cm 80cm; }
 			.print_header { position: fixed; top: -30px; left: 0px; right: 0px; height: 50px; }
-			.print_page { position: fixed; top: 130px; left: 0px; right: 0px; height: 50px; }
+			.print_page { position: fixed; top: 180px; left: 0px; right: 0px; height: 50px; }
 			.print_bottom { position: fixed; bottom: -50px; left: 0px; right: 0px; height: 50px; }
+			.logo { position: fixed; left: 0px; }
 		</style>
 		<div class="print_header">
-				<div class="text-center col_25" style="height: 100px; float: left;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-				<div class="text-center col_50" style="height: 100px; float: left;">
-					<img width="85px" height="85px" src="./attached/image/logo_print.svg">
-					<br/>
-					<br/>
-					<p style="font-size: 10px;">Boulevard Penonomé, Via Interamericana</p>
+				<div class="text-center col_25" style="height: 230px; float: left;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				<div class="text-center col_50" style="height: 230px; float: left; text-align: center;">
+					<img class="logo" width="150px" height="150px" src="./attached/image/logo_print.svg">
+					<br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/>
+					<p style="font-size: 12px;">Boulevard Penonomé, Via Interamericana</p>
 				</div>
-				<div class="text-center col_25" style="height: 100px; float: left; text-align: right; font-size: 10px;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
+				<div class="text-center col_25" style="height: 230px; float: left; text-align: right; font-size: 14px;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
 		</div>
-		<div class="print_page">
+		<div class="print_page"  >
 			<div class="top_content">
-				<div class="col_100 text-center h_30" >
+				<div class="col_100 text-center h_30">
 					<span class="content_title sanson_title fs_14">
 						'.$raw_page['title'].'
 					</span>
@@ -864,14 +864,16 @@ class printController extends Controller
 
 		$data_content = '';
 		foreach ($rs_charge['article'] as $value) {
-			$data_content .= '
-				<tr class="bs_1">
-					<td class="text_center">'.$value['tx_article_code'].'</td>
-					<td class="text_center">'.$value['tx_article_value'].'</td>
-					<td class="text_center">'.$value['tx_commanddata_quantity'].'</td>
-					<td class="text_center">'.number_format($value['tx_commanddata_price'],2).'</td>
-				</tr>
-			';
+			if ($value['tx_commanddata_status'] === 1) {
+				$data_content .= '
+					<tr class="bs_1">
+						<td class="text_center">'.$value['tx_article_code'].'</td>
+						<td class="text_center">'.$value['tx_article_value'].'</td>
+						<td class="text_center">'.$value['tx_commanddata_quantity'].'</td>
+						<td class="text_center">'.number_format($value['tx_commanddata_price'],2).'</td>
+					</tr>
+				';
+			}
 		}
 		$data_payment = '';
 		foreach ($rs_charge['payment'] as $key => $value) {
@@ -885,21 +887,21 @@ class printController extends Controller
 		}
 		$content = '
 			<div>
-				<table class="table bs_1 h_70 fs_12">
+				<table class="table bs_1 h_70 fs_14">
 					<tbody>
 						<tr>
-							<td class="px_10 fs_12"><strong>Cliente:</strong> '.$rs_charge['charge']['tx_client_name'].'</td>
+							<td class="px_10 fs_14"><strong>Cliente:</strong> '.$rs_charge['charge']['tx_client_name'].'</td>
 						</tr>
 						<tr>
-							<td class="px_10 fs_12"><strong>RUC:</strong> '.$rs_charge['charge']['tx_client_cif'].$rs_charge['charge']['tx_client_dv'].'</td>
+							<td class="px_10 fs_14"><strong>RUC:</strong> '.$rs_charge['charge']['tx_client_cif'].$rs_charge['charge']['tx_client_dv'].'</td>
 						</tr>
 						<tr>
-							<td class="px_10 fs_12"><strong>Dirección:</strong> '.$rs_charge['charge']['tx_client_direction'].'</td>
+							<td class="px_10 fs_14"><strong>Dirección:</strong> '.$rs_charge['charge']['tx_client_direction'].'</td>
 						</tr>
 					</tbody>
 				</table>
 
-				<table class="table bs_1 h_70 fs_12">
+				<table class="table bs_1 h_70 fs_14">
 					<tbody>
 						<tr>
 							<td class="text_left px_10"><strong>Fecha:</strong> '.date('d-m-Y h:i:s a', strtotime($rs_charge['charge']['created_at'])).'</td>
@@ -916,7 +918,7 @@ class printController extends Controller
 					</tbody>
 				</table>
 
-				<table class="table h_70b fs_12">
+				<table class="table h_70b fs_16">
 					<caption>Artículos Relacionados</caption>
 					<thead style="background-color: #ccc">
 						<tr class="bs_1">
@@ -937,7 +939,7 @@ class printController extends Controller
 					</tfoot>
 				</table>
 
-				<table class="table h_70 fs_12">
+				<table class="table h_70 fs_16">
 					<caption>Pagos Asociados</caption>
 					<thead style="background-color: #ccc">
 						<tr class="bs_1">
@@ -953,7 +955,7 @@ class printController extends Controller
 
 			</div>
 		';
-		$content_bottom = '';
+		$content_bottom = '<br /><br />&nbsp;';
 
 		$raw_page = [
 			'date' => date('d-m-Y'),

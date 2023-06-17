@@ -563,7 +563,6 @@ class class_charge{
 
   }
   print(charge_slug){
-
     cls_general.print_html('/print_charge/' + charge_slug);
   }
 }
@@ -790,6 +789,7 @@ class class_payment{
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
         cls_payment.payment = [];
         cls_payment.giftcard = [];
+        cls_charge.print(obj.data.slug);
         window.location.reload();
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });

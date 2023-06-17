@@ -69,7 +69,12 @@ class class_report
           case '5':
             cls_report.render_productinput_provider(from, to, obj.data.productinput);
             break;
+          case '6':
+            cls_report.render_depletion(from, to, obj.data.depletion);
+            break;
+
           default:
+            cls_general.shot_toast_bs('Opción incorecta.',{bg: 'text-bg-danger'});
             break;
         }
       } else {
@@ -463,6 +468,26 @@ class class_report
         </tfoot>
       </table>
     `;
+    document.getElementById('container_report').innerHTML = list;
+  }
+  render_depletion(from, to, raw_depletion){
+    var list = '';
+    list += `
+      <h5>Listado de Mermas, Desde: ${from} Hasta: ${to}</h5>
+      <div class="list-group">
+    `;
+    raw_depletion.map((depletion) => {
+      var status_class = (depletion.tx_depletion_status == 1) ? 'text-bg-success' : '';
+      list += `
+        <a href="#" class="list-group-item  cursor_pointer text-truncate ${status_class}">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">${depletion.tx_depletion_quantity} - ${depletion.tx_product_value}</h5>
+            <small>${cls_general.datetime_converter(depletion.created_at)}</small>
+          </div>
+        </a>
+      `;
+    })
+    list += `</div>`;
     document.getElementById('container_report').innerHTML = list;
   }
 }

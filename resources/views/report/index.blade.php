@@ -30,6 +30,7 @@
             <option value="3">Reporte de Ventas</option>
             <option value="4">Reporte Notas de Credito</option>
             <option value="5">Compras por proveedores</option>
+            <option value="6">Merma</option>
           </optgroup>
         </select>
       </div>

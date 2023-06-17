@@ -201,7 +201,7 @@ class productController extends Controller
         $denied = 1;
         }
         if ($denied === 0) {
-            // tm_product::where('ai_product_id',$rs_product['ai_product_id'])->delete();
+            tm_product::where('ai_product_id',$rs_product['ai_product_id'])->delete();
             $message = 'Se elimin&oacute; correctamente.';
         }else{
             tm_product::where('ai_product_id',$rs_product['ai_product_id'])->update(['tx_product_status'=>0]);

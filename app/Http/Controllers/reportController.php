@@ -47,7 +47,11 @@ class reportController extends Controller
                 $rs_productinput = $productinputController->report_by_provider($from,$to);
                 return response()->json([ 'status'=>'success','message'=>'','data'=>[ 'productinput' => $rs_productinput['list'] ] ]);
                 break;
-            
+            case '6':
+                $depletionController = new depletionController;
+                $rs_depletion = $depletionController->report($from,$to);
+                return response()->json([ 'status'=>'success','message'=>'','data'=>[ 'depletion' => $rs_depletion['list'] ] ]);
+                break;
             default:
 
                 break;
