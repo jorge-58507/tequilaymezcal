@@ -13,7 +13,8 @@
         "fakerphp/faker": "^1.21",
         "fideloper/proxy": "^4.0",
         "laravel/framework": "^6.2",
-        "laravel/tinker": "^2.0"
+        "laravel/tinker": "^2.0",
+        "mike42/escpos-php": "^4.0"
     },
     "require-dev": {
         "facade/ignition": "^1.4",

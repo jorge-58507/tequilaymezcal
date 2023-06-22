@@ -110,7 +110,7 @@
               <button type="button" id="btn_article" class="btn btn-primary btn-lg">Carta</button>
             </li>
             <li class="nav-item d-grid gap-2">
-              <button type="button" class="btn btn-success btn-lg">Usuario</button>
+              <button type="button" class="btn btn-success btn-lg" onclick="printdirect()">Usuario</button>
             </li>
             <li class="nav-item d-grid gap-2">
               <button type="button" class="btn btn-primary btn-lg" onclick="cls_product.render()">Producto</button>
@@ -161,10 +161,23 @@
     var raw_presentation = JSON.parse('<?php echo json_encode($data['presentation_list']) ?>')    
     const cls_presentation = new class_presentation(raw_presentation);
     const cls_client = new class_client;
-    const cls_giftcard = new class_giftcard;
+    // const cls_giftcard = new class_giftcard;
     var raw_paymentmethod = JSON.parse('<?php echo json_encode($data['paymentmethod_list']) ?>')    
     const cls_payment = new class_payment(raw_paymentmethod);
 
+    function printdirect(){
+      var url = '/test/';
+      var method = 'GET';
+      var body = '';
+      var funcion = function (obj) {
+        if (obj.status === 'success') {
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+        } else {
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+      cls_general.async_laravel_request(url, method, funcion, body);
+    }
   </script>
     {{-- ##############    JQUERY   ############### --}}
   <script type="text/javascript">

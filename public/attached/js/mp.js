@@ -223,7 +223,7 @@ class general_funct {
     }
     var myRequest = new Request(url, myInit);
     let response = await fetch(myRequest)
-    if (response['url'] === 'http://localhost:8000/') { window.location.href = "http://localhost:8000/date/create"; return false;  } 
+    if (response['url'] === 'http://localhost:8000/') { window.location.href = "http://localhost:8000/request"; return false;  } 
     let json_obj = await response.json();
     if (json_obj) { funcion(json_obj); }
   }
