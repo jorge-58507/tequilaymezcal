@@ -858,114 +858,120 @@ class printController extends Controller
 	// 	return $pdf->stream();
 	// }
 
+	// public function print_charge ($charge_slug){
+	// 	$chargeController = new chargeController;
+	// 	$rs_charge = $chargeController->showit($charge_slug);
+
+	// 	$data_content = '';
+	// 	foreach ($rs_charge['article'] as $value) {
+	// 		if ($value['tx_commanddata_status'] === 1) {
+	// 			$data_content .= '
+	// 				<tr class="bs_1">
+	// 					<td class="text_center">'.$value['tx_article_code'].'</td>
+	// 					<td class="text_center">'.$value['tx_article_value'].'</td>
+	// 					<td class="text_center">'.$value['tx_commanddata_quantity'].'</td>
+	// 					<td class="text_center">'.number_format($value['tx_commanddata_price'],2).'</td>
+	// 				</tr>
+	// 			';
+	// 		}
+	// 	}
+	// 	$data_payment = '';
+	// 	foreach ($rs_charge['payment'] as $key => $value) {
+	// 		$data_payment .= '
+	// 			<tr class="bs_1">
+	// 				<td class="text_center">'.$value['tx_paymentmethod_value'].'</td>
+	// 				<td class="text_center">'.$value['tx_payment_amount'].'</td>
+	// 				<td class="text_center">'.$value['tx_payment_number'].'</td>
+	// 			</tr>
+	// 		';
+	// 	}
+	// 	$content = '
+	// 		<div>
+	// 			<table class="table bs_1 h_70 fs_14">
+	// 				<tbody>
+	// 					<tr>
+	// 						<td class="px_10 fs_14"><strong>Cliente:</strong> '.$rs_charge['charge']['tx_client_name'].'</td>
+	// 					</tr>
+	// 					<tr>
+	// 						<td class="px_10 fs_14"><strong>RUC:</strong> '.$rs_charge['charge']['tx_client_cif'].$rs_charge['charge']['tx_client_dv'].'</td>
+	// 					</tr>
+	// 					<tr>
+	// 						<td class="px_10 fs_14"><strong>Dirección:</strong> '.$rs_charge['charge']['tx_client_direction'].'</td>
+	// 					</tr>
+	// 				</tbody>
+	// 			</table>
+
+	// 			<table class="table bs_1 h_70 fs_14">
+	// 				<tbody>
+	// 					<tr>
+	// 						<td class="text_left px_10"><strong>Fecha:</strong> '.date('d-m-Y h:i:s a', strtotime($rs_charge['charge']['created_at'])).'</td>
+	// 					</tr>
+	// 					<tr>
+	// 						<td class="text_left px_10"><strong>Cajera:</strong> '.$rs_charge['charge']['user_name'].'</td>
+	// 					</tr>
+	// 					<tr>
+	// 						<td class="text_left px_10"><strong>Factura:</strong> #'.$rs_charge['charge']['tx_charge_number'].'</td>
+	// 					</tr>
+	// 					<tr>
+	// 						<td class="text_left px_10"><strong>Total:</strong> B/ '.number_format($rs_charge['charge']['tx_charge_total'],2).'</td>
+	// 					</tr>
+	// 				</tbody>
+	// 			</table>
+
+	// 			<table class="table h_70b fs_16">
+	// 				<caption>Artículos Relacionados</caption>
+	// 				<thead style="background-color: #ccc">
+	// 					<tr class="bs_1">
+	// 						<th>Código</td>
+	// 						<th>Detalle</td>
+	// 						<th>Cantidad</td>
+	// 						<th>Precio</td>
+	// 					</tr>
+	// 				</thead>
+	// 				<tbody>
+	// 					'.$data_content.'
+	// 				</tbody>
+	// 				<tfoot>
+	// 					<tr class="bs_1">
+	// 						<td colspan="3"></td>
+	// 						<td class="text_right"><strong>Total:</strong> '.number_format($rs_charge['charge']['tx_charge_total'],2).'</td>
+	// 					</tr>
+	// 				</tfoot>
+	// 			</table>
+
+	// 			<table class="table h_70 fs_16">
+	// 				<caption>Pagos Asociados</caption>
+	// 				<thead style="background-color: #ccc">
+	// 					<tr class="bs_1">
+	// 						<th>Método</td>
+	// 						<th>Monto</td>
+	// 						<th>Numero</td>
+	// 					</tr>
+	// 				</thead>
+	// 				<tbody>
+	// 					'.$data_payment.'
+	// 				</tbody>
+	// 			</table>
+
+	// 		</div>
+	// 	';
+	// 	$content_bottom = '<br /><br />&nbsp;';
+
+	// 	$raw_page = [
+	// 		'date' => date('d-m-Y'),
+	// 		'title'=>'Factura #'.$rs_charge['charge']['tx_charge_number'],
+	// 		'content'=>[$content],
+	// 		'bottom'=>$content_bottom,
+	// 		'title_page'=>"Información de Pago"
+	// 	];
+	// 	$pdf = \App::make('dompdf.wrapper');
+	// 	$pdf->loadHTML($this->roll_page($raw_page));
+	// 	return $pdf->stream();
+	// }
 	public function print_charge ($charge_slug){
 		$chargeController = new chargeController;
-		$rs_charge = $chargeController->showit($charge_slug);
-
-		$data_content = '';
-		foreach ($rs_charge['article'] as $value) {
-			if ($value['tx_commanddata_status'] === 1) {
-				$data_content .= '
-					<tr class="bs_1">
-						<td class="text_center">'.$value['tx_article_code'].'</td>
-						<td class="text_center">'.$value['tx_article_value'].'</td>
-						<td class="text_center">'.$value['tx_commanddata_quantity'].'</td>
-						<td class="text_center">'.number_format($value['tx_commanddata_price'],2).'</td>
-					</tr>
-				';
-			}
-		}
-		$data_payment = '';
-		foreach ($rs_charge['payment'] as $key => $value) {
-			$data_payment .= '
-				<tr class="bs_1">
-					<td class="text_center">'.$value['tx_paymentmethod_value'].'</td>
-					<td class="text_center">'.$value['tx_payment_amount'].'</td>
-					<td class="text_center">'.$value['tx_payment_number'].'</td>
-				</tr>
-			';
-		}
-		$content = '
-			<div>
-				<table class="table bs_1 h_70 fs_14">
-					<tbody>
-						<tr>
-							<td class="px_10 fs_14"><strong>Cliente:</strong> '.$rs_charge['charge']['tx_client_name'].'</td>
-						</tr>
-						<tr>
-							<td class="px_10 fs_14"><strong>RUC:</strong> '.$rs_charge['charge']['tx_client_cif'].$rs_charge['charge']['tx_client_dv'].'</td>
-						</tr>
-						<tr>
-							<td class="px_10 fs_14"><strong>Dirección:</strong> '.$rs_charge['charge']['tx_client_direction'].'</td>
-						</tr>
-					</tbody>
-				</table>
-
-				<table class="table bs_1 h_70 fs_14">
-					<tbody>
-						<tr>
-							<td class="text_left px_10"><strong>Fecha:</strong> '.date('d-m-Y h:i:s a', strtotime($rs_charge['charge']['created_at'])).'</td>
-						</tr>
-						<tr>
-							<td class="text_left px_10"><strong>Cajera:</strong> '.$rs_charge['charge']['user_name'].'</td>
-						</tr>
-						<tr>
-							<td class="text_left px_10"><strong>Factura:</strong> #'.$rs_charge['charge']['tx_charge_number'].'</td>
-						</tr>
-						<tr>
-							<td class="text_left px_10"><strong>Total:</strong> B/ '.number_format($rs_charge['charge']['tx_charge_total'],2).'</td>
-						</tr>
-					</tbody>
-				</table>
-
-				<table class="table h_70b fs_16">
-					<caption>Artículos Relacionados</caption>
-					<thead style="background-color: #ccc">
-						<tr class="bs_1">
-							<th>Código</td>
-							<th>Detalle</td>
-							<th>Cantidad</td>
-							<th>Precio</td>
-						</tr>
-					</thead>
-					<tbody>
-						'.$data_content.'
-					</tbody>
-					<tfoot>
-						<tr class="bs_1">
-							<td colspan="3"></td>
-							<td class="text_right"><strong>Total:</strong> '.number_format($rs_charge['charge']['tx_charge_total'],2).'</td>
-						</tr>
-					</tfoot>
-				</table>
-
-				<table class="table h_70 fs_16">
-					<caption>Pagos Asociados</caption>
-					<thead style="background-color: #ccc">
-						<tr class="bs_1">
-							<th>Método</td>
-							<th>Monto</td>
-							<th>Numero</td>
-						</tr>
-					</thead>
-					<tbody>
-						'.$data_payment.'
-					</tbody>
-				</table>
-
-			</div>
-		';
-		$content_bottom = '<br /><br />&nbsp;';
-
-		$raw_page = [
-			'date' => date('d-m-Y'),
-			'title'=>'Factura #'.$rs_charge['charge']['tx_charge_number'],
-			'content'=>[$content],
-			'bottom'=>$content_bottom,
-			'title_page'=>"Información de Pago"
-		];
-		$pdf = \App::make('dompdf.wrapper');
-		$pdf->loadHTML($this->roll_page($raw_page));
-		return $pdf->stream();
+		$charge_data = $chargeController->showIt($charge_slug);
+		$chargeController->print_receipt($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
+		return response()->json(['status'=>'success','message'=>'Recibo Impreso.']);
 	}
 }

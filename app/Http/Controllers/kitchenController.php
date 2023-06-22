@@ -95,4 +95,9 @@ class kitchenController extends Controller
     {
         //
     }
+    public function reload(){
+        $raw_command = $this->all();
+        return response()->json(['status'=>'success','message'=>'','data'=>['notready'=>$raw_command['notready'], 'ready'=>$raw_command['ready']]]);
+    }
+
 }

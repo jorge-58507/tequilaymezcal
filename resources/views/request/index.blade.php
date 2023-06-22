@@ -79,6 +79,14 @@
 			cls_request.index(); //MUESTRA LA INTERFAZ PEDIDO
 			cls_table.render(cls_table.table_list); //MUESTRA LAS MESAS
 			cls_request.render('open',cls_request.open_request); //MUESTRA LOS PEDIDOS ABIERTOS
+
+      setInterval(() => {
+        var btn = document.getElementById('btn_reloadrequest');
+        if (btn) {
+          btn.click();
+          cls_request.filter(document.getElementById('requestFilter').value)
+        }
+      }, 60000);
 		});
 
 

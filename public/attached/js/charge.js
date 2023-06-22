@@ -164,6 +164,24 @@ class class_request{
       }, 500)
     });
   }
+  reload() {
+    var url = '/request/reload';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_request.open_request = obj.data.open_request;
+        cls_request.closed_request = obj.data.closed_request;
+        cls_charge.charge_list = obj.data.canceled_request;
+        console.log('requ act');
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+  }
+
 }
 class class_charge{
   constructor(charge_list){
@@ -187,101 +205,113 @@ class class_charge{
       </div>
     </div>
     <div class="col-md-12 col-lg-12">
-      <div class="col-sm-12"><h5>Pedidos</h5></div>
-      <div class="col-sm-12">
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#tab_closedrequest" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Cerrado</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#tab_openrequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Abierto</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#tab_canceledrequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Pagado</button>
-          </li>
-        </ul>
-      </div>
-      <div class="tab-content row" id="">
-        <div class="tab-pane fade show active v_scrollable col-sm-12" id="tab_closedrequest"    role="tabpanel" aria-labelledby="home-tab" tabindex="0" style="max-height: 80vh;">
-          <div class="row">
-            <div class="col-md-12 col-lg-6">
-              <div class="input-group my-3">
-                <input type="text" id="filter_closedrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('closed',this.value)">
-                <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('closed',document.getElementById('filter_closedrequest').value)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div class="col-md-12 col-lg-6 pt-3">
-              <div class="input-group mb-3">
-                <label class="input-group-text" for="closedrequestLimit">Mostrar</label>
-                <select id="closedrequestLimit" class="form-select">
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
-            </div>
-            <div id='container_closedrequest' class="col-md-12">
-            </div>
-          </div>
+      <div class="row">
+        <div class="col-md-6 col-lg-1">
+          <h5>Pedidos</h5>
         </div>
-        <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_openrequest"      role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
-        	<div class="row">
-            <div class="col-md-12 col-lg-6">
-              <div class="input-group my-3">
-                <input type="text" id="filter_openrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('open',this.value)">
-                <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('open',document.getElementById('filter_openrequest').value)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div class="col-md-12 col-lg-6 pt-3">
-              <div class="input-group mb-3">
-                <label class="input-group-text" for="openrequestLimit">Mostrar</label>
-                <select id="openrequestLimit" class="form-select">
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
-            </div>
-            <div id='container_openrequest' class="col-md-12">
-
-            </div>
-          </div>
+        <div class="col-md-6 col-lg-11">
+          <button class="btn btn-info" type="button" id="btn_reloadrequest" onclick="cls_request.reload()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+            </svg>
+          </button>
         </div>
-        <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_canceledrequest"  role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
-          <div class="row">
-            <div class="col-md-12 col-lg-6">
-              <div class="input-group my-3">
-                <input type="text" id="filter_canceledrequest" class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('canceled',this.value)">
-                <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('canceled',document.getElementById('filter_canceledrequest').value)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                  </svg>
-                </button>
+        <div class="col-sm-12">
+          <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#tab_closedrequest" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Cerrado</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#tab_openrequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Abierto</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#tab_canceledrequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Pagado</button>
+            </li>
+          </ul>
+        </div>
+        <div class="tab-content row" id="">
+          <div class="tab-pane fade show active v_scrollable col-sm-12" id="tab_closedrequest"    role="tabpanel" aria-labelledby="home-tab" tabindex="0" style="max-height: 80vh;">
+            <div class="row">
+              <div class="col-md-12 col-lg-6">
+                <div class="input-group my-3">
+                  <input type="text" id="filter_closedrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('closed',this.value)">
+                  <button class="btn btn-outline-secondary" type="button" id="btn_filterClosedRequest" onclick="cls_request.filter('closed',document.getElementById('filter_closedrequest').value)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="col-md-12 col-lg-6 pt-3">
-              <div class="input-group mb-3">
-                <label class="input-group-text" for="canceledrequestLimit">Mostrar</label>
-                <select id="canceledrequestLimit" class="form-select">
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
+              <div class="col-md-12 col-lg-6 pt-3">
+                <div class="input-group mb-3">
+                  <label class="input-group-text" for="closedrequestLimit">Mostrar</label>
+                  <select id="closedrequestLimit" class="form-select">
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
               </div>
-            </div>
-            <div id='container_canceledrequest' class="col-md-12">
-
+              <div id='container_closedrequest' class="col-md-12">
+              </div>
             </div>
           </div>
+          <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_openrequest"      role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
+            <div class="row">
+              <div class="col-md-12 col-lg-6">
+                <div class="input-group my-3">
+                  <input type="text" id="filter_openrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('open',this.value)">
+                  <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('open',document.getElementById('filter_openrequest').value)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-12 col-lg-6 pt-3">
+                <div class="input-group mb-3">
+                  <label class="input-group-text" for="openrequestLimit">Mostrar</label>
+                  <select id="openrequestLimit" class="form-select">
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
+              </div>
+              <div id='container_openrequest' class="col-md-12">
 
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_canceledrequest"  role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
+            <div class="row">
+              <div class="col-md-12 col-lg-6">
+                <div class="input-group my-3">
+                  <input type="text" id="filter_canceledrequest" class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('canceled',this.value)">
+                  <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('canceled',document.getElementById('filter_canceledrequest').value)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-12 col-lg-6 pt-3">
+                <div class="input-group mb-3">
+                  <label class="input-group-text" for="canceledrequestLimit">Mostrar</label>
+                  <select id="canceledrequestLimit" class="form-select">
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
+              </div>
+              <div id='container_canceledrequest' class="col-md-12">
+
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>`;
@@ -373,12 +403,6 @@ class class_charge{
     $(function () {
       $('#paymentNumber').keyboard();
     });
-
-    
-    // $('#paymentAmount').bind('accepted', function (e, keyboard, el) {
-    //   document.getElementById('submit_login').click();
-    // });
-
   }
   look_for(str) {
     return new Promise(resolve => {
@@ -563,7 +587,19 @@ class class_charge{
 
   }
   print(charge_slug){
-    cls_general.print_html('/print_charge/' + charge_slug);
+    // cls_general.print_html('/print_charge/' + charge_slug);
+    var url = '/print_charge/'+charge_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
   }
 }
 class class_command{
@@ -789,7 +825,7 @@ class class_payment{
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
         cls_payment.payment = [];
         cls_payment.giftcard = [];
-        cls_charge.print(obj.data.slug);
+        // cls_charge.print(obj.data.slug);
         window.location.reload();
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
@@ -1302,7 +1338,6 @@ class class_cashoutput{
     cls_general.async_laravel_request(url, method, funcion, body);
   }
   generate_cashoutput(list){
-    console.log(list);
     var content = '<ol class="list-group list-group-numbered">';
     list.map((cashoutput)=>{
       var type=(cashoutput.tx_cashoutput_type === 1) ? 'Salida' : 'Entrada';

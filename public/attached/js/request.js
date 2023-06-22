@@ -114,16 +114,24 @@ class class_request {
               </button>
             </div>
           </div>
-          <div class="col-xs-12 col-md-5 pt-2">
+          <div class="col-md-8 col-lg-3 pt-2">
             <select class="form-select" id="requestStatus">
               <option value="0" selected>Abierto</option>
               <option value="1">Cerrado</option>
               <option value="2">Cobrada</option>
             </select>
           </div>
+          <div class="col-md-4 col-lg-2 pt-2">
+            <button class="btn btn-info" type="button" id="btn_reloadrequest" onclick="cls_request.reload()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="row">
-          <div id="container_requestlist" class="col-xs-12 bx_1 by_1 border_gray radius_5 v_scrollable" style="height: 80vh">
+          <div id="container_requestlist" class="col-xs-12 bx_1 by_1 border_gray radius_5 v_scrollable" style="height: 80vh; padding: 0;">
 
           </div>
         </div>
@@ -343,6 +351,22 @@ class class_request {
     });
 
   }
+  reload(){
+    var url = '/request/reload';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_request.open_request = obj.data.open_request;
+        cls_request.closed_request = obj.data.closed_request;
+        cls_request.canceled_request = obj.data.canceled_request;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+  }
 
 }
 class class_article {
@@ -526,14 +550,27 @@ class class_command{
       </div>
     `;
     document.getElementById('container_request').innerHTML = content;
-    // $(function () {
-    //   $('#articleFilter').keyboard();
-    // });
-    // $('#articleFilter').bind('accepted', function (e, keyboard, el) {
-    //   cls_command.filter_article(el.value)
-    // });
-
     cls_command.filter_article('')
+
+    setInterval(() => {
+      var btn = document.getElementById('btn_commandprocess');
+      if (btn) {
+        var url = '/request/' + request_slug; var method = 'GET';
+        var body = "";
+        var funcion = function (obj) {
+          if (obj.data.command_procesed.length === 0) {
+            cls_general.shot_toast_bs('El pedido ya fue cerrado.', { bg: 'text-bg-warning' }); return false;
+          }
+          cls_command.command_procesed = obj.data.command_procesed;
+          var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
+          var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+          document.getElementById('commandList').innerHTML = content_command_procesed.content;
+          document.getElementById('requestTotal').innerHTML = `B/ ${cls_general.val_price(total_sale.total, 2, 1, 1) }`
+        }
+        cls_general.async_laravel_request(url, method, funcion, body);
+      }
+    }, 15000);
+
   }
   filter_article(str){
     var filtered = cls_article.look_for(str,40);

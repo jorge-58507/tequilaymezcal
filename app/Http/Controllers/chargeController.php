@@ -43,8 +43,8 @@ class chargeController extends Controller
         $rs_creditnote =        $creditnoteController->getAll();
 
         $data = [
-            'closed_request'    => $rs_closedrequest,
             'open_request'      => $rs_openrequest,
+            'closed_request'    => $rs_closedrequest,
             'canceled_request'  => $rs_canceledrequest,
             'paymentmethod'     => $rs_paymentmethod,
             'client_list'       => $rs_client,
@@ -141,14 +141,12 @@ class chargeController extends Controller
             $qry_giftcard->update(['tx_giftcard_amount' => ($rs_giftcard['tx_giftcard_amount'] - $payment['amount'])]);
         }
         $charge_data = $this->showIt($charge_slug);
-
-        // $charge_data = $this->showIt('1686710149321');
-        $this->print_receipt($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total']);
+        $this->print_receipt($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
 
         return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
 
-    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total){
+    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change){
         $connector = new WindowsPrintConnector("printreceipt");
 
         /* Information for the receipt */
@@ -202,9 +200,7 @@ class chargeController extends Controller
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
             }
         }
-
         $printer -> feed(2);
-
         $printer -> setJustification(Printer::JUSTIFY_RIGHT);
         $printer -> setEmphasis(true);
         $printer -> text("Subtotal. B/ ".number_format($subtotal,2)."\n");
@@ -216,7 +212,13 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("TOTAL. B/ ".number_format($total,2)."\n");
         $printer -> selectPrintMode();
-        
+        $printer -> feed(1);
+        $printer -> text("Pagos Relacionados.\n");
+        foreach ($raw_payment as $payment) {
+            $printer -> text($payment['tx_paymentmethod_value'].": ".number_format($payment['tx_payment_amount'],2)."\n");
+        }
+        $printer -> text("Cambio: ".number_format($change,2)."\n");
+
         /* Footer */
         $printer -> feed(2);
         $printer -> setJustification(Printer::JUSTIFY_CENTER);

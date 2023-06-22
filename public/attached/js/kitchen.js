@@ -15,6 +15,24 @@ class class_kitchen
     var content = cls_command.generate_ready_list(cls_kitchen.ready);
     document.getElementById('container_ready').innerHTML = content;
   }
+  reload() {
+    var url = '/kitchen/reload';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_kitchen.notready = obj.data.notready;
+        cls_kitchen.ready = obj.data.ready;
+
+        cls_kitchen.render_notready();
+        cls_kitchen.render_ready();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+  }
 
 }
 class class_command
@@ -272,5 +290,6 @@ class class_command
       }
     });
   }
+
 
 }

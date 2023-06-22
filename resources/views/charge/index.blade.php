@@ -423,9 +423,17 @@
     
 		document.addEventListener('DOMContentLoaded', function() {
       cls_charge.index();
-      // cls_request.render('open',cls_request.open_request.slice(0,10));
-      // cls_request.render('closed',cls_request.closed_request.slice(0,10));
-      // cls_request.render('canceled',cls_charge.charge_list.slice(0,10));
+      setInterval(() => {
+        var btn = document.getElementById('btn_reloadrequest');
+        if (btn) {
+          btn.click();
+        }
+        var btn = document.getElementById('btn_filterClosedRequest');
+        if (btn) {
+          btn.click();
+        }
+      }, 60000);
+
 		});
     var fecha = cls_general.getDate()
     document.getElementById('cashoutputDatefilter').value = cls_general.date_converter('ymd','dmy', fecha[0]);

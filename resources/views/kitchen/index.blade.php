@@ -30,9 +30,9 @@
     <div class="col-xs-12 v_scrollable bb_1 border_gray" style="height: 100vh;">
       <nav>
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
-          <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#tab_ready" type="button" role="tab" aria-controls="nav-home" aria-selected="true">PENDIENTE</button>
+          <button class="nav-link active" id="btn_tab_ready" data-bs-toggle="tab" data-bs-target="#tab_ready" type="button" role="tab" aria-controls="nav-home" aria-selected="true" onclick="cls_kitchen.reload()">PENDIENTE</button>
             
-          <button class="nav-link" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#tab_notready" type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">TERMINADO</button>
+          <button class="nav-link" id="btn_tab_notready" data-bs-toggle="tab" data-bs-target="#tab_notready" type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">TERMINADO</button>
         </div>
       </nav>
       <div class="tab-content" id="nav-tabContent">
@@ -70,6 +70,11 @@
       cls_kitchen.index();
       cls_kitchen.render_notready();
       cls_kitchen.render_ready();
+
+      setInterval(() => {
+          cls_kitchen.reload();
+      }, 15000);
+
 		});
 	</script>
 	{{-- ##############    JQUERY   ############### --}}

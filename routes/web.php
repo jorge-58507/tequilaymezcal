@@ -24,7 +24,7 @@ Route::get('/report', function () {
     return view('report.index');
 })->middleware('auth');
 
-Route::get('test', 'configurationController@test')->middleware('auth');
+// Route::get('test', 'configurationController@test')->middleware('auth');
 
 
 Route::get('configuration', 'configurationController@index')->middleware('auth');
@@ -33,6 +33,7 @@ Route::get('prefix/{prefix}', 'ubicationController@getPrefix');
 Route::get('price/{param}/article', 'priceController@showByArticle')->middleware('auth');
 Route::get('request/{param}/table', 'requestController@showByTable')->middleware('auth');
 Route::get('request/{param}/bar', 'requestController@showByBar')->middleware('auth');
+Route::get('request/reload', 'requestController@reload');
 Route::get('command/{param}/byrequest', 'commandController@getByRequest_json')->middleware('auth');
 Route::get('paydesk/{param}/creditnote', 'creditnoteController@getByCharge_json')->middleware('auth');
 Route::get('depletion/{param}/article', 'depletionController@getByArticle')->middleware('auth');
@@ -41,6 +42,7 @@ Route::get('cashregister/{param}/filter', 'cashregisterController@filter')->midd
 Route::get('dataproductinput/{param}', 'productinputController@show_data')->middleware('auth');
 Route::get('provider/{param}/requisition', 'requisitionController@get_requisitionByRequisition')->middleware('auth');
 Route::get('userlog/{param}', 'articleController@get_user');
+Route::get('kitchen/reload', 'kitchenController@reload');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
 // Route::post('article/product', 'measureproductController@save')->middleware('auth');
