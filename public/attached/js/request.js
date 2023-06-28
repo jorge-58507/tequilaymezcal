@@ -750,6 +750,9 @@ class class_command{
             <input type="hidden" class="form-control" id="articleDiscountrate" value="${obj.data.article.tx_article_discountrate}" onfocus="cls_general.validFranz(this.id, ['number'])" required>
             <input type="hidden" class="form-control" id="articleTaxrate" value="${tax_rate}" onfocus="cls_general.validFranz(this.id, ['number'])" required>
           </div>
+          <hr/>
+
+          <h5>Opciones</h5>
           <div id="articleOption" class="row">
             ${content_option}
           </div>

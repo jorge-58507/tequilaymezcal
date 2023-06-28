@@ -1,6 +1,6 @@
 
-
-
+Por cada presentacion establecer una receta, y en cada articulo de la receta establecer articulos intercambiables. Al agregar la datacomanda guardar la receta seleccionada, 
+al restar los producos verificar la receta seleccionada y restar
 
 
 incluir giftcard <-- esto hacerlo desde la interfaz opciones, crear boton llamado clientes, desde el cual se puede hacer CRUD a clientes y la giftcard, se regirá por un codigo utilizable por cualquiera
