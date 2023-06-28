@@ -126,5 +126,11 @@ class measureSeeder extends Seeder
         $tm->tx_measure_status = 1;
         $tm->save();
         
+        $tm = new tm_measure;
+        $tm->measure_ai_user_id	= 1;
+        $tm->tx_measure_value = 'Unidad';
+        $tm->tx_measure_status = 1;
+        $tm->save();
+        
     }
 }

@@ -264,6 +264,7 @@ nav{
 .fs_60 {  font-size: 60px;  }
 
 .f_white { color: #fff;   }
+.filter_white { filter: invert(100%) sepia(10%) saturate(10%) hue-rotate(86deg) brightness(118%) contrast(119%); }
 /* ########################     FLEX WIDTH CLASS     ######################## */
 .w_50  { width: 50px;  }
 .w_100 { width: 100px; }

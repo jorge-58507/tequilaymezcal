@@ -436,7 +436,6 @@ class class_product{
   }
   look_for(str,limit){
     var haystack = cls_product.productlist;
-    console.log(haystack);
     var needles = str.split(' ');
     var raw_filtered = [];
     var counter = 0;
@@ -1210,72 +1209,98 @@ class class_article {
       var selected = cls_articleproduct.articleproduct_selected;
       var list_selected = cls_articleproduct.generate_productselected(selected);
 
+      var img = (cls_general.is_empty_var(article['tx_article_thumbnail']) === 1) ? `<img src="attached/image/article/${article['tx_article_thumbnail']}" width="100px"></img>` : `
+      <svg width="80px" height="80px" viewBox="0 0 108 108" id="Layeri" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <g class="cls-2">
+          <g id="Line">
+            <path d="M85.5,2h-63a7,7,0,0,0,0,14h.61q2.3,41.22,4.58,82.44a8,8,0,0,0,8,7.56H72.32a8,8,0,0,0,8-7.56Q82.61,57.22,84.89,16h.61a7,7,0,0,0,0-14ZM76.32,98.22a4,4,0,0,1-4,3.78H35.68a4,4,0,0,1-4-3.78L30.56,78H77.44ZM77.67,74H30.33L28.39,39H79.61ZM85.5,12H48v4H80.89L79.83,35H28.17L27.11,16H36V12H22.5a3,3,0,0,1,0-6h63a3,3,0,0,1,0,6Z"/><path d="M24.33,38.11A2,2,0,0,1,24,37a2,2,0,0,1,.22-.91Z"/><path d="M84,37a2,2,0,0,1-.33,1.11l.11-2A2,2,0,0,1,84,37Z"/><path d="M42.66,64.3c0,.11-.08.21-.12.3-2.8-4.3-1.41-11.1,3.52-16,4.32-4.32,10.06-5.92,14.31-4.37a21.45,21.45,0,0,0-2.16,4.55,12.17,12.17,0,0,1-2.15,4.17,12.17,12.17,0,0,1-4.17,2.15A16.17,16.17,0,0,0,46,58.36,16.17,16.17,0,0,0,42.66,64.3Z"/><path d="M60.91,63.42c-4.3,4.3-10,5.9-14.26,4.39.25-.58.48-1.17.69-1.74a12.17,12.17,0,0,1,2.15-4.17,12.17,12.17,0,0,1,4.17-2.15,16.17,16.17,0,0,0,5.94-3.3,16.17,16.17,0,0,0,3.3-5.94,19.87,19.87,0,0,1,1.45-3.26C67.26,51.54,65.9,58.44,60.91,63.42Z"/><rect height="4" rx="2" ry="2" width="4" x="40" y="12"/>
+          </g>
+        </g>
+      </svg>`;
+
       var content = `
-        <div class="row">
-          <div class="col">
-            <div class="row">
-              <div class="col-xs-12">
-                <h4>Modificar Art&iacute;culo</h4>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-xs-12">
-                <label for="articleValue" class="form-label">Descripci&oacute;n</label>
-                <input type="text" class="form-control" id="articleValue" value="${article.tx_article_value}" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_general.limitText(this, 100, toast = 0)" onblur="cls_general.limitText(this, 100, toast = 0)">
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-lg-4 col-md-12">
-                <label for="articleCode" class="form-label">C&oacute;digo</label>
-                <input type="text" class="form-control" id="articleCode" value="${article.tx_article_code}" onfocus="cls_general.validFranz(this.id, ['number'],'abcdefghijklmnñopqrstuvwxyzáéíóúABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ')" onkeyup="cls_general.limitText(this, 15, toast = 0)" onkeyup="cls_general.limitText(this, 15, toast = 0)" placeholder="00000000" >
-              </div>
-              <div class="col-lg-4 col-md-12">
-                <label for="articleCategory" class="form-label">Categor&iacute;a</label>
-                <select id="articleCategory" class="form-select"><option value="" disabled selected>Seleccione</option> ${option_category}</select>
-              </div>
-              <div class="col-lg-2 col-md-12">
-                <div class="form-check form-switch pt_35">
-                  <input class="form-check-input" type="checkbox" role="switch" id="articlePromotion" ${checked_promotion}>
-                  <label class="form-check-label" for="articlePromotion">Promoci&oacute;n</label>
+        <form id="form_updatearticle" name="form_updatearticle" method="post" onsubmit="event.preventDefault(); cls_article.update();" autocomplete="off">
+          <div class="row">
+            <div class="col">
+              <div class="row">
+                <div class="col-xs-12">
+                  <h4>Modificar Art&iacute;culo</h4>
                 </div>
               </div>
-              <div class="col-lg-2 col-md-12">
-                <div class="form-check form-switch pt_35">
-                  <input class="form-check-input" type="checkbox" role="switch" id="articleStatus" ${checked_status}>
-                  <label class="form-check-label" for="articleStatus">Activo</label>
+              <div class="row">
+                <div class="col-xs-12">
+                  <label for="articleValue" class="form-label">Descripci&oacute;n</label>
+                  <input type="text" class="form-control" id="articleValue" name="articleValue" value="${article.tx_article_value}" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_general.limitText(this, 100, toast = 0)" onblur="cls_general.limitText(this, 100, toast = 0)">
+                  <input type="hidden" class="form-control" id="articleId" name="articleId" value="${article.ai_article_id}">
                 </div>
               </div>
-            </div>
-            <div class="row">
-              <div class="col-sm-12 col-md-6 col-lg-3">
-                <label for="articleTaxrate" class="form-label">% Impuesto</label>
-                <input type="text" class="form-control" id="articleTaxrate" value="${article.tx_article_taxrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
+              <div class="row">
+                <div class="col-lg-4 col-md-12">
+                  <label for="articleCode" class="form-label">C&oacute;digo</label>
+                  <input type="text" class="form-control" id="articleCode" name="articleCode" value="${article.tx_article_code}" onfocus="cls_general.validFranz(this.id, ['number'],'abcdefghijklmnñopqrstuvwxyzáéíóúABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ')" onkeyup="cls_general.limitText(this, 15, toast = 0)" onkeyup="cls_general.limitText(this, 15, toast = 0)" placeholder="00000000" >
+                </div>
+                <div class="col-lg-4 col-md-12">
+                  <label for="articleCategory" class="form-label">Categor&iacute;a</label>
+                  <select id="articleCategory" name="articleCategory" class="form-select"><option value="" disabled selected>Seleccione</option> ${option_category}</select>
+                </div>
+                <div class="col-lg-2 col-md-12">
+                  <div class="form-check form-switch pt_35">
+                    <input class="form-check-input" type="checkbox" role="switch" id="articlePromotion" name="articlePromotion" ${checked_promotion}>
+                    <label class="form-check-label" for="articlePromotion">Promoci&oacute;n</label>
+                  </div>
+                </div>
+                <div class="col-lg-2 col-md-12">
+                  <div class="form-check form-switch pt_35">
+                    <input class="form-check-input" type="checkbox" role="switch" id="articleStatus" name="articleStatus" ${checked_status}>
+                    <label class="form-check-label" for="articleStatus">Activo</label>
+                  </div>
+                </div>
               </div>
-              <div class="col-sm-12 col-md-6 col-lg-3">
-                <label for="articleDiscountrate" class="form-label">% Descuento</label>
-                <input type="text" class="form-control" id="articleDiscountrate" value="${article.tx_article_discountrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
+              <div class="row pb-2">
+                <div class="col-sm-12 col-md-6 col-lg-3">
+                  <label for="articleTaxrate" class="form-label">% Impuesto</label>
+                  <input type="text" class="form-control" id="articleTaxrate" name="articleTaxrate" value="${article.tx_article_taxrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-3">
+                  <label for="articleDiscountrate" class="form-label">% Descuento</label>
+                  <input type="text" class="form-control" id="articleDiscountrate" name="articleDiscountrate" value="${article.tx_article_discountrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-3 d-grid gap-2 pt-3">
+                  <button type="button" class="btn btn-info" onclick="cls_article.price('${article_slug}')">Precio</button>
+                </div>
               </div>
-              <div class="col-sm-12 col-md-6 col-lg-3 d-grid gap-2 pt-3">
-                <button type="button" class="btn btn-info" onclick="cls_article.price('${article_slug}')">Precio</button>
+
+              <div class="row">
+                <div class="col-md-12 col-lg-3 mb-3 text-center">
+                  ${img}
+                </div>
+                <div class="col-md-12 col-lg-9 mb-3 pt-4">
+                  <div class="input-group mb-3">
+                    <input type="file" class="form-control" id="articleImage" name="articleImage">
+                    <input type="hidden" id="articleImagePlaceholder" name="articleImagePlaceholder" value="${article['tx_article_thumbnail']}">
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="row">
-              <div class="col-lg-12">
-                <label class="form-check-label" for="articleOption">Opciones de Art&iacute;culo</label>
-                <textarea id="articleOption" cols="82" rows="3" onkeyup="this.value = cls_general.franz_textarea(event,this.value)" placeholder="Ejemplo. coccion:sellada,termino medio,tres cuartos  Debe dejar un reglon para cada opción.">${option}</textarea>
+
+
+              <div class="row">
+                <div class="col-lg-12">
+                  <label class="form-check-label" for="articleOption">Opciones de Art&iacute;culo</label>
+                  <textarea id="articleOption" name="articleOption" cols="82" rows="3" onkeyup="this.value = cls_general.franz_textarea(event,this.value)" placeholder="Ejemplo. coccion:sellada,termino medio,tres cuartos  Debe dejar un reglon para cada opción.">${option}</textarea>
+                </div>
               </div>
             </div>
           </div>
-        </div>
       `;
       var content_bottom = `
-        <div class="row">
-          <div class="col-lg-12 text-center pt-2">
-            <button type="button" class="btn btn-warning" onclick="cls_article.delete(this,${article.tx_article_slug});">Eliminar Art&iacute;culo</button>
-            <button type="button" class="btn btn-secondary" onclick="cls_article.render()">Volver</button>
-            <button type="button" class="btn btn-success" name="${article.ai_article_id}" id="btn_articleModal_update" onclick="cls_article.update(this,this.name)">Guardar Artículo</button>
+          <div class="row">
+            <div class="col-lg-12 text-center pt-2">
+              <button type="button" class="btn btn-warning" onclick="cls_article.delete(this,${article.tx_article_slug});">Eliminar Art&iacute;culo</button>
+              <button type="button" class="btn btn-secondary" onclick="cls_article.render()">Volver</button>
+              <button type="button" class="btn btn-success" name="${article.ai_article_id}" id="btn_articleModal_update" onclick="cls_article.update(this,this.name)">Guardar Artículo</button>
+            </div>
           </div>
-        </div>
+        </form>
       `;
       var content_product = `
         <div class="row">
@@ -1319,6 +1344,7 @@ class class_article {
     }
     
     var option = cls_article.encode_articleoption(article_option);// Verificar la constitucion de options, condicionales debe tener : y al menos 1 coma
+    if (option === false) { return false; }
     var product_selected = cls_articleproduct.articleproduct_selected;
     var keys = Object.keys(product_selected);
     if (keys.length > 0 && status == 0) { 
@@ -1343,11 +1369,13 @@ class class_article {
         switch (ans) {
           case 'si':
             status = 0;
-            cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
+            cls_article.run_update(article_id, product_selected);
+            // cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
             break;
           case 'no':
             status = 1;
-            cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
+            cls_article.run_update(article_id, product_selected);
+            // cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
             break;
         }
       });
@@ -1355,10 +1383,42 @@ class class_article {
       cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
     }
   }
-  run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate){
-    var url = '/article/' + article_id; var method = 'PUT';
-    var body = JSON.stringify({ a: description, b: code, c: category, d: promotion, e: option, f: status, g: product_selected, h: taxrate, i: discountrate});
-    var funcion = function (obj) {
+  run_update(article_id, product_selected) {
+  // run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate){
+
+
+
+    var formData = new FormData($('#form_updatearticle')[0]);
+    $.ajax({
+      url: '/article_upd/',
+      type: 'POST',
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="csrf-token"]').attr('content'));
+      },
+      // Form data
+      data: formData,
+      // Tell jQuery not to process data or worry about content-type. You *must* include these options!
+      cache: false,
+      contentType: false,
+      processData: false,
+      // Custom XMLHttpRequest
+      xhr: function () {
+        var myXhr = $.ajaxSettings.xhr();
+        if (myXhr.upload) {
+          // For handling the progress of the upload
+          myXhr.upload.addEventListener('progress', function (e) {
+            if (e.lengthComputable) {
+              $('progress').attr({
+                value: e.loaded,
+                max: e.total,
+              });
+            }
+          }, false);
+        }
+        return myXhr;
+      }
+    })
+    .done(function (obj) {
       if (obj.status != 'failed') {
         var raw_list = obj['data']['all'];
         var list = cls_article.generate_list(raw_list)
@@ -1388,8 +1448,46 @@ class class_article {
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
+
+
+    });
+
+
+
+    // var url = '/article/' + article_id; var method = 'PUT';
+    // var body = JSON.stringify({ a: description, b: code, c: category, d: promotion, e: option, f: status, g: product_selected, h: taxrate, i: discountrate});
+    // var funcion = function (obj) {
+      // if (obj.status != 'failed') {
+      //   var raw_list = obj['data']['all'];
+      //   var list = cls_article.generate_list(raw_list)
+      //   var content = `
+      //     <div class="row">
+      //       <div class="col-xs-12 py-2 text-center">
+      //         <button type="button" class="btn btn-lg btn-primary" onclick="cls_article.create()">Crear Art&iacute;culo</button>
+      //         &nbsp;
+      //       </div>
+      //       <div class="col-xs-12">
+      //         <h5>Listado de Art&iacute;culos</h5>
+      //       </div>
+      //       <div class="col-xs-12">
+      //         <input type="text" class="form-control" id="articleFilter" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_article.filter(this.value,20)" placeholder="Buscar art&iacute;culos por nombre" >
+      //       </div>
+      //       <div id="container_articleList" class="col-xs-12 border-top">
+      //         ${list}
+      //       </div>
+      //     </div>
+      //   `;
+      //   document.getElementById('container').innerHTML = content;
+
+
+      //   var list = cls_article.generate_list(raw_list)
+      //   document.getElementById('container_articleList').innerHTML = list;
+      //   cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      // } else {
+      //   cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      // }
+    // }
+    // cls_general.async_laravel_request(url, method, funcion, body);
   }
   delete(btn,article_slug){
     cls_general.disable_submit(btn);
@@ -1504,34 +1602,100 @@ class class_article {
       cls_general.shot_toast_bs('Cantidad debe ser un numero.', {bg: 'text-bg-warning'});
       return false;
     }
-    var select_measure = document.getElementById('articleproductMeasure');
-    var selected = {
-      product_id: product_id,
-      product_value: document.getElementById('articleproductModal_title').innerHTML,
-      article: document.getElementById('btn_articleModal_update').name,
-      quantity: document.getElementById('articleproductQuantity').value,
-      measure_id: select_measure.value,
-      measure_value: select_measure.options[select_measure.selectedIndex].text
-    }
-    var check_dup = new Object;
-    check_dup = cls_articleproduct.articleproduct_selected.filter(x =>  x.product_id == product_id );
 
-    const keys = Object.keys(check_dup);
-    if (keys.length > 0) {
-      cls_general.shot_toast_bs('Ese producto ya fu&eacute; agregado.', {bg: 'text-bg-warning'})
-      return false;
-    }
-    cls_articleproduct.articleproduct_selected.push(selected);
-    const modal = bootstrap.Modal.getInstance('#articleproductModal');
-    modal.hide();
+    var url = '/article/product';
+    var method = 'POST';
+    var body = JSON.stringify({ a: product_id, b: article_id, c: quantity, d: measure });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_articleproduct.articleproduct_selected = [];
+        obj.data.articleproduct.map((product) => {
+          cls_articleproduct.articleproduct_selected.push({
+            product_id: product.articleproduct_ai_product_id,
+            product_value: product.tx_product_value,
+            article: product.articleproduct_ai_article_id,
+            quantity: product.tx_articleproduct_quantity,
+            measure_id: product.articleproduct_ai_measure_id,
+            measure_value: product.tx_measure_value
+          });
+        })
 
-    cls_articleproduct.render_productselected();
+        cls_articleproduct.render_productselected();
+        const modal = bootstrap.Modal.getInstance('#articleproductModal');
+        modal.hide();
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+    // cls_general.disable_submit(btn);
+    // var quantity = document.getElementById('articleproductQuantity').value;
+    // var measure = document.getElementById('articleproductMeasure').value;
+    // var article_id = document.getElementById('btn_articleModal_update').name;
+    // if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(measure) === 0 || cls_general.is_empty_var(article_id) === 0) {
+    //   cls_general.shot_toast_bs('Falta informaci&oacute;n.', { bg: 'text-bg-warning' });
+    //   return false;
+    // }
+    // if(isNaN(quantity)) {
+    //   cls_general.shot_toast_bs('Cantidad debe ser un numero.', {bg: 'text-bg-warning'});
+    //   return false;
+    // }
+    // var select_measure = document.getElementById('articleproductMeasure');
+    // var selected = {
+    //   product_id: product_id,
+    //   product_value: document.getElementById('articleproductModal_title').innerHTML,
+    //   article: document.getElementById('btn_articleModal_update').name,
+    //   quantity: document.getElementById('articleproductQuantity').value,
+    //   measure_id: select_measure.value,
+    //   measure_value: select_measure.options[select_measure.selectedIndex].text
+    // }
+    // var check_dup = new Object;
+    // check_dup = cls_articleproduct.articleproduct_selected.filter(x =>  x.product_id == product_id );
+
+    // const keys = Object.keys(check_dup);
+    // if (keys.length > 0) {
+    //   cls_general.shot_toast_bs('Ese producto ya fu&eacute; agregado.', {bg: 'text-bg-warning'})
+    //   return false;
+    // }
+    // cls_articleproduct.articleproduct_selected.push(selected);
+    // const modal = bootstrap.Modal.getInstance('#articleproductModal');
+    // modal.hide();
+
+    // cls_articleproduct.render_productselected();
   }
-  erase_product(index){
-    var selected = cls_articleproduct.articleproduct_selected;
-    selected.splice(index, 1)
-    cls_articleproduct.articleproduct_selected = selected;
-    cls_articleproduct.render_productselected();
+  erase_product(product_id, article_id){
+    var url = '/article/product';
+    var method = 'DELETE';
+    var body = JSON.stringify({ a: product_id, b: article_id });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_articleproduct.articleproduct_selected = [];
+        obj.data.articleproduct.map((product) => {
+          cls_articleproduct.articleproduct_selected.push({
+            product_id: product.articleproduct_ai_product_id,
+            product_value: product.tx_product_value,
+            article: product.articleproduct_ai_article_id,
+            quantity: product.tx_articleproduct_quantity,
+            measure_id: product.articleproduct_ai_measure_id,
+            measure_value: product.tx_measure_value
+          });
+        })
+
+        cls_articleproduct.render_productselected();
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+    // var selected = cls_articleproduct.articleproduct_selected;
+    // selected.splice(index, 1)
+    // cls_articleproduct.articleproduct_selected = selected;
+    // cls_articleproduct.render_productselected();
 
   }
 }
@@ -1549,7 +1713,7 @@ class class_articleproduct{
     selected.map(((product, index) => content += `
     <li class="list-group-item d-flex justify-content-between align-items-center">
       ${product.product_value} (${product.quantity} ${product.measure_value})
-      <button class="btn btn-warning" type="button" onclick="cls_article.erase_product(${index})">
+      <button class="btn btn-warning" type="button" onclick="cls_article.erase_product(${product.product_id},${product.article})">
         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
           <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
         </svg>

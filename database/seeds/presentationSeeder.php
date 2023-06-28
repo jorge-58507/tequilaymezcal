@@ -42,5 +42,11 @@ class presentationSeeder extends Seeder
         $tm->tx_presentation_status	= 1;
         $tm->save();
 
+        $tm = new tm_presentation;
+        $tm->presentation_ai_user_id = 1;		
+        $tm->tx_presentation_value	= 'Bandeja';
+        $tm->tx_presentation_status	= 1;
+        $tm->save();
+
     }
 }

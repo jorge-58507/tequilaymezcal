@@ -48,6 +48,35 @@
       </div>
     </div>
   </div>
+  <div class="modal fade modal-xl" id="modalArticleList" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="articlelistModal_title">Seleccione el producto</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="articlelistModal_content" class="modal-body">
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="input-group" style="height: 10vh">
+                <input type="text" id="articlethumbnailFilter" class="form-control" placeholder="Buscar artículo por código o descripción" onkeyup="cls_command.filter_articlethumbnail(this.value)">
+                <button class="btn btn-outline-secondary" type="button" onclick="cls_command.filter_article(document.getElementById('articleFilter').value)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div id="container_articlethumbnail_categories" class="col-sm-12 h_scrollable pt-1" style="height: 10vh">
+            </div>
+            <div id="container_articlethumbnail" class="col-sm-12"></div>
+          </div>
+        </div>
+        <div id="articlelistModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
 
 	<div id="container_request" class="row"></div>
 

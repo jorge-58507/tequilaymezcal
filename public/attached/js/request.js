@@ -71,9 +71,6 @@ class class_table{
           </button>
         </div>`;
       }
-
-
-      
     });
     content_tab_container += `</div>`;
     document.getElementById('nav-tab').innerHTML = content_tab;
@@ -421,6 +418,7 @@ class class_command{
       var key = Object.keys(request_info);
       request_slug = (key.length > 0) ? request_info['tx_request_slug'] : '';
     }
+
     var opt_tablelist = '';
     cls_table.table_list.map((table) => {
       opt_tablelist += (table.tx_table_slug === table_slug) ? `<option value="${table.ai_table_id}" selected>${table.tx_table_code} - ${table.tx_table_value}</option>` : `<option value="${table.ai_table_id}">${table.tx_table_code} - ${table.tx_table_value}</option>`;
@@ -449,9 +447,12 @@ class class_command{
       }
     })
     var content_category = '';
+    var content_categorythumbnail = '';
     raw_category.map((category)=>{
       content_category += `<button class="btn btn-primary" style="height: 8vh;" onclick="cls_command.filter_article_category('${category}');">${category}</button>&nbsp;`;
+      content_categorythumbnail += `<button class="btn btn-primary fs_20" style="height: 8vh;" onclick="cls_command.filter_articlethumbnail_category('${category}');">${category}</button>&nbsp;`;
     })
+    document.getElementById('container_articlethumbnail_categories').innerHTML = content_categorythumbnail;
 
     var content = `
       <div class="row">
@@ -465,14 +466,28 @@ class class_command{
             </div>
             <div id="article_selected" class="col-xs-12 v_scrollable" style="height: 40vh">
             </div>
-            <div class="col-xs-12 input-group mb-3 pt-2" style="height: 10vh">
-              <input type="text" id="articleFilter" class="form-control" placeholder="Buscar por c&oacute;digo o descripci&oacute;n" onkeyup="cls_command.filter_article(this.value)">
-              <button class="btn btn-outline-secondary" type="button" onclick="cls_command.filter_article(document.getElementById('articleFilter').value)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+          </div>
+          <div class="row">
+            <div class="col-sm-3 d-grid gap-2 mb-3 pt-2" style="height: 10vh">
+              <button type="button" id="btn_graphicList" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalArticleList">
+                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-basket2" viewBox="0 0 16 16">
+                  <path d="M4 10a1 1 0 0 1 2 0v2a1 1 0 0 1-2 0v-2zm3 0a1 1 0 0 1 2 0v2a1 1 0 0 1-2 0v-2zm3 0a1 1 0 1 1 2 0v2a1 1 0 0 1-2 0v-2z"/>
+                  <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-.623l-1.844 6.456a.75.75 0 0 1-.722.544H3.69a.75.75 0 0 1-.722-.544L1.123 8H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 6h1.717L5.07 1.243a.5.5 0 0 1 .686-.172zM2.163 8l1.714 6h8.246l1.714-6H2.163z"/>
                 </svg>
               </button>
             </div>
+            <div class="col-sm-9 mb-3 pt-2" style="height: 10vh">
+              <div class="input-group" style="height: 10vh">
+                <input type="text" id="articleFilter" class="form-control" placeholder="Buscar por c&oacute;digo o descripci&oacute;n" onkeyup="cls_command.filter_article(this.value)">
+                <button class="btn btn-outline-secondary" type="button" onclick="cls_command.filter_article(document.getElementById('articleFilter').value)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="row">
             <span>Listado de Art&iacute;culos</span>
             <div id="article_list" class="col-xs-12 v_scrollable" style="height: 25vh">
 
@@ -482,10 +497,10 @@ class class_command{
             </div>
           </div>
         </div>
-        <div class="col-md-12 col-lg-1 text-center">
+        <div class="col-lg-1 text-center d-none d-lg-block d-xxl-block">
           <div class="row">
             <div class="col-md-12 text-center" style="height:20vh;display: flex;align-items: top;">
-              <button class="btn btn-warning btn-lg h_50" onclick="cls_request.close(this)">
+              <button class="btn btn-warning btn-lg h_50" data-bs-toggle="tooltip" data-bs-title="Cerrar Pedido" onclick="cls_request.close(this)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" fill="currentColor" class="bi bi-door-closed-fill" viewBox="0 0 16 16">
                   <path d="M12 1a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V2a1 1 0 0 1 1-1h8zm-2 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
                 </svg>
@@ -493,14 +508,14 @@ class class_command{
             </div>
 
             <div class="col-md-12 text-center" style="height:60vh;display: flex;align-items: center;">
-              <button id="btn_commandprocess" class="btn tmgreen_bg btn-lg h_150" name="${request_slug}" onclick="cls_command.save(this.name,'${table_slug}');">
+              <button id="btn_commandprocess" class="btn tmgreen_bg btn-lg h_150" name="${request_slug}" onclick="cls_command.save(this.name,'${table_slug}');" data-bs-toggle="tooltip" data-bs-title="Procesar Comanda">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
                   <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
                 </svg>
               </button>
             </div>
             <div class="col-md-12 text-center" style="height:20vh;display: flex;align-items: bottom;">
-              <button class="btn btn-secondary btn-lg h_50" onclick="window.location.href = '/request';">
+              <button class="btn btn-secondary btn-lg h_50" onclick="window.location.href = '/request';" data-bs-toggle="tooltip" data-bs-title="Salir">
                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
                   <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
                 </svg>
@@ -508,6 +523,42 @@ class class_command{
             </div>
           </div>
         </div>
+
+
+
+
+        <div class="col-md-12 text-center d-md-block d-lg-none">
+          <div class="row">
+            <div class="col-md-4 text-center">
+              <button class="btn btn-warning btn-lg h_50" onclick="cls_request.close(this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" fill="currentColor" class="bi bi-door-closed-fill" viewBox="0 0 16 16">
+                  <path d="M12 1a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V2a1 1 0 0 1 1-1h8zm-2 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                </svg>
+                Cerrar Pedido
+              </button>
+            </div>
+
+            <div class="col-md-4 text-center">
+              <button id="btn_commandprocess" class="btn tmgreen_bg btn-lg h_50" name="${request_slug}" onclick="cls_command.save(this.name,'${table_slug}');">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+                </svg>
+                Procesar Comanda
+              </button>
+            </div>
+            <div class="col-md-4 text-center">
+              <button class="btn btn-secondary btn-lg h_50" onclick="window.location.href = '/request';">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+                </svg>
+                Volver
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+
 
         <div class="col-md-12 col-lg-6">
           <div class="row">
@@ -551,27 +602,83 @@ class class_command{
     `;
     document.getElementById('container_request').innerHTML = content;
     cls_command.filter_article('')
-
-    setInterval(() => {
-      var btn = document.getElementById('btn_commandprocess');
-      if (btn) {
-        var url = '/request/' + request_slug; var method = 'GET';
-        var body = "";
-        var funcion = function (obj) {
-          if (obj.data.command_procesed.length === 0) {
-            cls_general.shot_toast_bs('El pedido ya fue cerrado.', { bg: 'text-bg-warning' }); return false;
+    if (cls_general.is_empty_var(request_slug) === 1) {
+      setInterval(() => {
+        var btn = document.getElementById('btn_commandprocess');
+        if (btn) {
+          var url = '/request/' + request_slug; var method = 'GET';
+          var body = "";
+          var funcion = function (obj) {
+            if (obj.data.command_procesed.length === 0) {
+              cls_general.shot_toast_bs('El pedido ya fue cerrado.', { bg: 'text-bg-warning' }); return false;
+            }
+            cls_command.command_procesed = obj.data.command_procesed;
+            var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
+            var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+            document.getElementById('commandList').innerHTML = content_command_procesed.content;
+            document.getElementById('requestTotal').innerHTML = `B/ ${cls_general.val_price(total_sale.total, 2, 1, 1) }`
           }
-          cls_command.command_procesed = obj.data.command_procesed;
-          var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
-          var total_sale = cls_general.calculate_sale(content_command_procesed.price);
-          document.getElementById('commandList').innerHTML = content_command_procesed.content;
-          document.getElementById('requestTotal').innerHTML = `B/ ${cls_general.val_price(total_sale.total, 2, 1, 1) }`
+          cls_general.async_laravel_request(url, method, funcion, body);
         }
-        cls_general.async_laravel_request(url, method, funcion, body);
-      }
-    }, 15000);
+      }, 15000);
+    }
+    document.getElementById('btn_graphicList').addEventListener('click', () => { cls_command.filter_articlethumbnail(''); });
+    document.getElementById('btn_graphicList').click();
+
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
   }
+
+  filter_articlethumbnail(str) {
+    var filtered = cls_article.look_for(str, 40);
+    var content = cls_command.generate_articlethumbnail_list(filtered)
+    document.getElementById('container_articlethumbnail').innerHTML = content;
+  }
+  filter_articlethumbnail_category(category) {
+    var filtered = cls_article.look_for_category(category);
+    var content = cls_command.generate_articlethumbnail_list(filtered)
+    document.getElementById('container_articlethumbnail').innerHTML = content;
+  }
+  generate_articlethumbnail_list(filtered) {
+    var content = '<div class="row">';
+    filtered.map((article) => {
+      var bg = '';
+      var promo_str = '';
+      if (article.tx_article_promotion == 1) {
+        bg = 'tmred_bg f_white';
+        promo_str = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
+            <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
+          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
+            <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+          </svg>
+        `;
+      }
+      var img = (cls_general.is_empty_var(article['tx_article_thumbnail']) === 1) ? `<img src="attached/image/article/${article['tx_article_thumbnail']}" width="100px"></img>` : `
+      <svg width="80px" height="80px" class="filter_white" viewBox="0 0 108 108" id="Layeri" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <g class="cls-2 ${bg}">
+          <g id="Line">
+            <path d="M85.5,2h-63a7,7,0,0,0,0,14h.61q2.3,41.22,4.58,82.44a8,8,0,0,0,8,7.56H72.32a8,8,0,0,0,8-7.56Q82.61,57.22,84.89,16h.61a7,7,0,0,0,0-14ZM76.32,98.22a4,4,0,0,1-4,3.78H35.68a4,4,0,0,1-4-3.78L30.56,78H77.44ZM77.67,74H30.33L28.39,39H79.61ZM85.5,12H48v4H80.89L79.83,35H28.17L27.11,16H36V12H22.5a3,3,0,0,1,0-6h63a3,3,0,0,1,0,6Z"/><path d="M24.33,38.11A2,2,0,0,1,24,37a2,2,0,0,1,.22-.91Z"/><path d="M84,37a2,2,0,0,1-.33,1.11l.11-2A2,2,0,0,1,84,37Z"/><path d="M42.66,64.3c0,.11-.08.21-.12.3-2.8-4.3-1.41-11.1,3.52-16,4.32-4.32,10.06-5.92,14.31-4.37a21.45,21.45,0,0,0-2.16,4.55,12.17,12.17,0,0,1-2.15,4.17,12.17,12.17,0,0,1-4.17,2.15A16.17,16.17,0,0,0,46,58.36,16.17,16.17,0,0,0,42.66,64.3Z"/><path d="M60.91,63.42c-4.3,4.3-10,5.9-14.26,4.39.25-.58.48-1.17.69-1.74a12.17,12.17,0,0,1,2.15-4.17,12.17,12.17,0,0,1,4.17-2.15,16.17,16.17,0,0,0,5.94-3.3,16.17,16.17,0,0,0,3.3-5.94,19.87,19.87,0,0,1,1.45-3.26C67.26,51.54,65.9,58.44,60.91,63.42Z"/><rect height="4" rx="2" ry="2" width="4" x="40" y="12"/>
+          </g>
+        </g>
+      </svg>`;
+
+      content += `<div class="col-md-4 col-lg-2 text-center">
+        <button class="btn btn-success btn-lg my_20 ${bg}" onclick="cls_command.show_article('${article.tx_article_slug}','${article.tx_article_value}')" style="width: 120px">
+          ${img}
+          <br>
+            <p class="fs-6 mb_0 ">${promo_str + ' ' + article.tx_article_value}</p>
+        </button>
+      </div>`;
+    })
+    content += '</div>';
+    return content;
+  }
+
+
+
   filter_article(str){
     var filtered = cls_article.look_for(str,40);
     var content = cls_command.generate_article_list(filtered)
@@ -664,6 +771,11 @@ class class_command{
 
       cls_command.modal_set_price(obj.data.price[0].tx_price_three+','+obj.data.price[0].tx_price_two+','+obj.data.price[0].tx_price_one); //OPTION PARA Los PRECIOS DEL ARTICULO
       
+      const Modal = bootstrap.Modal.getInstance('#modalArticleList');
+      if (Modal) {
+        Modal.hide();
+      }
+
       const modal = new bootstrap.Modal('#commandModal', {})
       modal.show();
     }

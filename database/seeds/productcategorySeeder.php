@@ -83,5 +83,17 @@ class productcategorySeeder extends Seeder
         $tm->tx_productcategory_value = 'Otros';
         $tm->tx_productcategory_status = 1;
         $tm->save();
+
+        $tm = new tm_productcategory;
+        $tm->productcategory_ai_user_id	= 1;
+        $tm->tx_productcategory_value = 'Miscellaneo';
+        $tm->tx_productcategory_status = 1;
+        $tm->save();
+
+        $tm = new tm_productcategory;
+        $tm->productcategory_ai_user_id	= 1;
+        $tm->tx_productcategory_value = 'Pulpa/Base';
+        $tm->tx_productcategory_status = 1;
+        $tm->save();
     }
 }

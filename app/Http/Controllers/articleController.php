@@ -9,6 +9,9 @@ use App\tm_commanddata;
 use App\tm_price;
 use App\User;
 
+use Illuminate\Support\Facades\Validator;
+
+
 class articleController extends Controller
 {
     public function getAll(){
@@ -122,16 +125,38 @@ class articleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $article_id)
-    {
-        $category = $request->input('c');
-        $description = $request->input('a');
-        $code = $request->input('b');
-        $promotion = $request->input('d');
-        $option = $request->input('e');
-        $status = $request->input('f');
 
-        $product = $request->input('g');
+    public function encode_articleoption($article_option)
+    {
+        $option = [];
+        if (!empty($article_option)) {
+            $raw_articleoption = explode("\n",$article_option);
+            foreach ($raw_articleoption as $key => $articleoption) {
+                $splited_line = explode(':',$articleoption);
+                $option_splited = explode(',',$splited_line[1]);
+                $option_array = [];
+                foreach ($option_splited as $value) {
+                    $value = trim($value);
+                    array_push($option_array,str_replace("\r","",$value));
+                }
+                array_push($option,[$splited_line[0] => $option_array]);
+            }
+        }
+        return $option;
+    }
+
+    public function renovate(Request $request)
+    {
+        $article_id = $request->input('articleId');
+        $description = $request->input('articleValue');
+        $code = $request->input('articleCode');
+        $category = $request->input('articleCategory');
+        $promotion = ($request->input('articlePromotion') === 'on') ? 1 : 0;
+        $option = $this->encode_articleoption($request->input('articleOption'));
+        $status = ($request->input('articleStatus') === 'on') ? 1 : 0;
+        $imagePlaceholder = $request->input('articleImagePlaceholder');
+
+        // $product = $request->input('g');
 
         $check_description = tm_article::where('tx_article_value',$description)->where('article_ai_category_id',$category)->where('ai_article_id','!=',$article_id)->count();
         if ($check_description > 0) {
@@ -148,6 +173,18 @@ class articleController extends Controller
             $status = 0;
         }
 
+        if ($request->hasFile('articleImage')) {
+            $validator = Validator::make($request->all(),['articleImage' => 'mimes:jpg,png,jpeg,gif,svg|max:2048|dimensions:min_width=100,min_height=100,max_width=1000,max_height=1000']);
+            if ($validator->fails()) {  return response()->json(['status'=>'fail', 'message'=>'La imagen no tiene el formato adecuado.']); }
+            $avatar = $request->file('articleImage');
+            $filename = time().$avatar->getClientOriginalName();      
+            $avatar->move(public_path().'/attached/image/article/',$filename);
+        }else{
+            $filename = $imagePlaceholder;
+        }
+
+
+
         $article = new tm_article;
         $qry = tm_article::where('ai_article_id',$article_id);
         if ($qry->count() > 0) {
@@ -158,19 +195,73 @@ class articleController extends Controller
                 'tx_article_promotion' => $promotion,
                 'tx_article_option' => json_encode($option), // opcion tiene que ser un json [{titulo: ['opcion1','opcion2','opcion3']}]
                 'tx_article_status' => $status,
-                'tx_article_taxrate' => $request->input('h'),
-                'tx_article_discountrate' => $request->input('i')
+                'tx_article_taxrate' => $request->input('articleTaxrate'),
+                'tx_article_discountrate' => $request->input('articleDiscountrate'),
+                'tx_article_thumbnail' => $filename
             ]);
         }
-        if (sizeOf($product) > 0) {
-            $articlepoductController = new articleproductController;
-            $ans = $articlepoductController->save($product);
-        }
+        // if (sizeOf($product) > 0) {
+        //     $articlepoductController = new articleproductController;
+        //     $ans = $articlepoductController->save($product);
+        // }
         
         // ANSWER
         $rs_article = $this->getAll();
         return response()->json(['status'=>'success','data'=>['all'=>$rs_article]]);
     }
+
+
+
+
+    // public function update(Request $request, $article_id)
+    // {
+    //     $category = $request->input('c');
+    //     $description = $request->input('a');
+    //     $code = $request->input('b');
+    //     $promotion = $request->input('d');
+    //     $option = $request->input('e');
+    //     $status = $request->input('f');
+
+    //     $product = $request->input('g');
+
+    //     $check_description = tm_article::where('tx_article_value',$description)->where('article_ai_category_id',$category)->where('ai_article_id','!=',$article_id)->count();
+    //     if ($check_description > 0) {
+    //         return response()->json(['status'=>'failed','message'=>'Art&iacute;culo duplicado.']);
+    //     }
+    //     $check_code = tm_article::where('tx_article_code',$code)->where('ai_article_id','!=',$article_id)->count();
+    //     if ($check_code > 0) {
+    //         return response()->json(['status'=>'failed','message'=>'C&oacute;digo ya existe.']);
+    //     }
+
+    //     // revisa si el articulo tiene precio, sino mantenerse desactivado
+    //     $check_price = tm_price::where('price_ai_article_id',$article_id)->where('tx_price_status',1)->count();
+    //     if ($check_price === 0) {
+    //         $status = 0;
+    //     }
+
+    //     $article = new tm_article;
+    //     $qry = tm_article::where('ai_article_id',$article_id);
+    //     if ($qry->count() > 0) {
+    //         $qry->update([
+    //             'article_ai_category_id' => $category,
+    //             'tx_article_value' => $description,
+    //             'tx_article_code' => $code,
+    //             'tx_article_promotion' => $promotion,
+    //             'tx_article_option' => json_encode($option), // opcion tiene que ser un json [{titulo: ['opcion1','opcion2','opcion3']}]
+    //             'tx_article_status' => $status,
+    //             'tx_article_taxrate' => $request->input('h'),
+    //             'tx_article_discountrate' => $request->input('i')
+    //         ]);
+    //     }
+    //     if (sizeOf($product) > 0) {
+    //         $articlepoductController = new articleproductController;
+    //         $ans = $articlepoductController->save($product);
+    //     }
+        
+    //     // ANSWER
+    //     $rs_article = $this->getAll();
+    //     return response()->json(['status'=>'success','data'=>['all'=>$rs_article]]);
+    // }
 
     /**
      * Remove the specified resource from storage.

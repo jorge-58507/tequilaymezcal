@@ -50,12 +50,15 @@ Route::post('product/{param}/count', 'productController@update_quantity')->middl
 Route::post('creditnote/{param}/nullify', 'creditnoteController@nullify')->middleware('auth');
 Route::post('depletion/{param}/article', 'depletionController@depletionByArticle')->middleware('auth');
 Route::post('/table_upd/', 'tableController@renovate')->middleware('auth');
+Route::post('/article_upd/', 'articleController@renovate')->middleware('auth');
 Route::post('/paymentprovider/productinput', 'paymentproviderController@create')->middleware('auth');
 Route::post('/report/show', 'reportController@show');
+Route::post('/article/product', 'articleproductController@save');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
 Route::delete('dataproductinput/{param}', 'productinputController@delete_data')->middleware('auth');
+Route::delete('/article/product', 'articleproductController@delete');
 
 Route::put('request/{param}/client/table', 'requestController@update_rel')->middleware('auth');
 Route::put('request/{param}/close', 'requestController@close')->middleware('auth');
