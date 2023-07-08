@@ -94,6 +94,7 @@ Route::resource('stock', 'stockController')->middleware('auth');
 Route::resource('paymentprovider', 'paymentproviderController')->middleware('auth');
 Route::resource('datapaymentprovider', 'datapaymentproviderController')->middleware('auth');
 Route::resource('productoutput', 'productoutputController')->middleware('auth');
+Route::resource('user', 'userController')->middleware('auth');
 
 // PRINT
 Route::get('print_cashregister/{param}', 'printController@print_cashregister');

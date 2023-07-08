@@ -99,12 +99,17 @@ class articleController extends Controller
             return response()->json(['status'=>'failed','message'=>'Articulo no existe.']);
         }
         $rs = $qry->first();
+        $qry_price = tm_price::select('tm_presentations.tx_presentation_value','tm_presentations.ai_presentation_id','tm_prices.ai_price_id','tm_prices.tx_price_one','tm_prices.tx_price_two','tm_prices.tx_price_three','tm_prices.tx_price_date')->join('tm_presentations','tm_prices.price_ai_presentation_id','tm_presentations.ai_presentation_id')
+        ->where('price_ai_article_id',$rs['ai_article_id'])->where('tx_price_status',1)->orderby('tx_price_date','DESC');
+        $rs_price = $qry_price->get();
 
-        $articleproduct = tm_articleproduct::join('tm_products','tm_products.ai_product_id','tm_articleproducts.articleproduct_ai_product_id')
-        ->join('tm_measures','tm_measures.ai_measure_id','tm_articleproducts.articleproduct_ai_measure_id')
-        ->where('articleproduct_ai_article_id',$rs['ai_article_id'])->get();
-        $rs_price = tm_price::select('tm_presentations.tx_presentation_value','tm_presentations.ai_presentation_id','tm_prices.ai_price_id','tm_prices.tx_price_one','tm_prices.tx_price_two','tm_prices.tx_price_three','tm_prices.tx_price_date')->join('tm_presentations','tm_prices.price_ai_presentation_id','tm_presentations.ai_presentation_id')->where('price_ai_article_id',$rs['ai_article_id'])->where('tx_price_status',1)->orderby('tx_price_date','DESC')->get();
+        if ($qry_price->count() === 0) {
+            $articleproduct = [];
+        }else{
+            $articleproduct = tm_articleproduct::where('articleproduct_ai_article_id',$rs['ai_article_id'])->where('articleproduct_ai_presentation_id',$rs_price[0]['ai_presentation_id'])->get();
+        }
         return response()->json(['status'=>'success','data'=>['article'=>$rs, 'price' => $rs_price, 'articleproduct'=>$articleproduct]]);
+        // return response()->json(['status'=>'success','data'=>['article'=>$rs, 'price' => $rs_price]]);
     }
 
     /**

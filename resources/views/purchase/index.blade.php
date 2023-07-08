@@ -162,6 +162,7 @@
 	<script type="text/javascript">
     var notprocesed = JSON.parse('<?php echo json_encode($data['notprocesed']) ?>');
     var procesed = JSON.parse('<?php echo json_encode($data['procesed']) ?>');
+    var low_inventory = '<?php echo $data['low_inventory'] ?>';
 
     const cls_productinput = new class_productinput(notprocesed,procesed);
     const cls_purchase = new class_purchase;

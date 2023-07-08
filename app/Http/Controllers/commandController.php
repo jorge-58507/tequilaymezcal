@@ -118,7 +118,6 @@ class commandController extends Controller
 
         return $rs_article;
     }
-
     public function getByRequest_json($request_slug)
     {
         $rs_request = tm_request::where('tx_request_slug',$request_slug)->first();

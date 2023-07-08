@@ -20,7 +20,6 @@ class class_purchase{
     var content_notprocesed = cls_productinput.generate_notprocesed(cls_productinput.notprocesed);
     var content_procesed = cls_productinput.generate_processed(cls_productinput.procesed);
 
-    // <li class="list-group-item cursor_pointer fs_20 text-truncate" onclick="cls_productinput.show_notprocesed()">01001 - Pedersen Fine Foods</li>
     var content = `
       <div class="col-sm-6">
         <div class="row">
@@ -48,7 +47,7 @@ class class_purchase{
         </div>
         <div class="row">
           <div class="col text-center">
-            <button type="button" class="btn btn-lg btn-secondary" onclick="cls_requisition.render();">Orden de Compra</button>
+            <button type="button" class="btn btn-lg btn-secondary" onclick="cls_requisition.render();">Orden de Compra <span class="badge text-bg-warning">${low_inventory}</span></button>
           </div>
         </div>
       </div>
@@ -1137,7 +1136,16 @@ class class_product{
   generate_productlist(raw_product) {
     var content = '<ul class="list-group">';
     raw_product.map((product) => {
-      content += `<li class="list-group-item cursor_pointer fs_20 text-truncate" onclick="cls_product.show('${product.tx_product_slug}')">${product.tx_product_code} - ${product.tx_product_value}</li>`;
+      let bg = '';
+      if(product.tx_product_alarm === 1) {
+        if(product.tx_product_quantity < product.tx_product_minimum) {
+          bg ='text-bg-warning';
+        }
+        if (product.tx_product_quantity > product.tx_product_maximum) {
+          bg = 'text-bg-success';
+        }
+      } 
+      content += `<li class="list-group-item cursor_pointer fs_20 text-truncate ${bg}" onclick="cls_product.show('${product.tx_product_slug}')" title="${product.tx_product_value} (Cant: ${product.tx_product_quantity})">${product.tx_product_code} - ${product.tx_product_value} (Cant: ${product.tx_product_quantity})</li>`;
     });
     content += '</ul>';
     return content;

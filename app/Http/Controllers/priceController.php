@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\tm_price;
 use App\tm_article;
+use App\tm_articleproduct;
 
 class priceController extends Controller
 {
@@ -58,6 +59,8 @@ class priceController extends Controller
         $pThree = $request->input('c');
         $article_slug = $request->input('e');
         $presentation_id = $request->input('f');
+        $raw_recipe = $request->input('g');
+
         $rs_article = tm_article::where('tx_article_slug',$article_slug)->first();
         $check_dup = tm_price::where('tx_price_one',$pOne)->where('tx_price_two',$pTwo)->where('tx_price_three',$pThree)->where('price_ai_article_id',$rs_article['ai_article_id'])
         ->where('price_ai_presentation_id',$presentation_id)->where('tx_price_status',1)->count();
@@ -82,6 +85,11 @@ class priceController extends Controller
         $tm_price->tx_price_date = date('Y-m-d');
         $tm_price->save();
 
+        tm_articleproduct::where('articleproduct_ai_article_id',$rs_article['ai_article_id'])->where('articleproduct_ai_presentation_id',$presentation_id)->delete();
+        $articleproductController = new articleproductController;
+        foreach ($raw_recipe as $recipe) {
+            $articleproductController->save($rs_article['ai_article_id'],$presentation_id,$recipe);
+        }
         // ANSWER
         $rs_price = $this->byArticle($article_slug);
         return response()->json(['status'=>'success','message'=>'Precios agregados.','data'=>['price'=>$rs_price]]);

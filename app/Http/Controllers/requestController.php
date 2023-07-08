@@ -9,6 +9,7 @@ use App\tm_request;
 use App\tm_article;
 use App\tm_client;
 use App\tm_command;
+use App\tm_product;
 
 class requestController extends Controller
 {
@@ -26,13 +27,21 @@ class requestController extends Controller
         $rs_article =           tm_article::select('tm_articles.ai_article_id','tm_articles.tx_article_thumbnail','tm_articles.tx_article_code', 'tm_articles.tx_article_value', 'tm_articles.tx_article_promotion','tm_articles.tx_article_slug','tm_categories.ai_category_id','tm_categories.tx_category_value')->join('tm_categories','tm_categories.ai_category_id','tm_articles.article_ai_category_id')->where('tx_article_status',1)->orderby('tx_article_promotion','DESC')->orderby('tx_article_value','ASC')->get();
         $rs_client =            tm_client::where('tx_client_status',1)->get();
         $raw_request = $this->getAll();
+
+        if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
+            $chk_low_inventory = 0;
+        }else{
+            $chk_low_inventory = tm_product::where('tx_product_status',1)->where('tx_product_quantity','<','tx_product_minimum')->where('tx_product_alarm',1)->count();
+        }
+
         $data = [
             'table_list' => $rs_ubication,
             'open_request' => $raw_request['open_request'],
             'closed_request' => $raw_request['closed_request'],
             'canceled_request' => $raw_request['canceled_request'],
             'article_list' => $rs_article,
-            'client_list' => $rs_client
+            'client_list' => $rs_client,
+            'low_inventory' => $chk_low_inventory
         ];
         return view('request.index', compact('data'));
     }

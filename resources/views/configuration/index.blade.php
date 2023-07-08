@@ -55,7 +55,7 @@
 
   <!-- Modal ARTICLEPRODUCT -->
   <div class="modal fade" id="articleproductModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
       <div class="modal-content">
         <div class="modal-header">
           <h1 class="modal-title fs-5" id="articleproductModal_title">Modal title</h1>
@@ -64,22 +64,6 @@
         <div id="articleproductModal_content" class="modal-body">
         </div>
         <div id="articleproductModal_footer" class="modal-footer">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal PRICE -->
-  <div class="modal fade" id="priceModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="priceModal_title">Precios</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div id="priceModal_content" class="modal-body">
-        </div>
-        <div id="priceModal_footer" class="modal-footer">
         </div>
       </div>
     </div>
@@ -101,6 +85,22 @@
     </div>
   </div>
 
+  <!-- Modal USER -->
+  <div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="userModal_title">Información de Usuario</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="userModal_content" class="modal-body">
+        </div>
+        <div id="userModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row">
     <div class="col-xs-12 col-md-3">
       <div class="row">
@@ -110,7 +110,7 @@
               <button type="button" id="btn_article" class="btn btn-primary btn-lg">Carta</button>
             </li>
             <li class="nav-item d-grid gap-2">
-              {{-- <button type="button" class="btn btn-success btn-lg" onclick="">Usuario</button> --}}
+              <button type="button" class="btn btn-success btn-lg" onclick="cls_user.render()">Usuario</button>
             </li>
             <li class="nav-item d-grid gap-2">
               <button type="button" class="btn btn-primary btn-lg" onclick="cls_product.render()">Producto</button>
@@ -162,6 +162,7 @@
     const cls_client = new class_client;
     var raw_paymentmethod = JSON.parse('<?php echo json_encode($data['paymentmethod_list']) ?>')    
     const cls_payment = new class_payment(raw_paymentmethod);
+    const cls_user = new class_user();
 
   </script>
     {{-- ##############    JQUERY   ############### --}}

@@ -38,6 +38,7 @@ class productinputController extends Controller
         $rs_productinput = $this->getAll();
         $rs_product = tm_product::join('tm_productcategories','tm_productcategories.ai_productcategory_id','tm_products.product_ai_productcategory_id')->where('tx_product_status',1)->get();
         $rs_productcategory = tm_productcategory::where('tx_productcategory_status',1)->get();
+        $chk_low_inventory = tm_product::where('tx_product_status',1)->where('tx_product_quantity','<','tx_product_minimum')->where('tx_product_alarm',1)->count();
         $data = [
             'providerlist' => $rs_provider['active'],
             'notprocesed' => $rs_productinput['notprocesed'],
@@ -45,7 +46,8 @@ class productinputController extends Controller
             'productlist' => $rs_product,
             'requisition_procesed' => $rs_requisition['procesed'],
             'requisition_notprocesed' => $rs_requisition['notprocesed'],
-            'productcategory' => $rs_productcategory
+            'productcategory' => $rs_productcategory,
+            'low_inventory' => $chk_low_inventory
         ];
         return view('purchase.index', compact('data'));
     }

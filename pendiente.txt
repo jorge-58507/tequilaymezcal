@@ -1,6 +1,7 @@
+agregar roles eliminar roles y funciones de actualizar la informacion
+En la receta poder eliminar productos agregados
 
-Por cada presentacion establecer una receta, y en cada articulo de la receta establecer articulos intercambiables. Al agregar la datacomanda guardar la receta seleccionada, 
-al restar los producos verificar la receta seleccionada y restar
+cuantos gramos trae un sobre de azucar
 
 
 incluir giftcard <-- esto hacerlo desde la interfaz opciones, crear boton llamado clientes, desde el cual se puede hacer CRUD a clientes y la giftcard, se regirá por un codigo utilizable por cualquiera
@@ -18,8 +19,10 @@ Los reportes: Reporte de Compras, Reporte de Ventas,  Reporte Compras totales, R
 para la interfaz de reporte poner dons campos de fechas y hacer un select y un boton de procesar, mostrarlo en el contenedor de abajo y un boton de imprimir
         // "php": "^7.2",
         "fzaninotto/faker": "^1.4",
-
-
+Por cada presentacion establecer una receta, y en cada articulo de la receta establecer articulos intercambiables. 
+Al agregar la datacomanda guardar la receta seleccionada, 
+al restar los producos verificar la receta seleccionada y restar
+*Alarmas de productos bajos
         3.55*17 = 60.45
         pegamento 42.99
         cewmento        14

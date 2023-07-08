@@ -656,7 +656,7 @@ class class_command{
           </svg>
         `;
       }
-      var img = (cls_general.is_empty_var(article['tx_article_thumbnail']) === 1) ? `<img src="attached/image/article/${article['tx_article_thumbnail']}" width="100px"></img>` : `
+      var img = (cls_general.is_empty_var(article['tx_article_thumbnail']) === 1) ? `<img src="attached/image/article/${article['tx_article_thumbnail']}" width="80px"></img>` : `
       <svg width="80px" height="80px" class="filter_white" viewBox="0 0 108 108" id="Layeri" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <g class="cls-2 ${bg}">
           <g id="Line">
@@ -733,9 +733,25 @@ class class_command{
 
       var tax_rate = (document.getElementById('requestClient').getAttribute('alt') == 1) ? 0 : obj.data.article.tx_article_taxrate;
 
+      var article_product = obj.data.articleproduct; //SELECT PARA LAS RECETAS
+      console.log(article_product);
+      var content_recipe = '';
+      article_product.map((ap,i) => {
+        var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
+        content_recipe += `
+          <div class="col-md-12 col-lg-6">
+            <label for="ingredient_${i}">${i+1}.- Ingrediente</label>
+            <select class="form-select" id="ingredient_${i}">`;
+            raw_ingredient.map((ingredient) => {
+              // content_recipe += `<option value="${JSON.stringify(ingredient)}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+              content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+            })
+        content_recipe += `</select></div>`;
+      })
+
       var content = `
         <div class="row">
-          <div class="col-md-12">
+          <div class="col-md-12 col-lg-4">
             <label for="articleQuantity">Cantidad</label>
             <input type="number" class="form-control" id="articleQuantity" value="1" onfocus="cls_general.validFranz(this.id, ['number'])" >
           </div>
@@ -745,13 +761,18 @@ class class_command{
               ${option_presentation}
             </select>
           </div>
-          <div id="container_price" class="col-md-12 col-lg-4"></div>
+          <div id="container_price" class="col-md-12 col-lg-4">
+          </div>
+          <div class="col-sm-12">
+            <div id="container_recipe" class="row">
+              ${content_recipe}
+            </div>
+          </div>
           <div class="col-md-12 col-lg-4">
             <input type="hidden" class="form-control" id="articleDiscountrate" value="${obj.data.article.tx_article_discountrate}" onfocus="cls_general.validFranz(this.id, ['number'])" required>
             <input type="hidden" class="form-control" id="articleTaxrate" value="${tax_rate}" onfocus="cls_general.validFranz(this.id, ['number'])" required>
           </div>
           <hr/>
-
           <h5>Opciones</h5>
           <div id="articleOption" class="row">
             ${content_option}
@@ -766,8 +787,7 @@ class class_command{
           </div>
         </div>
       `;
-      
-      
+
       document.getElementById('commandModal_title').innerHTML = 'Agregar Art&iacute;culo';
       document.getElementById('commandModal_content').innerHTML = content;
       document.getElementById('commandModal_footer').innerHTML = footer;
@@ -806,6 +826,11 @@ class class_command{
     $('#articleOption').find('select').each(function () {
       option += `${$(this).attr('id')}: ${$(this).val()},`;
     });
+    var raw_recipe = [];
+    $('#container_recipe').find('select').each(function () {
+      var index = $(this.selectedOptions).text();
+      raw_recipe.push({ [index] : $(this).val() })
+    });
     cls_command.command_list.push({
       'article_slug': article_slug,
       'article_id': article_id,
@@ -815,13 +840,12 @@ class class_command{
       'presentation_id' : document.getElementById('articlePresentation').value,
       'price' : document.getElementById('articlePrice').value,
       'tax_rate': document.getElementById('articleTaxrate').value,
-      'discount_rate' : document.getElementById('articleDiscountrate').value
+      'discount_rate' : document.getElementById('articleDiscountrate').value,
+      'recipe': raw_recipe
     });
     const Modal = bootstrap.Modal.getInstance('#commandModal');
     Modal.hide();
     cls_command.render_articleselected();
-
-
   }
   render_articleselected(){
     var content = cls_command.generate_articleselected(cls_command.command_list);

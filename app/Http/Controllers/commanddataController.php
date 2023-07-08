@@ -10,6 +10,7 @@ class commanddataController extends Controller
     public function store ($article_list,$user_id,$command_id,$exempt) {
         foreach ($article_list as $a => $article) {
             $option = (strlen($article['option']) > 1) ? $article['option'] : '';
+            $recipe = json_encode($article['recipe']);
             $tax_rate = ($exempt == 1) ? 0 : $article['tax_rate'];
             $tm_commanddata = new tm_commanddata;
             $tm_commanddata->commanddata_ai_user_id         = $user_id;
@@ -23,6 +24,7 @@ class commanddataController extends Controller
             $tm_commanddata->tx_commanddata_description     = $article['article_description'];
             $tm_commanddata->tx_commanddata_modified        = 0;
             $tm_commanddata->tx_commanddata_option          = $option;
+            $tm_commanddata->tx_commanddata_recipe          = $recipe;
             $tm_commanddata->save();
         }
     }
@@ -35,8 +37,15 @@ class commanddataController extends Controller
         
         if ($request->input('a') === 1) {
             $rs = $qry->first();
+            $article_list = [
+                [
+                    "article_id"=> $rs['commanddata_ai_article_id'],
+                    "quantity"  => $rs['tx_commanddata_quantity'],
+                    "recipe"    => $rs['tx_commanddata_recipe']
+                ]
+            ];
             $productController = new productController;
-            $productController->plus_byArticle([['article_id'=> $rs['commanddata_ai_article_id'],'quantity'=>$rs['tx_commanddata_quantity']]]);
+            $productController->plus_byArticle($article_list);
         }
 
         // ANSWER

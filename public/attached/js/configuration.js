@@ -374,7 +374,6 @@ class class_table {
     cls_general.disable_submit(document.getElementById('btn_submitupdatetable'));
     var description = document.getElementById('tableValue').value;
     var code = document.getElementById('tableCode').value;
-    // var status = (document.getElementById('tableStatus').checked === true) ? 1 : 0;
 
     if (cls_general.is_empty_var(description) === 0 || cls_general.is_empty_var(code) === 0) {
       cls_general.shot_toast_bs('Verifique la información ingresada.', { bg: 'text-bg-secondary' });
@@ -943,6 +942,9 @@ class class_product{
   }
   updateQuantity(product_slug){
     var quantity = document.getElementById('productQuantity').value;
+    if (cls_general.is_empty_var(quantity) === 0 || isNaN(quantity)) {
+      cls_general.shot_toast_bs("Debe ingresar un numero.",{bg: "text-bg-warning"})
+    }
     var url = '/product/' + product_slug + '/count'; var method = 'POST';
     var body = JSON.stringify({a: quantity});
     var funcion = function (obj) {
@@ -973,6 +975,7 @@ class class_category{
 class class_article {
   constructor (article_list){
     this.articleList = article_list;
+    this.article_selected;
   }
   render() {
     var url = '/article'; var method = 'GET';
@@ -1014,7 +1017,6 @@ class class_article {
     return list;
   }
   create() {
-    // LLENAR ESTA FUNCION
     var option_category = '';
     var categoryList = cls_category.category_active
     categoryList.map(x => option_category += `<option value="${x.ai_category_id}">${x.tx_category_value} </option>`);
@@ -1185,8 +1187,8 @@ class class_article {
     var body = "";
     var funcion = function (obj) {
       var article = obj['data']['article'];
+      cls_article.article_selected = {'slug': article_slug, 'id': article.ai_article_id}
 
-      cls_articleproduct.articleproduct_selected = [];
       var option_category = '';
       var categoryList = cls_category.category_active
       categoryList.map(x => option_category += (x.ai_category_id === article.article_ai_category_id) ? `<option value="${x.ai_category_id}" selected>${x.tx_category_value}</option>` : `<option value="${x.ai_category_id}">${x.tx_category_value}</option>`);
@@ -1195,20 +1197,6 @@ class class_article {
       var checked_status = (article.tx_article_status == 1) ? 'checked' : '';
       var raw_option = JSON.parse(article.tx_article_option);
       var option = cls_article.decode_articleoption(raw_option)
-
-      obj.data.articleproduct.map(product => {
-        cls_articleproduct.articleproduct_selected.push({
-          product_id: product.articleproduct_ai_product_id,
-          product_value: product.tx_product_value,
-          article: product.articleproduct_ai_article_id,
-          quantity: product.tx_articleproduct_quantity,
-          measure_id: product.articleproduct_ai_measure_id,
-          measure_value: product.tx_measure_value
-        });
-      })
-      var selected = cls_articleproduct.articleproduct_selected;
-      var list_selected = cls_articleproduct.generate_productselected(selected);
-
       var img = (cls_general.is_empty_var(article['tx_article_thumbnail']) === 1) ? `<img src="attached/image/article/${article['tx_article_thumbnail']}" width="100px"></img>` : `
       <svg width="80px" height="80px" viewBox="0 0 108 108" id="Layeri" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <g class="cls-2">
@@ -1266,7 +1254,7 @@ class class_article {
                   <input type="text" class="form-control" id="articleDiscountrate" name="articleDiscountrate" value="${article.tx_article_discountrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
                 </div>
                 <div class="col-sm-12 col-md-6 col-lg-3 d-grid gap-2 pt-3">
-                  <button type="button" class="btn btn-info" onclick="cls_article.price('${article_slug}')">Precio</button>
+                  <button type="button" class="btn btn-info" onclick="cls_article.price('${article_slug}','${article.tx_article_value}')">Presentaciones</button>
                 </div>
               </div>
 
@@ -1302,29 +1290,7 @@ class class_article {
           </div>
         </form>
       `;
-      var content_product = `
-        <div class="row">
-          <div class="col-lg-12">
-            <h5>Receta</h5>
-          </div>
-
-          <div class="col-lg-6">
-            <div class="col-lg-12">
-                <label for="" class="form-label">Buscar Producto</label>
-                <input type="text" class="form-control" id="" onkeyup="cls_article.filter_product(this.value)" onfocus="cls_general.validFranz(this.id, ['number'],'abcdefghijklmnñopqrstuvwxyzáéíóúABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ')" placeholder="Nombre del producto"/>
-            </div>
-            <div id="container_filterproduct" class="col-lg-12 v_scrollable h_150 bx_1 by_1 border_gray"></div>
-          </div>
-
-          <div class="col-lg-6">
-            <div class="col-lg-12"><h5>Productos Seleccionados</h5></div>
-            <div id="container_productselected" class="col-lg-12 v_scrollable h_200">
-              ${list_selected}
-            </div>
-          </div>
-        </div>
-      `; 
-      document.getElementById('container').innerHTML = content+content_bottom+content_product;
+      document.getElementById('container').innerHTML = content + content_bottom;
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
@@ -1370,12 +1336,10 @@ class class_article {
           case 'si':
             status = 0;
             cls_article.run_update(article_id, product_selected);
-            // cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
             break;
           case 'no':
             status = 1;
             cls_article.run_update(article_id, product_selected);
-            // cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
             break;
         }
       });
@@ -1383,11 +1347,7 @@ class class_article {
       cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
     }
   }
-  run_update(article_id, product_selected) {
-  // run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate){
-
-
-
+  run_update() {
     var formData = new FormData($('#form_updatearticle')[0]);
     $.ajax({
       url: '/article_upd/',
@@ -1451,43 +1411,6 @@ class class_article {
 
 
     });
-
-
-
-    // var url = '/article/' + article_id; var method = 'PUT';
-    // var body = JSON.stringify({ a: description, b: code, c: category, d: promotion, e: option, f: status, g: product_selected, h: taxrate, i: discountrate});
-    // var funcion = function (obj) {
-      // if (obj.status != 'failed') {
-      //   var raw_list = obj['data']['all'];
-      //   var list = cls_article.generate_list(raw_list)
-      //   var content = `
-      //     <div class="row">
-      //       <div class="col-xs-12 py-2 text-center">
-      //         <button type="button" class="btn btn-lg btn-primary" onclick="cls_article.create()">Crear Art&iacute;culo</button>
-      //         &nbsp;
-      //       </div>
-      //       <div class="col-xs-12">
-      //         <h5>Listado de Art&iacute;culos</h5>
-      //       </div>
-      //       <div class="col-xs-12">
-      //         <input type="text" class="form-control" id="articleFilter" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_article.filter(this.value,20)" placeholder="Buscar art&iacute;culos por nombre" >
-      //       </div>
-      //       <div id="container_articleList" class="col-xs-12 border-top">
-      //         ${list}
-      //       </div>
-      //     </div>
-      //   `;
-      //   document.getElementById('container').innerHTML = content;
-
-
-      //   var list = cls_article.generate_list(raw_list)
-      //   document.getElementById('container_articleList').innerHTML = list;
-      //   cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-      // } else {
-      //   cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-      // }
-    // }
-    // cls_general.async_laravel_request(url, method, funcion, body);
   }
   delete(btn,article_slug){
     cls_general.disable_submit(btn);
@@ -1524,184 +1447,81 @@ class class_article {
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  price(article_slug){
+  price(article_slug,article_description){
     var url = '/price/' + article_slug + '/article'; var method = 'GET';
     var body = "";
     var funcion = function (obj) {
-      var raw_price = obj.data.price;
-      cls_price.render_article(raw_price,article_slug);
-      const modal = new bootstrap.Modal('#priceModal', {})
-      modal.show();
+      cls_articleproduct.articleproduct_selected = [];
 
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
-  }
-  filter_product (str) {
-    var filtered = cls_product.look_for(str,20)
-    var list = cls_article.generate_productlist(filtered);
-    document.getElementById('container_filterproduct').innerHTML = list;
-  }
-  generate_productlist(filtered){
-    var content = '<ul class="list-group">';
-    for (const a in filtered) {
-      content += `<li class="list-group-item cursor_pointer" onclick="cls_article.show_product('${filtered[a].tx_product_slug}')">${filtered[a].tx_product_value}</li>`;
-    }
-    content += '</ul>';
-    return content;
-  }
-  show_product(product_slug){
-    var url = '/product/'+product_slug; var method = 'GET';
-    var body = '';
-    var funcion = function (obj) {
-      var product = obj['data']['product'];
-      var option_productmeasure = '';
-      var measureList = obj['data']['measure_list'];
-      measureList.map(x => option_productmeasure += `<option value="${x.ai_measure_id}">${x.tx_measure_value} </option>`)
+      var table_price = cls_price.generate_tableprice(obj.data.price);
+      
+      var option_presentation = ''; //SELECT DEL PRESENTATION
+      cls_presentation.presentation_list.map((presentation) => { option_presentation += `<option value="${presentation.ai_presentation_id}">${presentation.tx_presentation_value}</option>`; })
       var content = `
         <div class="row">
-          <div class="col-md-12 col-lg-6">
-              <label for="" class="form-label">Cantidad</label>
-              <input type="text" class="form-control" id="articleproductQuantity" value="" onfocus="cls_general.validFranz(this.id, ['number'], '.')">
+          <div class="col-sm-12">
+          <h5>Precio y Recetas de ${article_description}</h5>
           </div>
-          <div class="col-md-12 col-lg-6">
-            <label for="articleproductMeasure" class="form-label">Medida</label>
-            <select id="articleproductMeasure" class="form-select">${option_productmeasure}</select>
+          <div class="col-sm-12">
+            <div class="row">
+              <div class="col-sm-12 col-md-6 col-lg-3">
+                <label for="pricePresentation" class="form-label">Presentaci&oacute;n</label>
+                <select id="pricePresentation" class="form-select"><option value="" disabled selected>Seleccione</option>${option_presentation}</select>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-3">
+                <label for="priceThree" class="form-label">Standard</label>
+                <input type="text" class="form-control" id="priceThree" value="" onfocus="cls_general.validFranz(this.id, ['number'],'.')" onkeyup="cls_general.limitText(this, 10, toast = 0)" onblur="cls_general.limitText(this, 10, toast = 0)">
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-3">
+                <label for="priceTwo" class="form-label">Precio #2</label>
+                <input type="text" class="form-control" id="priceTwo"   value="" onfocus="cls_general.validFranz(this.id, ['number'],'.')" onkeyup="cls_general.limitText(this, 10, toast = 0)" onblur="cls_general.limitText(this, 10, toast = 0)">
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-3">
+                <label for="priceOne" class="form-label">Precio #1</label>
+                <input type="text" class="form-control" id="priceOne"   value="" onfocus="cls_general.validFranz(this.id, ['number'],'.')" onkeyup="cls_general.limitText(this, 10, toast = 0)" onblur="cls_general.limitText(this, 10, toast = 0)">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-12 text-center pt-2">
+                <button type="button" class="btn btn-outline-primary" onclick="cls_articleproduct.create_ingredient()">Agregar Ingrediente</button>
+              </div>
+              <div class="col-lg-12">
+                <h5>Recetas</h5>
+              </div>
+              <div id="container_recipe" class="col-lg-12">
+                
+              </div>
+              <hr />
+              <div class="col-lg-12 text-center pt-1">
+                <button type="button" class="btn btn-success" onclick="cls_price.save(this,'${article_slug}')">Guardar Precio</button>
+              </div>
+            </div>
+            <hr />
+            <div class="row">
+              <div id="container_articlepricehistory" class="col-lg-12 h_200 v_scrollable">
+                ${table_price}
+              </div>
+            </div>
           </div>
         </div>
       `;
+
       var content_bottom = `
         <div class="row">
-          <div class="col-lg-12 text-center">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            <button type="button" class="btn btn-success" id="" onclick="cls_article.add_product(this,${product.ai_product_id},)">Agregar Producto</button>
+          <div class="col-lg-12 text-center pt-2">
+            <button type="button" class="btn btn-secondary" onclick="cls_article.show('${article_slug}')">Volver</button>
           </div>
         </div>
       `;
-
-      document.getElementById('articleproductModal_title').innerHTML = product['tx_product_value'];
-      document.getElementById('articleproductModal_content').innerHTML = content;
-      document.getElementById('articleproductModal_footer').innerHTML = content_bottom;
-      const modal = new bootstrap.Modal('#articleproductModal', {})
-      modal.show();
-      setTimeout(() => {
-        document.getElementById('articleproductQuantity').focus();
-      }, 600);
+      document.getElementById('container').innerHTML = content + content_bottom;
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-  }
-  add_product(btn, product_id){
-    cls_general.disable_submit(btn);
-    var quantity = document.getElementById('articleproductQuantity').value;
-    var measure = document.getElementById('articleproductMeasure').value;
-    var article_id = document.getElementById('btn_articleModal_update').name;
-    if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(measure) === 0 || cls_general.is_empty_var(article_id) === 0) {
-      cls_general.shot_toast_bs('Falta informaci&oacute;n.', { bg: 'text-bg-warning' });
-      return false;
-    }
-    if(isNaN(quantity)) {
-      cls_general.shot_toast_bs('Cantidad debe ser un numero.', {bg: 'text-bg-warning'});
-      return false;
-    }
-
-    var url = '/article/product';
-    var method = 'POST';
-    var body = JSON.stringify({ a: product_id, b: article_id, c: quantity, d: measure });
-    var funcion = function (obj) {
-      if (obj.status === 'success') {
-        cls_articleproduct.articleproduct_selected = [];
-        obj.data.articleproduct.map((product) => {
-          cls_articleproduct.articleproduct_selected.push({
-            product_id: product.articleproduct_ai_product_id,
-            product_value: product.tx_product_value,
-            article: product.articleproduct_ai_article_id,
-            quantity: product.tx_articleproduct_quantity,
-            measure_id: product.articleproduct_ai_measure_id,
-            measure_value: product.tx_measure_value
-          });
-        })
-
-        cls_articleproduct.render_productselected();
-        const modal = bootstrap.Modal.getInstance('#articleproductModal');
-        modal.hide();
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-
-      } else {
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-      }
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
-
-    // cls_general.disable_submit(btn);
-    // var quantity = document.getElementById('articleproductQuantity').value;
-    // var measure = document.getElementById('articleproductMeasure').value;
-    // var article_id = document.getElementById('btn_articleModal_update').name;
-    // if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(measure) === 0 || cls_general.is_empty_var(article_id) === 0) {
-    //   cls_general.shot_toast_bs('Falta informaci&oacute;n.', { bg: 'text-bg-warning' });
-    //   return false;
-    // }
-    // if(isNaN(quantity)) {
-    //   cls_general.shot_toast_bs('Cantidad debe ser un numero.', {bg: 'text-bg-warning'});
-    //   return false;
-    // }
-    // var select_measure = document.getElementById('articleproductMeasure');
-    // var selected = {
-    //   product_id: product_id,
-    //   product_value: document.getElementById('articleproductModal_title').innerHTML,
-    //   article: document.getElementById('btn_articleModal_update').name,
-    //   quantity: document.getElementById('articleproductQuantity').value,
-    //   measure_id: select_measure.value,
-    //   measure_value: select_measure.options[select_measure.selectedIndex].text
-    // }
-    // var check_dup = new Object;
-    // check_dup = cls_articleproduct.articleproduct_selected.filter(x =>  x.product_id == product_id );
-
-    // const keys = Object.keys(check_dup);
-    // if (keys.length > 0) {
-    //   cls_general.shot_toast_bs('Ese producto ya fu&eacute; agregado.', {bg: 'text-bg-warning'})
-    //   return false;
-    // }
-    // cls_articleproduct.articleproduct_selected.push(selected);
-    // const modal = bootstrap.Modal.getInstance('#articleproductModal');
-    // modal.hide();
-
-    // cls_articleproduct.render_productselected();
-  }
-  erase_product(product_id, article_id){
-    var url = '/article/product';
-    var method = 'DELETE';
-    var body = JSON.stringify({ a: product_id, b: article_id });
-    var funcion = function (obj) {
-      if (obj.status === 'success') {
-        cls_articleproduct.articleproduct_selected = [];
-        obj.data.articleproduct.map((product) => {
-          cls_articleproduct.articleproduct_selected.push({
-            product_id: product.articleproduct_ai_product_id,
-            product_value: product.tx_product_value,
-            article: product.articleproduct_ai_article_id,
-            quantity: product.tx_articleproduct_quantity,
-            measure_id: product.articleproduct_ai_measure_id,
-            measure_value: product.tx_measure_value
-          });
-        })
-
-        cls_articleproduct.render_productselected();
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-      } else {
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-      }
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
-
-    // var selected = cls_articleproduct.articleproduct_selected;
-    // selected.splice(index, 1)
-    // cls_articleproduct.articleproduct_selected = selected;
-    // cls_articleproduct.render_productselected();
-
   }
 }
 class class_articleproduct{
   constructor(){
     this.articleproduct_selected = [];
+    this.articleproduct_ingredient = [];
   }
   render_productselected(){
     var selected = cls_articleproduct.articleproduct_selected;
@@ -1722,9 +1542,120 @@ class class_articleproduct{
     content += '</ul>';
     return content;
   }
+  create_ingredient(){
+    var option_product = ''; //SELECT DEL PRESENTATION
+    cls_product.productlist.map((product) => { option_product += `<option value="${product.tx_product_slug}" alt="${product.ai_product_id}">${product.tx_product_value}</option>`; })
+
+    document.getElementById('articleproductModal_title').innerHTML = `Agregar Ingrediente`;
+    document.getElementById('articleproductModal_content').innerHTML = `
+    <div class="row">
+      <div class="col-sm-12 text-center">
+        <span>Debe agregar el ingrediente. Seleccione la cantidad, el producto y la medida. En caso de que el ingrediente pueda variar sabores agregar todos los productos que puedan conformar el ingrediente.</span>
+      </div>
+      <hr/>
+      <div class="col-sm-4">
+        <label for="recipeQuantity" class="form-label">Cantidad</label>
+        <input type="text" class="form-control" id="recipeQuantity" onfocus="cls_general.validFranz(this.id, ['number'],'.')">
+      </div>
+      <div class="col-sm-4">
+        <label for="recipeProduct" class="form-label">Producto</label>
+        <select name="recipeProduct" id="recipeProduct" class="form-select" onchange="cls_articleproduct.set_recipemeasure(this.value)"><option value='' disabled selected>Seleccione</option>${option_product}</select>
+      </div>
+      <div id="container_recipemeasure" class="col-sm-4">
+      </div>
+      <div class="col-sm-12 text-center pt-1">
+        <button type="button" class="btn btn-primary" onclick="cls_articleproduct.add_ingredient()">Aceptar</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <span>Productos Seleccionados</span>
+      </div>
+      <div id="container_productselected" class="col-sm-12">
+      </div>
+    </div>
+
+    `;
+    document.getElementById('articleproductModal_footer').innerHTML = `    
+      <div class="col-sm-12 pt-1 text-end">
+        <button type="button" class="btn btn-success" onclick="cls_articleproduct.add_articleproduct()">Agregar Ingrediente</button>
+      </div>
+    `
+
+
+    const modal = new bootstrap.Modal('#articleproductModal', {})
+    modal.show();
+
+  }
+  set_recipemeasure(product_slug){
+    var url = '/product/' + product_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var option_measure = ''; //SELECT DEL PRESENTATION
+        obj.data.measure_list.map((measure) => { option_measure += `<option value="${measure.ai_measure_id}">${measure.tx_measure_value}</option>`; })
+
+        document.getElementById('container_recipemeasure').innerHTML = `
+          <label for="recipeMeasure" class="form-label">Medida</label>
+          <select name="recipeMeasure" id="recipeMeasure" class="form-select">${option_measure}</select>
+        `;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  add_ingredient(){
+    var quantity = document.getElementById('recipeQuantity').value;
+    var product = document.getElementById("recipeProduct");
+    var measure = document.getElementById("recipeMeasure");
+    if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(product.value) === 0 || cls_general.is_empty_var(measure.value) === 0) {
+      cls_general.shot_toast_bs('Faltan datos', { bg: 'text-bg-warning' }); return false;
+    }
+    cls_articleproduct.articleproduct_ingredient.push({
+      product_id: product.options[product.selectedIndex].getAttribute('alt'),
+      product_value: product.options[product.selectedIndex].text,
+      measure_id: measure.value,
+      measure_value: measure.options[measure.selectedIndex].text,
+      quantity: quantity,
+    });
+    cls_general.shot_toast_bs('Producto agregado.')
+    cls_articleproduct.render_ingredient();
+  }
+  render_ingredient(){
+    var content = '<ul class="list-group">';
+    cls_articleproduct.articleproduct_ingredient.map((ingredient)=> {
+      content += `<li class="list-group-item" >${ingredient.quantity} - ${ingredient.product_value} (${ingredient.measure_value})</li >`;
+    })
+    content += '</ul>';
+    document.getElementById('container_productselected').innerHTML = content;
+  }
+
+  add_articleproduct(){
+    if (cls_articleproduct.articleproduct_ingredient.length === 0) {
+      cls_general.shot_toast_bs('Debe ingresar algún ingrediente', {bg: 'text-bg-warning'}); return false;
+    }
+    cls_articleproduct.articleproduct_selected.push(cls_articleproduct.articleproduct_ingredient);
+    cls_articleproduct.articleproduct_ingredient = [];
+    cls_articleproduct.render_articleproduct();
+  }
+  render_articleproduct(){
+    var content = '<ul class="list-group">';
+    cls_articleproduct.articleproduct_selected.map((articleproduct) => {
+      content += (articleproduct.length === 1) ? `<li class="list-group-item" >${articleproduct[0].quantity} - ${articleproduct[0].product_value}</li >` : '<li class="list-group-item" >Varios</li>';
+    })
+    content += '</ul>';
+    document.getElementById('container_recipe').innerHTML = content;
+
+    const modal = bootstrap.Modal.getInstance('#articleproductModal');
+    modal.hide();
+  }
+
+  
 }
 class class_price{
-  render_article(raw_price,article_slug){
+  generate_tableprice(raw_price){
     var actual = [];
     var historical = [];
     raw_price.map((price) => {
@@ -1733,95 +1664,43 @@ class class_price{
       }
       historical.push(price);
     })
-    
+
     var tbody_price = '';
     historical.map((price) => {
       var date = cls_general.date_converter('ymd', 'dmy', price.tx_price_date);
       var bg = (price.tx_price_status == 1) ? 'table-dark' : '';
       var pOne = (cls_general.is_empty_var(price.tx_price_one) === 0) ? 0 : price.tx_price_one;
       var pTwo = (cls_general.is_empty_var(price.tx_price_two) === 0) ? 0 : price.tx_price_two;
-      tbody_price += `<tr class="${bg}">  <td>${date}(${price.tx_presentation_value})</td>  <td>B/${price.tx_price_three.toFixed(2)}</td> <td>B/${pTwo.toFixed(2)}</td> <td>B/${pOne.toFixed(2)}</td>
-      <td>
-        <button class="btn btn-warning" type="button" onclick="cls_price.delete(this,${price.ai_price_id})">
-         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
-          <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
-         </svg>
-        </button>
-      
-      </td>
-      </tr>`;
-
+      tbody_price += `
+        <tr class="${bg}">  <td>${date}(${price.tx_presentation_value})</td>  <td>B/${price.tx_price_three.toFixed(2)}</td> <td>B/${pTwo.toFixed(2)}</td> <td>B/${pOne.toFixed(2)}</td>
+          <td>
+            <button class="btn btn-warning" type="button" onclick="cls_price.delete(this,${price.ai_price_id})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+              <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+            </svg>
+            </button>
+          
+          </td>
+        </tr>`;
     })
-    if (actual.length > 0) {
-      var pThree  = actual[0]['tx_price_three'];
-      var pTwo = (cls_general.is_empty_var(actual[0]['tx_price_two']) === 0) ? 0.00 : actual[0]['tx_price_two'];
-      var pOne = (cls_general.is_empty_var(actual[0]['tx_price_one']) === 0) ? 0.00 : actual[0]['tx_price_one'];
-    }else{
-      var pThree = '';
-      var pTwo = '';
-      var pOne = '';
-    }
-    var option_presentation = ''; //SELECT DEL PRESENTATION
-    cls_presentation.presentation_list.map((presentation) => {  option_presentation += `<option value="${presentation.ai_presentation_id}">${presentation.tx_presentation_value}</option>`; })
     var content = `
-      <div class="row">
-        <div class="col">
-          <div class="row">
-            <div class="col-xs-12 col-md-6 col-lg-3">
-              <label for="priceThree" class="form-label">Standard</label>
-              <input type="text" class="form-control" id="priceThree" value="${pThree}" onfocus="cls_general.validFranz(this.id, ['number'],'.')" onkeyup="cls_general.limitText(this, 10, toast = 0)" onblur="cls_general.limitText(this, 10, toast = 0)">
-            </div>
-            <div class="col-xs-12 col-md-6 col-lg-3">
-              <label for="priceTwo" class="form-label">Precio #2</label>
-              <input type="text" class="form-control" id="priceTwo"   value="${pTwo}" onfocus="cls_general.validFranz(this.id, ['number'],'.')" onkeyup="cls_general.limitText(this, 10, toast = 0)" onblur="cls_general.limitText(this, 10, toast = 0)">
-            </div>
-            <div class="col-xs-12 col-md-6 col-lg-3">
-              <label for="priceOne" class="form-label">Precio #1</label>
-              <input type="text" class="form-control" id="priceOne"   value="${pOne}" onfocus="cls_general.validFranz(this.id, ['number'],'.')" onkeyup="cls_general.limitText(this, 10, toast = 0)" onblur="cls_general.limitText(this, 10, toast = 0)">
-            </div>
-            <div class="col-xs-12">
-              <label for="pricePresentation" class="form-label">Presentaci&oacute;n</label>
-              <select id="pricePresentation" class="form-select"><option value="" disabled selected>Seleccione</option>${option_presentation}</select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-lg-12 text-center pt-2">
-              <button type="button" class="btn btn-success" onclick="cls_price.save(this,'${article_slug}')">Agregar Precio</button>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-lg-12 h_200 v_scrollable">
-            <caption>Hist&oacute;rico de Precios</caption>
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Standard</th>
-                    <th scope="col">D #2</th>
-                    <th scope="col">D #1</th>
-                    <th scope="col"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${tbody_price}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+      <caption>Hist&oacute;rico de Precios</caption>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Fecha</th>
+            <th scope="col">Standard</th>
+            <th scope="col">D #2</th>
+            <th scope="col">D #1</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tbody_price}
+        </tbody>
+      </table>
     `;
-    var content_bottom = `
-      <div class="row">
-        <div class="col-lg-12 text-center pt-2">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        </div>
-      </div>
-    `;
-
-    document.getElementById('priceModal_content').innerHTML = content;
-    document.getElementById('priceModal_footer').innerHTML = content_bottom;
-    document.getElementById('priceModal_title').innerHTML = '<h4>Crear Art&iacute;culo</h4>';
+    return content;
   }
   save(btn,article_slug){
     cls_general.disable_submit(btn);
@@ -1829,16 +1708,28 @@ class class_price{
     var pTwo = document.getElementById('priceTwo').value;
     var pThree = document.getElementById('priceThree').value;
     var presentation_id = document.getElementById('pricePresentation').value;
+    if (cls_articleproduct.articleproduct_selected.length === 0) {
+      cls_general.shot_toast_bs('Debe ingresar la receta del artículo.', { bg: 'text-bg-warning' }); return false;
+    }
 
     if (cls_general.is_empty_var(presentation_id) === 0) {
-      cls_general.shot_toast_bs('Debe seleccionar la presentaci&oacute;n.',{bg: 'text-bg-warning'});
+      cls_general.shot_toast_bs('Debe seleccionar la presentaci&oacute;n.', { bg: 'text-bg-warning' }); return false;
     }
-    var url = '/price/'; var method = 'POST';
-    var body = JSON.stringify({ a: pOne, b: pTwo, c: pThree, e: article_slug, f: presentation_id });
+
+    var url = '/price/'; 
+    var method = 'POST';
+    var body = JSON.stringify({ a: pOne, b: pTwo, c: pThree, e: article_slug, f: presentation_id, g: cls_articleproduct.articleproduct_selected });
     var funcion = function (obj) {
       if (obj.status != 'failed') {
         var raw_price = obj.data.price;
-        cls_price.render_article(raw_price, article_slug);
+        document.getElementById('container_articlepricehistory').innerHTML = cls_price.generate_tableprice(raw_price);
+
+        document.getElementById('priceOne').value = '';
+        document.getElementById('priceTwo').value = '';
+        document.getElementById('priceThree').value = '';
+
+        cls_articleproduct.articleproduct_selected = [];
+        cls_articleproduct.render_articleproduct();
       }else{
         cls_general.shot_toast_bs(obj.message,{bg: 'text-bg-warning'});
       }
@@ -2211,7 +2102,6 @@ class class_client {
     cls_general.async_laravel_request(url, method, funcion, body);
   }
 }
-
 class class_payment {
   constructor(method) {
     this.payment_method = method;
@@ -2291,4 +2181,202 @@ class class_payment {
     cls_payment.render();
   }
 }
+class class_user {
+  constructor (){
+    this.info = [];
+    this.role_list = [];
+  }
+  render() {
+    var url = '/user'; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      var raw_list = obj['data']['all'];
+
+      var list = cls_user.generate_list(raw_list)
+      var content = `
+        <div class="row">
+          <div class="col-xs-12 py-2 text-center">
+            <button type="button" class="btn btn-lg btn-primary" onclick="cls_product.create()">Crear producto</button>
+            &nbsp;
+          </div>
+          <div class="col-xs-12">
+            <h5>Listado de Productos</h5>
+          </div>
+          <div class="col-xs-12">
+            <input type="text" class="form-control" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_product.filter(this.value,20)" placeholder="Buscar producto por nombre, referencia o c&oacute;digo" >
+          </div>
+          <div id="container_productList" class="col-xs-12 border-top">
+            ${list}
+          </div>
+        </div>
+      `;
+      document.getElementById('container').innerHTML = content;
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_list(raw_list) {
+    var list = '<div class="list-group">';
+    for (const a in raw_list) {
+      list += `<a href = "#" class="list-group-item list-group-item-action" onclick="event.preventDefault(); cls_user.show('${raw_list[a]['id']}')" >${raw_list[a]['name']}</a>`;
+    }
+    list += '</div>';
+    return list;
+  }
+  show(user_id) {
+    var url = '/user/' + user_id; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_user.info = obj['data']['info'];
+        cls_user.render_modal();
+
+        const modalProduct = new bootstrap.Modal('#userModal')
+        modalProduct.show();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_rolelist(raw_role) {
+    var content_role = '<ul class="list-group">';
+    raw_role.map((role) => {
+      content_role += `  <li class="list-group-item">${role.description}</li>`;
+    })
+    return content_role += '</ul>';
+  }
+  render_modal() {
+    var user_info = cls_user.info;
+    var option_role = '';
+    cls_user.role_list.map((role) => {
+      option_role += `<option value="${role.id}">${role.description}</option>`;
+    })
+    var content_role = cls_user.generate_rolelist(user_info.role);
+    var content = `
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="row">
+            <div class="col-sm-6">
+              <label for="userName" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="userName" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 100, toast = 0)" onblur="cls_general.limitText(this, 100, toast = 0)" value="${user_info.data.name}">
+            </div>
+            <div class="col-sm-6">
+              <label for="userEmail" class="form-label">Correo E.</label>
+              <input type="text" class="form-control" id="userEmail" value="${user_info.data.email}" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 150, toast = 0)" onkeyup="cls_general.limitText(this, 150, toast = 0)">
+            </div>
+            <div class="col-sm-4">
+              <label for="userPasswordF" class="form-label">Contrase&ntilde;a</label>
+              <input type="text" class="form-control" id="userPasswordF" value="">
+            </div>
+            <div class="col-sm-4">
+              <label for="userPasswordS" class="form-label">Repetir Contrase&ntilde;a</label>
+              <input type="text" class="form-control" id="userPasswordS" value="">
+            </div>
+            <div class="col-sm-4 pt-2">
+              <button type="button" class="btn btn-primary" id="upd_password">Cambiar Contrase&ntilde;a</button>              
+            </div>
+          </div>
+        </div>
+        <hr/>
+        <div class="col-sm-12">
+          <span>Listado de Roles</span>
+          <div class="row">
+            <div class="col-sm-12">
+              ${content_role}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    var content_bottom = `          
+      <div class="row">
+        <div class="col-lg-12 text-center">
+          <button type="button" class="btn btn-warning" data-bs-dismiss="modal" onclick="cls_user.delete(this,${user_info.data.id});">Eiminar Usuario</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-success" onclick="cls_user.update(this,${user_info.data.id})">Guardar Cambios</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('userModal_title').innerHTML = 'Informaci&oacute;n de ' + user_info.data.name;
+    document.getElementById('userModal_content').innerHTML = content;
+    document.getElementById('userModal_footer').innerHTML = content_bottom;
+  }
+
+
+  // update(btn, productSlug) {
+  //   cls_general.disable_submit(btn);
+  //   var category = document.getElementById('productCategory').value;
+  //   var value = document.getElementById('productValue').value;
+  //   var reference = document.getElementById('productReference').value;
+  //   var code = document.getElementById('productCode').value;
+  //   var taxrate = document.getElementById('productTaxrate').value;
+  //   var minimum = document.getElementById('productMinimum').value;
+  //   var maximum = document.getElementById('productMaximum').value;
+  //   var discountRate = document.getElementById('productDiscountrate').value;
+  //   var status = (document.getElementById('productStatus').checked) ? 1 : 0;
+  //   var alarm = (document.getElementById('productAlarm').checked) ? 1 : 0;
+  //   var discountable = (document.getElementById('productDiscountable').checked) ? 1 : 0;
+
+
+  //   if (cls_general.is_empty_var(category) === 0 || cls_general.is_empty_var(value) === 0 || cls_general.is_empty_var(code) === 0 || cls_general.is_empty_var(taxrate) === 0 || cls_general.is_empty_var(minimum) === 0 || cls_general.is_empty_var(maximum) === 0 || cls_general.is_empty_var(discountRate) === 0) {
+  //     cls_general.shot_toast_bs('Falta informaci&oacute;n', { bg: 'text-bg-secondary' });
+  //     return false;
+  //   }
+  //   var url = '/product/' + productSlug; var method = 'PUT';
+  //   var body = JSON.stringify({ a: category, b: value, c: reference, d: code, e: taxrate, f: minimum, g: maximum, h: discountRate, i: status, j: alarm, k: discountable });
+  //   var funcion = function (obj) {
+  //     if (obj.status != 'failed') {
+  //       var raw_list = obj['data']['all'];
+
+  //       var list = cls_product.generate_list(raw_list)
+  //       var content = `
+  //         <div class="row">
+  //           <div class="col-xs-12 py-2 text-center">
+  //             <button type="button" class="btn btn-lg btn-primary" onclick="cls_product.create()">Crear producto</button>
+  //             &nbsp;
+  //           </div>
+  //           <div class="col-xs-12">
+  //             <h5>Listado de Productos</h5>
+  //           </div>
+  //           <div id="container_productList" class="col-xs-12 border-top">
+  //             ${list}
+  //           </div>
+  //         </div>
+  //       `;
+  //       document.getElementById('container').innerHTML = content;
+
+  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+  //       const productModal = bootstrap.Modal.getInstance('#productModal');
+  //       productModal.hide();
+  //     } else {
+  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-secondary' });
+  //     }
+  //   }
+  //   cls_general.async_laravel_request(url, method, funcion, body);
+  // }
+  // delete(btn, product_slug) {
+  //   cls_general.disable_submit(btn);
+
+  //   var url = '/product/' + product_slug; var method = 'DELETE';
+  //   var body = '';
+  //   var funcion = function (obj) {
+  //     if (obj.status != 'failed') {
+  //       var raw_list = obj['data']['all'];
+  //       var list = cls_product.generate_list(raw_list)
+  //       document.getElementById('container_productList').innerHTML = list;
+
+  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+  //       const productModal = bootstrap.Modal.getInstance('#productModal');
+  //       productModal.hide();
+  //     } else {
+  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-secondary' });
+  //     }
+  //   }
+  //   cls_general.async_laravel_request(url, method, funcion, body);
+  // }
+
+}
+
+// PASAR A LA SELECCION DEL PRODUCTO, AL CAMBIAR LA PRESENTACION VERIFICAR SI ALGUNO DE LOS INGREDIENTES TIENE OTRAS OPCIONES, SI ES ASI MOSTRAR UN SELECT CON LAS DIVERSAS OPCIONES
 

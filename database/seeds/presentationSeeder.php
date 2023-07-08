@@ -48,5 +48,30 @@ class presentationSeeder extends Seeder
         $tm->tx_presentation_status	= 1;
         $tm->save();
 
+        $tm = new tm_presentation;
+        $tm->presentation_ai_user_id = 1;		
+        $tm->tx_presentation_value	= '4oz';
+        $tm->tx_presentation_status	= 1;
+        $tm->save();
+
+        $tm = new tm_presentation;
+        $tm->presentation_ai_user_id = 1;		
+        $tm->tx_presentation_value	= '8oz';
+        $tm->tx_presentation_status	= 1;
+        $tm->save();
+
+        $tm = new tm_presentation;
+        $tm->presentation_ai_user_id = 1;		
+        $tm->tx_presentation_value	= '12oz';
+        $tm->tx_presentation_status	= 1;
+        $tm->save();
+
+        $tm = new tm_presentation;
+        $tm->presentation_ai_user_id = 1;		
+        $tm->tx_presentation_value	= '16oz';
+        $tm->tx_presentation_status	= 1;
+        $tm->save();
+
+
     }
 }
