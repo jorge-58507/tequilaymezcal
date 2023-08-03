@@ -1,7 +1,11 @@
 agregar roles eliminar roles y funciones de actualizar la informacion
-En la receta poder eliminar productos agregados
-
-cuantos gramos trae un sobre de azucar
+En la pantalla de cocina mostrar la presentacion y receta del producto
+ingresar motivo de anulacion de una comanda
+verificar las anulaciones
+descuento de jubilados
+ingreso de mercancia a traves de lector de codigo de barras
+Productos con varios codigos de barra
+VERIFICAR QUE SOLO SE MUESTRAN LOS PRECIOS DE LOS ARTICULOS QUE TIENEN RECETA
 
 
 incluir giftcard <-- esto hacerlo desde la interfaz opciones, crear boton llamado clientes, desde el cual se puede hacer CRUD a clientes y la giftcard, se regirá por un codigo utilizable por cualquiera
@@ -23,6 +27,9 @@ Por cada presentacion establecer una receta, y en cada articulo de la receta est
 Al agregar la datacomanda guardar la receta seleccionada, 
 al restar los producos verificar la receta seleccionada y restar
 *Alarmas de productos bajos
+En la receta poder eliminar productos agregados
+En la pantalla de pedidos mostrar la presentacion y receta del producto
+
         3.55*17 = 60.45
         pegamento 42.99
         cewmento        14

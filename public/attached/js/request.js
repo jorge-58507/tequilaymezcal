@@ -709,6 +709,21 @@ class class_command{
     content += '</ul>';
     return content;
   }
+  generate_recipe_option(article_product){
+    var content_recipe = '';
+    article_product.map((ap, i) => {
+      var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
+      content_recipe += `
+          <div class="col-md-12 col-lg-6">
+            <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
+            <select class="form-select" id="ingredient_${i}">`;
+      raw_ingredient.map((ingredient) => {
+        content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+      })
+      content_recipe += `</select></div>`;
+    })
+    return content_recipe;
+  }
   show_article(article_slug, description){
     var url = '/article/' + article_slug; var method = 'GET';
     var body = "";
@@ -732,22 +747,23 @@ class class_command{
       })
 
       var tax_rate = (document.getElementById('requestClient').getAttribute('alt') == 1) ? 0 : obj.data.article.tx_article_taxrate;
+      
+      var content_recipe = cls_command.generate_recipe_option(obj.data.articleproduct);
 
-      var article_product = obj.data.articleproduct; //SELECT PARA LAS RECETAS
-      console.log(article_product);
-      var content_recipe = '';
-      article_product.map((ap,i) => {
-        var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
-        content_recipe += `
-          <div class="col-md-12 col-lg-6">
-            <label for="ingredient_${i}">${i+1}.- Ingrediente</label>
-            <select class="form-select" id="ingredient_${i}">`;
-            raw_ingredient.map((ingredient) => {
-              // content_recipe += `<option value="${JSON.stringify(ingredient)}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
-              content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
-            })
-        content_recipe += `</select></div>`;
-      })
+      // var article_product = obj.data.articleproduct; //SELECT PARA LAS RECETAS
+      // var content_recipe = '';
+      // article_product.map((ap,i) => {
+      //   var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
+      //   content_recipe += `
+      //     <div class="col-md-12 col-lg-6">
+      //       <label for="ingredient_${i}">${i+1}.- Ingrediente</label>
+      //       <select class="form-select" id="ingredient_${i}">`;
+      //       raw_ingredient.map((ingredient) => {
+      //         // content_recipe += `<option value="${JSON.stringify(ingredient)}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+      //         content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+      //       })
+      //   content_recipe += `</select></div>`;
+      // })
 
       var content = `
         <div class="row">
@@ -757,7 +773,7 @@ class class_command{
           </div>
           <div class="col-md-12 col-lg-4">
             <label for="articlePresentation">Presentation</label>
-            <select class="form-select" id="articlePresentation" onchange="cls_command.modal_set_price(this.options[this.selectedIndex].getAttribute('alt'))">
+            <select class="form-select" id="articlePresentation" onchange="cls_command.modal_set_price(this.options[this.selectedIndex].getAttribute('alt'), this.value, '${article_slug}')">
               ${option_presentation}
             </select>
           </div>
@@ -792,7 +808,8 @@ class class_command{
       document.getElementById('commandModal_content').innerHTML = content;
       document.getElementById('commandModal_footer').innerHTML = footer;
 
-      cls_command.modal_set_price(obj.data.price[0].tx_price_three+','+obj.data.price[0].tx_price_two+','+obj.data.price[0].tx_price_one); //OPTION PARA Los PRECIOS DEL ARTICULO
+      
+      cls_command.modal_set_price(obj.data.price[0].tx_price_three + ',' + obj.data.price[0].tx_price_two + ',' + obj.data.price[0].tx_price_one, obj.data.price[0].ai_presentation_id, article_slug); //OPTION PARA Los PRECIOS DEL ARTICULO
       
       const Modal = bootstrap.Modal.getInstance('#modalArticleList');
       if (Modal) {
@@ -804,17 +821,31 @@ class class_command{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  modal_set_price(str){
-    var raw = str.split(',');
-    var content = `<label for="articlePrice">Precio</label>
-    <select class="form-select" id="articlePrice">`;
-    raw.map((price) => {
-      var p = parseFloat(price);
-      if (price > 0.1) {
-        content += `<option value="${p}">${p.toFixed(2)}</option>`;
+  modal_set_price(str,presentation_id,article_slug){
+    var url = '/recipe/'+presentation_id+'/'+article_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+
+        var raw = str.split(',');
+        var content = `<label for="articlePrice">Precio</label>
+        <select class="form-select" id="articlePrice">`;
+        raw.map((price) => {
+          var p = parseFloat(price);
+          if (price > 0.1) {
+            content += `<option value="${p}">${p.toFixed(2)}</option>`;
+          }
+        })
+        document.getElementById('container_price').innerHTML = content + '</select>';
+        document.getElementById('container_recipe').innerHTML = cls_command.generate_recipe_option(obj.data.recipe);;
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
-    })
-    document.getElementById('container_price').innerHTML = content+'</select>';
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
   }
   add_article(article_slug,description,article_id){
     var quantity = document.getElementById('articleQuantity').value;
@@ -831,13 +862,15 @@ class class_command{
       var index = $(this.selectedOptions).text();
       raw_recipe.push({ [index] : $(this).val() })
     });
+    var select_presentation = document.getElementById('articlePresentation');
     cls_command.command_list.push({
       'article_slug': article_slug,
       'article_id': article_id,
       'article_description': description,
       'quantity' : quantity,
       'option' : option.slice(0,-1),
-      'presentation_id' : document.getElementById('articlePresentation').value,
+      'presentation_id' : select_presentation.value,
+      'presentation_value': select_presentation.options[select_presentation.selectedIndex].text,
       'price' : document.getElementById('articlePrice').value,
       'tax_rate': document.getElementById('articleTaxrate').value,
       'discount_rate' : document.getElementById('articleDiscountrate').value,
@@ -865,9 +898,19 @@ class class_command{
         })
         option += `</ul>`
       }
+
+      var content_recipe = '<ul>';
+      article.recipe.map((ingredient) => {
+        for (const index in ingredient) {
+          content_recipe += `<li><small>${index}</small></li>`;
+        }
+      })
+      content_recipe += '</ul>';
       content += `
       <li class="list-group-item cursor_pointer text-truncate">
-        ${article.quantity} - ${article.article_description}<br/> ${option} <span style="float: right; width: 30%" class="text-truncate">B/ ${cls_general.val_price(article.price,2,1,1)}</span>
+        ${article.quantity} - ${article.article_description} ${article.presentation_value}<br/> ${option} <span style="float: right; width: 30%" class="text-truncate">B/ ${cls_general.val_price(article.price,2,1,1)}</span>
+        <br/>
+        ${content_recipe}
         <div class="text-center">
           <button class="btn btn-warning" type="button" onclick="cls_command.delete_articleselected(${index})">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
@@ -907,15 +950,24 @@ class class_command{
         var bg_status = '';
         var btn = `
           <button type="button" class="btn btn-secondary" onclick="event.preventDefault(); cls_command.cancel(${command.ai_commanddata_id})">Anular</button>
-          <button type="button" class="btn btn-secondary">Reimprimir</button>
         `;
       }
-      
+      var recipe = JSON.parse(command.tx_commanddata_recipe);
+      var content_recipe = '<ul>';
+      recipe.map((ingredient) => {
+        for (const index in ingredient) {
+          content_recipe += `<li><small>${index}</small></li>`;
+        }
+      })
+      content_recipe += `</ul>`;
+
       content_command_procesed += `
         <a href="#" class="list-group-item list-group-item-action ${bg_status}" aria-current="true" onclick="event.preventDefault();">
           <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description}</h5>
+            <h5 class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description} (${command.tx_presentation_value})</h5>
+            <br/>
           </div>
+          ${content_recipe}
           <p class="mb-1">${option}</p>
           <small>Consumo: ${command.tx_command_consumption}${observation}</small><br/>
           <div class="text-center">

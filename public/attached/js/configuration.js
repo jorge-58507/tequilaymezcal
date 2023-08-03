@@ -763,6 +763,7 @@ class class_product{
     var funcion = function (obj) {
       if (obj.status != 'failed') {
         var raw_list = obj['data']['all'];
+        cls_product.productlist = raw_list;
 
         var list = cls_product.generate_list(raw_list)
         var content = `
@@ -798,6 +799,7 @@ class class_product{
     var funcion = function (obj) {
       if (obj.status != 'failed') {
         var raw_list = obj['data']['all'];
+        cls_product.productlist = raw_list;
         var list = cls_product.generate_list(raw_list)
         document.getElementById('container_productList').innerHTML = list;
 
@@ -1254,7 +1256,10 @@ class class_article {
                   <input type="text" class="form-control" id="articleDiscountrate" name="articleDiscountrate" value="${article.tx_article_discountrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
                 </div>
                 <div class="col-sm-12 col-md-6 col-lg-3 d-grid gap-2 pt-3">
-                  <button type="button" class="btn btn-info" onclick="cls_article.price('${article_slug}','${article.tx_article_value}')">Presentaciones</button>
+                  <button type="button" class="btn btn-info" onclick="cls_article.price('${article_slug}','${article.tx_article_value}')">Precio</button>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-3 d-grid gap-2 pt-3">
+                  <button type="button" class="btn btn-info" onclick="cls_article.recipe('${article_slug}','${article.tx_article_value}')">Receta</button>
                 </div>
               </div>
 
@@ -1447,6 +1452,61 @@ class class_article {
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
+  recipe(article_slug, article_description){
+    var url = '/recipe/' + article_slug + '/article'; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      cls_articleproduct.articleproduct_selected = [];
+      
+      var table_articleproduct = cls_articleproduct.generate_tablearticleproduct(obj.data.articleproduct);
+
+      var option_presentation = ''; //SELECT DEL PRESENTATION
+      obj.data.presentation.map((presentation) => { option_presentation += `<option value="${presentation.ai_presentation_id}">${presentation.tx_presentation_value}</option>`; })
+      var content = `
+        <div class="row">
+          <div class="col-sm-12">
+          <h5>Recetas de ${article_description}</h5>
+          </div>
+          <div class="col-sm-12">
+            <div class="row">
+              <div class="col-sm-12 col-md-6 col-lg-3">
+                <label for="recipePresentation" class="form-label">Presentaci&oacute;n</label>
+                <select id="recipePresentation" class="form-select"><option value="" disabled selected>Seleccione</option>${option_presentation}</select>
+              </div>
+              <div class="col-sm-3 text-center pt-4">
+                <button type="button" class="btn btn-outline-primary" onclick="cls_articleproduct.create_ingredient()">Agregar Ingrediente</button>
+              </div>
+              <div class="col-lg-12">
+                <h5>Recetas</h5>
+              </div>
+              <div id="container_recipe" class="col-lg-12 list-group">
+
+              </div>
+              <div class="col-lg-12 text-center pt-1">
+                <button type="button" class="btn btn-success" onclick="cls_articleproduct.save(this,'${article_slug}')">Guardar Receta</button>
+              </div>
+              <hr />
+              <div id="container_articleproduct" class="col-lg-12 h_200 v_scrollable">
+                ${table_articleproduct}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      `;
+
+      var content_bottom = `
+        <div class="row">
+          <div class="col-lg-12 text-center pt-2">
+            <button type="button" class="btn btn-secondary" onclick="cls_article.show('${article_slug}')">Volver</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('container').innerHTML = content + content_bottom;
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
   price(article_slug,article_description){
     var url = '/price/' + article_slug + '/article'; var method = 'GET';
     var body = "";
@@ -1460,7 +1520,7 @@ class class_article {
       var content = `
         <div class="row">
           <div class="col-sm-12">
-          <h5>Precio y Recetas de ${article_description}</h5>
+          <h5>Precio de ${article_description}</h5>
           </div>
           <div class="col-sm-12">
             <div class="row">
@@ -1480,19 +1540,7 @@ class class_article {
                 <label for="priceOne" class="form-label">Precio #1</label>
                 <input type="text" class="form-control" id="priceOne"   value="" onfocus="cls_general.validFranz(this.id, ['number'],'.')" onkeyup="cls_general.limitText(this, 10, toast = 0)" onblur="cls_general.limitText(this, 10, toast = 0)">
               </div>
-            </div>
-            <div class="row">
-              <div class="col-lg-12 text-center pt-2">
-                <button type="button" class="btn btn-outline-primary" onclick="cls_articleproduct.create_ingredient()">Agregar Ingrediente</button>
-              </div>
-              <div class="col-lg-12">
-                <h5>Recetas</h5>
-              </div>
-              <div id="container_recipe" class="col-lg-12">
-                
-              </div>
-              <hr />
-              <div class="col-lg-12 text-center pt-1">
+              <div class="col-sm-12 text-center pt-3">
                 <button type="button" class="btn btn-success" onclick="cls_price.save(this,'${article_slug}')">Guardar Precio</button>
               </div>
             </div>
@@ -1543,6 +1591,11 @@ class class_articleproduct{
     return content;
   }
   create_ingredient(){
+    cls_articleproduct.articleproduct_ingredient = [];
+    if (cls_general.is_empty_var(document.getElementById('recipePresentation').value) === 0) {
+      cls_general.shot_toast_bs('Debe seleccionar alguna presentaci&oacute;n.', { bg: 'text-bg-warning' }); return false;
+    }
+
     var option_product = ''; //SELECT DEL PRESENTATION
     cls_product.productlist.map((product) => { option_product += `<option value="${product.tx_product_slug}" alt="${product.ai_product_id}">${product.tx_product_value}</option>`; })
 
@@ -1571,7 +1624,7 @@ class class_articleproduct{
       <div class="col-sm-12">
         <span>Productos Seleccionados</span>
       </div>
-      <div id="container_productselected" class="col-sm-12">
+      <div id="container_productselected" class="col-sm-12 list-group">
       </div>
     </div>
 
@@ -1624,13 +1677,26 @@ class class_articleproduct{
     cls_articleproduct.render_ingredient();
   }
   render_ingredient(){
-    var content = '<ul class="list-group">';
-    cls_articleproduct.articleproduct_ingredient.map((ingredient)=> {
-      content += `<li class="list-group-item" >${ingredient.quantity} - ${ingredient.product_value} (${ingredient.measure_value})</li >`;
+    var content = '';
+    cls_articleproduct.articleproduct_ingredient.map((ingredient,index)=> {
+      content += `
+      <li class="list-group-item d-flex justify-content-between align-items-center" >
+        ${ingredient.quantity} - ${ingredient.product_value} (${ingredient.measure_value})
+        <button class="btn btn-warning" type="button" onclick="cls_articleproduct.delete_ingredient(${index})">
+          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+            <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+          </svg>
+        </button>
+      </li >`;
     })
     content += '</ul>';
     document.getElementById('container_productselected').innerHTML = content;
   }
+  delete_ingredient(index) {
+    cls_articleproduct.articleproduct_ingredient.splice(index, 1);
+    cls_articleproduct.render_ingredient();
+  }
+
 
   add_articleproduct(){
     if (cls_articleproduct.articleproduct_ingredient.length === 0) {
@@ -1641,17 +1707,100 @@ class class_articleproduct{
     cls_articleproduct.render_articleproduct();
   }
   render_articleproduct(){
-    var content = '<ul class="list-group">';
-    cls_articleproduct.articleproduct_selected.map((articleproduct) => {
-      content += (articleproduct.length === 1) ? `<li class="list-group-item" >${articleproduct[0].quantity} - ${articleproduct[0].product_value}</li >` : '<li class="list-group-item" >Varios</li>';
+    var content = '';
+    cls_articleproduct.articleproduct_selected.map((articleproduct,index) => {
+      content += (articleproduct.length === 1) ? `
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        ${articleproduct[0].quantity} (${articleproduct[0].measure_value}) - ${articleproduct[0].product_value}
+        <button class="btn btn-warning" type="button" onclick="cls_articleproduct.delete_selected(${index})">
+          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+            <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+          </svg>
+        </button>
+      </li >
+      ` : `
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        ${articleproduct.map((product) => { return `${product.quantity} (${product.measure_value}) - ${product.product_value} `})}
+        <button class="btn btn-warning" type="button" onclick="cls_articleproduct.delete_selected(${index})">
+          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+            <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
+          </svg>
+        </button>
+      </li>`;
     })
-    content += '</ul>';
+    content += '';
     document.getElementById('container_recipe').innerHTML = content;
 
     const modal = bootstrap.Modal.getInstance('#articleproductModal');
     modal.hide();
   }
+  delete_selected(index){
+    cls_articleproduct.articleproduct_selected.splice(index,1);
+    cls_articleproduct.render_articleproduct();
+  }
+  save(btn, article_slug) {
+    cls_general.disable_submit(btn);
+    var presentation_id = document.getElementById('recipePresentation').value;
+    if (cls_articleproduct.articleproduct_selected.length === 0) {
+      cls_general.shot_toast_bs('Debe ingresar la receta del artículo.', { bg: 'text-bg-warning' }); return false;
+    }
 
+    if (cls_general.is_empty_var(presentation_id) === 0) {
+      cls_general.shot_toast_bs('Debe seleccionar la presentaci&oacute;n.', { bg: 'text-bg-warning' }); return false;
+    }
+
+    var url = '/articleproduct/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: cls_articleproduct.articleproduct_selected, b: article_slug, c: presentation_id });
+    var funcion = function (obj) {
+      if (obj.status != 'failed') {
+        document.getElementById('container_articleproduct').innerHTML = cls_articleproduct.generate_tablearticleproduct(obj.data.articleproduct);
+
+        cls_articleproduct.articleproduct_selected = [];
+        cls_articleproduct.articleproduct_ingredient = [];
+        cls_articleproduct.render_articleproduct();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_tablearticleproduct(raw_list){
+    var tbody_price = '';
+    var check_presentation = 0;
+    raw_list.map((articleproduct) => {
+      var date = cls_general.datetime_converter(articleproduct.created_at);
+
+      if (check_presentation != articleproduct.articleproduct_ai_presentation_id) {
+        tbody_price += `
+          <tr class="text-bg-secondary">  
+            <td colspan="2">${articleproduct.tx_presentation_value} (${date})</td>
+          </tr>
+        `;
+      }
+      var ingredient = JSON.parse(articleproduct.tx_articleproduct_ingredient);
+      tbody_price += `
+      <tr>
+        <td></td>
+        <td>`;
+      ingredient.map((product) => {
+        tbody_price += `
+        ${product.quantity} (${product.measure_value}) ${product.product_value}, `;
+      })
+      tbody_price += `
+        </td>
+      </tr>`;
+      check_presentation = articleproduct.articleproduct_ai_presentation_id;
+    })
+    var content = `
+    <caption>Listado de Recetas</caption>
+    <table class="table">
+      <tbody>
+        ${tbody_price}
+      </tbody>
+    </table>`;
+    return content;
+  }
   
 }
 class class_price{
@@ -1708,9 +1857,9 @@ class class_price{
     var pTwo = document.getElementById('priceTwo').value;
     var pThree = document.getElementById('priceThree').value;
     var presentation_id = document.getElementById('pricePresentation').value;
-    if (cls_articleproduct.articleproduct_selected.length === 0) {
-      cls_general.shot_toast_bs('Debe ingresar la receta del artículo.', { bg: 'text-bg-warning' }); return false;
-    }
+    // if (cls_articleproduct.articleproduct_selected.length === 0) {
+    //   cls_general.shot_toast_bs('Debe ingresar la receta del artículo.', { bg: 'text-bg-warning' }); return false;
+    // }
 
     if (cls_general.is_empty_var(presentation_id) === 0) {
       cls_general.shot_toast_bs('Debe seleccionar la presentaci&oacute;n.', { bg: 'text-bg-warning' }); return false;
@@ -1743,7 +1892,7 @@ class class_price{
     var funcion = function (obj) {
       if (obj.status != 'failed') {
         var raw_price = obj.data.price;
-        cls_price.render_article(raw_price, obj.data.article.tx_article_slug);
+        document.getElementById('container_articlepricehistory').innerHTML = cls_price.generate_tableprice(raw_price);
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }

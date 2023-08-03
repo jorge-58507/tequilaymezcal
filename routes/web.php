@@ -31,6 +31,8 @@ Route::get('configuration', 'configurationController@index')->middleware('auth')
 Route::get('product/{param}/count', 'productController@show_quantity')->middleware('auth');
 Route::get('prefix/{prefix}', 'ubicationController@getPrefix');
 Route::get('price/{param}/article', 'priceController@showByArticle')->middleware('auth');
+Route::get('recipe/{param}/article', 'articleproductController@showByArticle')->middleware('auth');
+Route::get('recipe/{param_a}/{param_b}', 'articleproductController@showRecipe')->middleware('auth');
 Route::get('request/{param}/table', 'requestController@showByTable')->middleware('auth');
 Route::get('request/{param}/bar', 'requestController@showByBar')->middleware('auth');
 Route::get('request/reload', 'requestController@reload');
@@ -54,6 +56,7 @@ Route::post('/article_upd/', 'articleController@renovate')->middleware('auth');
 Route::post('/paymentprovider/productinput', 'paymentproviderController@create')->middleware('auth');
 Route::post('/report/show', 'reportController@show');
 Route::post('/article/product', 'articleproductController@save');
+Route::post('/articleproduct/', 'articleproductController@store');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');

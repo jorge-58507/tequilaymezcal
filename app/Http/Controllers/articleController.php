@@ -293,7 +293,7 @@ class articleController extends Controller
             tm_article::where('ai_article_id',$rs['ai_article_id'])->delete();
             tm_price::where('price_ai_article_id',$rs['ai_article_id'])->delete();
             tm_articleproduct::where('articleproduct_ai_article_id',$rs['ai_article_id'])->delete();
-            rel_article_presentation::where('article_presentation_ai_article_id',$rs['ai_article_id'])->delete();
+            /* rel_article_presentation::where('article_presentation_ai_article_id',$rs['ai_article_id'])->delete(); */
             $message = 'Se elimin&oacute; correctamente.';
         }else{
             tm_article::where('ai_article_id',$rs['ai_article_id'])->update(['tx_article_status'=>0]);

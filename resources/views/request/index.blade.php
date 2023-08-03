@@ -87,11 +87,10 @@
 	<script src="{{ asset('attached/js/sweetalert.js') }}"></script>
 	
 	<script type="text/javascript">
-    var low_inventory = '<?php echo $data['low_inventory'] ?>';
-    console.log(low_inventory);
-    if (low_inventory > 0) {
-      swal ( "Atención" ,  "Existen artículos con baja existencia. Diríjase al Menu Compras." ,  "error" );      
-    }
+		var low_inventory = '<?php echo $data['low_inventory'] ?>';
+		if (low_inventory > 0) {
+		  swal ( "Atención" ,  "Existen artículos con baja existencia. Diríjase al Menu Compras." ,  "error" );      
+		}
 
 		var open_request = JSON.parse('<?php echo json_encode($data['open_request']) ?>');
 		var closed_request = JSON.parse('<?php echo json_encode($data['closed_request']) ?>');
