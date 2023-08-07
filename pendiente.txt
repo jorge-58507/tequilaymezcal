@@ -6,6 +6,7 @@ descuento de jubilados
 ingreso de mercancia a traves de lector de codigo de barras
 Productos con varios codigos de barra
 VERIFICAR QUE SOLO SE MUESTRAN LOS PRECIOS DE LOS ARTICULOS QUE TIENEN RECETA
+al actualizar mesa si la imagen esta vacia se desconfigura y se guarda como null
 
 
 incluir giftcard <-- esto hacerlo desde la interfaz opciones, crear boton llamado clientes, desde el cual se puede hacer CRUD a clientes y la giftcard, se regirá por un codigo utilizable por cualquiera

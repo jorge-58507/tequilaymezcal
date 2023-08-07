@@ -713,14 +713,17 @@ class class_command{
     var content_recipe = '';
     article_product.map((ap, i) => {
       var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
-      content_recipe += `
-          <div class="col-md-12 col-lg-6">
-            <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
-            <select class="form-select" id="ingredient_${i}">`;
-      raw_ingredient.map((ingredient) => {
-        content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
-      })
-      content_recipe += `</select></div>`;
+	  if (raw_ingredient.length > 1) {
+
+		  content_recipe += `
+			  <div class="col-md-12 col-lg-6">
+				<label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
+				<select class="form-select" id="ingredient_${i}">`;
+		  raw_ingredient.map((ingredient) => {
+			content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+		  })
+		  content_recipe += `</select></div>`;
+	  }
     })
     return content_recipe;
   }
