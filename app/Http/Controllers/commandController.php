@@ -66,7 +66,13 @@ class commandController extends Controller
         // ANSWER
         $rs_request = tm_request::where('ai_request_id',$request_id)->first();
         $rs_command = $this->getByRequest($request_id);
-        return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command,'request'=>$rs_request]]);
+        
+        $cashier = 0;
+        if ( auth()->user()->hasAnyRole(['cashier']) === true){ 
+            $cashier = 1;
+        }
+
+        return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command,'request'=>$rs_request, 'cashier'=>$cashier ]]);
     }
     public function save($user_id,$request_id,$time,$consumption,$observation){
         $tm_command =new tm_command;

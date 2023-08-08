@@ -1056,6 +1056,50 @@ class class_command{
 
         const Modal = bootstrap.Modal.getInstance('#commandModal');
         Modal.hide();
+
+        if (obj.data.cashier === 1) {
+          swal({
+            title: "¿Desea cobrar este pedido?",
+            icon: "info",
+
+            buttons: {
+              si: {
+                text: "Si, cobrarlo",
+                className: "btn btn-success btn-lg"
+              },
+              no: {
+                text: "No",
+                className: "btn btn-warning btn-lg",
+              },
+            },
+            dangerMode: true,
+          })
+          .then((ans) => {
+            switch (ans) {
+              case 'si':
+
+                var request_slug = document.getElementById('btn_commandprocess').name;
+                // console.log(request_slug);
+                var url = '/request/' + request_slug + '/close';
+                var method = 'PUT';
+                var body = JSON.stringify({ a: 1 });;
+                var funcion = function (obj) {
+                  if (obj.status === 'success') {
+                    window.location = "/paydesk";
+                  } else {
+                    cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+                  }
+                }
+                cls_general.async_laravel_request(url, method, funcion, body);
+
+                break;
+              case 'no':
+
+                break;
+            }
+          });
+
+        }
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
