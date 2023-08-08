@@ -105,10 +105,13 @@ class class_request{
               cls_request.open_request = obj.data.open_request;
               cls_request.closed_request = obj.data.closed_request;
 
-              cls_request.render('open', cls_request.open_request);
-              cls_request.render('closed', cls_request.closed_request);
+              cls_charge.show(request_slug)
 
-              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+
+              // cls_request.render('open', cls_request.open_request);
+              // cls_request.render('closed', cls_request.closed_request);
+
+              // cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
             } else {
               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
             }
@@ -358,7 +361,7 @@ class class_charge{
           <div class="col-md-12 pt-1">
             <div class="row bs_1 border_gray radius_5 mb-1">
               <div class="col-md-12 col-lg-6 text-truncate"><span>Total Bruto</span><span id="sp_gross" class="float_right fs_20"></span></div>
-              <div class="col-md-12 col-lg-6 text-truncate"><span>Descuento</span><span id="sp_discount" class="float_right fs_20"></span></div>
+              <div class="col-md-12 col-lg-6 text-truncate" onclick=cls_charge.create_discount('${request_slug}')><span>Descuento</span><span id="sp_discount" class="float_right fs_20"></span></div>
               <div class="col-md-12 col-lg-6 text-truncate"><span>Subtotal</span><span id="sp_subtotal" class="float_right fs_20"></span></div>
               <div class="col-md-12 col-lg-6 text-truncate"><span>Impuesto</span><span id="sp_tax" class="float_right fs_20"></span></div>          
             </div>
@@ -600,6 +603,39 @@ class class_charge{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
 
+  }
+  create_discount(request_slug){
+    swal({
+      title: 'Porcentaje de Descuento',
+      text: "Ingrese el porcentaje que desea descontar.",
+
+      content: {
+        element: "input",
+        attributes: {
+          placeholder: "porcentaje",
+          type: "text",
+        },
+      },
+    })
+    .then((quantity) => {
+      if (cls_general.is_empty_var(quantity) === 0) {
+        return swal("Debe ingresar un numero.");
+      }
+      if (isNaN(quantity)) {
+        return swal("Debe ingresar un numero entero.");
+      }
+      var url = '/command/' + request_slug + '/discount';
+      var method = 'PUT';
+      var body = JSON.stringify({ a: quantity});
+      var funcion = function (obj) {
+        if (obj.status === 'success') {
+          cls_charge.show(request_slug);
+        } else {
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+      cls_general.async_laravel_request(url, method, funcion, body);
+    });
   }
 }
 class class_command{

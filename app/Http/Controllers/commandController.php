@@ -124,7 +124,19 @@ class commandController extends Controller
         $rs_command = $this->getByRequest($rs_request['ai_request_id']);
         return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command, 'request_info'=>$rs_request]]);
     }
-    
+    public function discount(Request $request, $request_slug){
+        $user = $request->user();
+        if( $user->hasAnyRole(['admin','super']) != true){
+            return response()->json(['status'=>'failed','message'=>'Debe ingresar como supervisor.']);
+        }else{
+            $rs_request = tm_request::where('tx_request_slug',$request_slug)->first();
+            $rs_command = $this->getByRequest($rs_request['ai_request_id']);
+            foreach ($rs_command as $key => $value) {
+                tm_commanddata::where('ai_commanddata_id',$value['ai_commanddata_id'])->update(['tx_commanddata_discountrate' => $request->input('a')]);
+            }
+            return response()->json(['status'=>'success','message'=>'Descuento aplicado.']);
+        }
+    }
     /**
      * Show the form for editing the specified resource.
      *

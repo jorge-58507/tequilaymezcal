@@ -13,7 +13,10 @@
 use App\User;
 
 Route::get('/', function () {
-    $rs_user = User::select('name','email')->get();
+    $rs_user = User::select('users.name','users.email','roles.name as rol')
+    ->join('role_users','users.id','=', 'role_users.user_id')
+    ->join('roles','roles.id','=', 'role_users.role_id')
+    ->wherein('roles.name',['bartender','cashier']) ->get();
     $data = ['user_list'=>$rs_user];
     return view('welcome', compact('data'));
 })->name('welcome');
@@ -71,6 +74,7 @@ Route::put('depletion/approve_all', 'depletionController@approve_all')->middlewa
 Route::put('command/{param}/setready', 'commandController@set_ready')->middleware('auth');
 Route::put('requisition/{param}/provider', 'requisitionController@upd_provider')->middleware('auth');
 Route::put('dataproductinput/{param}', 'productinputController@update_data')->middleware('auth');
+Route::put('command/{param}/discount', 'commandController@discount')->middleware('auth');
 
 
 
