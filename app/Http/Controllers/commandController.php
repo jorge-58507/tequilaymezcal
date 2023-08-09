@@ -132,7 +132,7 @@ class commandController extends Controller
     }
     public function discount(Request $request, $request_slug){
         $user = $request->user();
-        if( $user->hasAnyRole(['admin','super']) != true){
+        if( $user->hasAnyRole(['admin','super','cashier']) != true){
             return response()->json(['status'=>'failed','message'=>'Debe ingresar como supervisor.']);
         }else{
             $rs_request = tm_request::where('tx_request_slug',$request_slug)->first();

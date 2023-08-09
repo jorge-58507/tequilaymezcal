@@ -27,7 +27,7 @@ Route::get('/report', function () {
     return view('report.index');
 })->middleware('auth');
 
-// Route::get('test', 'configurationController@test')->middleware('auth');
+Route::get('test', 'commandController@getByCharge')->middleware('auth');
 
 
 Route::get('configuration', 'configurationController@index')->middleware('auth');

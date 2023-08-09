@@ -199,9 +199,12 @@ class chargeController extends Controller
         $printer -> setJustification(Printer::JUSTIFY_LEFT);
         $printer -> text("Articulos Relacionados.\n");
 
+        $content_observation = '';
+        $last_observation = '';
+        $command_id = 0 ;
         foreach ($raw_item as $item) {
-            if ($item['tx_commanddata_status'] === 1) {
-                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']."\n");
+            if ($item['tx_commanddata_status'] === 1) {  
+                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
 
                 $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
@@ -210,8 +213,26 @@ class chargeController extends Controller
                         $printer -> text('   -'.$k."\n");
                     }
                 }
+                if (strlen($content_observation) > 0) {
+                    $position = strpos($content_observation,$item['tx_command_observation']);
+                    if ($position === false) {
+                        // $printer -> text("OBS. ".$item['tx_command_observation']."\n");
+                        $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
+                        $content_observation .= $item['tx_command_observation']."\n";
+                    }
+                }else{
+                    // $printer -> text("OBS. ".$item['tx_command_observation']."\n");
+                    $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
+                    $content_observation .= $item['tx_command_observation']."\n";
+                }
+                if ($command_id != $item['ai_command_id']) {
+                    $printer -> text("OBS. ".$last_observation."\n");
+                    $command_id = $item['ai_command_id'];
+                }
             }
         }
+        // $printer -> text($content_observation);
+
         $printer -> feed(2);
         $printer -> setJustification(Printer::JUSTIFY_RIGHT);
         $printer -> setEmphasis(true);
@@ -280,8 +301,8 @@ class chargeController extends Controller
         $rs = $qry->first();
 
         $rs_payment = tm_payment::join('tm_paymentmethods','tm_paymentmethods.ai_paymentmethod_id','tm_payments.payment_ai_paymentmethod_id')->where('payment_ai_charge_id',$rs['ai_charge_id'])->get();
+        
         $commandController = new commandController;
-
         $rs_article = $commandController->getByCharge($rs['ai_charge_id']);
 
         return ['charge'=>$rs, 'payment'=>$rs_payment, 'article'=>$rs_article];
