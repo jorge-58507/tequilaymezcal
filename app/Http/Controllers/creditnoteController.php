@@ -49,7 +49,7 @@ class creditnoteController extends Controller
     public function store(Request $request)
     {
         if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
-            return redirect() -> route('request.index');
+           return response()->json(['status'=>'failed','message'=>'Debe ingresar como supervisor.']);
         }
 
         $charge = tm_charge::where('tx_charge_slug',$request->input('a'));

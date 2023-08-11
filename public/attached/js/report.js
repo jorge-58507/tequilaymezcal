@@ -25,8 +25,8 @@ class class_report
       cls_general.shot_toast_bs('Debe llenar los campos fechas.', { bg: 'text-bg-warning' }); return false;
     }
     if (type === '2') {
-      let fechaFrom = new Date(cls_general.date_converter('dmy','ymd',from))
-      let fechaTo = new Date(cls_general.date_converter('dmy', 'ymd', to))
+      let fechaFrom = new Date(cls_general.date_converter('dmy','ymd',from)+'00:00:00')
+      let fechaTo = new Date(cls_general.date_converter('dmy', 'ymd', to) + '23:59:00')
       let yearDiff = fechaTo.getFullYear() - fechaFrom.getFullYear();
       let MonthDiff = fechaTo.getMonth() - fechaFrom.getMonth();
       if (yearDiff > 0) {
