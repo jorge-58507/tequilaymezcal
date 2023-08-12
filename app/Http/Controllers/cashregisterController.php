@@ -10,6 +10,13 @@ use App\tm_cashoutput;
 use App\tm_payment;
 use App\tm_giftcard;
 
+require '../vendor/autoload.php';
+
+use Mike42\Escpos\Printer;
+use Mike42\Escpos\EscposImage;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
+
 class cashregisterController extends Controller
 {
     /**
@@ -233,7 +240,7 @@ class cashregisterController extends Controller
         
         // PRINT TOP DATE
         $printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        $printer -> text(date('d-m-Y', strtotime($date))."\n");
+        $printer -> text(date('d-m-Y', strtotime($rs_cashregister['cashregister']['created_at']))."\n");
 
         /* Print top logo */
         $printer -> setJustification(Printer::JUSTIFY_CENTER);
@@ -249,7 +256,7 @@ class cashregisterController extends Controller
         /* Title of receipt */
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
         $printer -> setEmphasis(true);
-        $printer -> text("CIERRE DE CAJA ".date('d-m-Y h:i s', strtotime($date))."\n");
+        $printer -> text("CIERRE DE CAJA ".date('d-m-Y h:i s', strtotime($rs_cashregister['cashregister']['created_at']))."\n");
         $printer -> setEmphasis(false);
         $printer -> selectPrintMode();
         $printer -> feed(2);
@@ -260,13 +267,13 @@ class cashregisterController extends Controller
         $printer -> text("Métodos de Pago.\n");
         $printer -> setJustification(Printer::JUSTIFY_LEFT);
 
-        $printer -> text("Efectivo: ".number_format($incomeCash - $returnCash, 2)."(".number_format($incomeCash, 2)."-".number_format($returnCash, 2).")\n");
-        $printer -> text("Cheque: ".number_format($incomeCheck - $returnCheck, 2)."(".number_format($incomeCheck, 2)."-".number_format($returnCheck, 2).")\n");
-        $printer -> text("T. Clave: ".number_format($incomeDebit - $returnDebit, 2)."(".number_format($incomeDebit, 2)."-".number_format($returnDebit, 2).")\n");
-        $printer -> text("T. Credito: ".number_format($incomeCredit - $returnCredit, 2)."(".number_format($incomeCredit, 2)."-".number_format($returnCredit, 2).")\n");
-        $printer -> text("Yappy: ".number_format($incomeYappi - $returnYappi, 2)."(".number_format($incomeYappi, 2)."-".number_format($returnYappi, 2).")\n");
-        $printer -> text("Nequi: ".number_format($incomeNequi - $returnNequi, 2)."(".number_format($incomeNequi, 2)."-".number_format($returnNequi, 2).")\n");
-        $printer -> text("Cupón: ".number_format($incomeGiftcard - $returnGiftcard, 2)."(".number_format($incomeGiftcard, 2)."-".number_format($returnGiftcard, 2).")\n");
+        $printer -> text("Efectivo: B/".number_format($incomeCash - $returnCash, 2)."\n");
+        $printer -> text("Cheque: B/".number_format($incomeCheck - $returnCheck, 2)."\n");
+        $printer -> text("T. Clave: B/".number_format($incomeDebit - $returnDebit, 2)."\n");
+        $printer -> text("T. Credito: B/".number_format($incomeCredit - $returnCredit, 2)."\n");
+        $printer -> text("Yappy: B/".number_format($incomeYappi - $returnYappi, 2)."\n");
+        $printer -> text("Nequi: B/".number_format($incomeNequi - $returnNequi, 2)."\n");
+        $printer -> text("Cupón: B/".number_format($incomeGiftcard - $returnGiftcard, 2)."\n");
         
         $printer -> feed(1);
 
@@ -283,7 +290,7 @@ class cashregisterController extends Controller
         $printer -> text("Totales.\n");
         $printer -> setJustification(Printer::JUSTIFY_LEFT);
 
-        $printer -> text("Documentos: ".number_format($rs_cashregister['cashregister']['tx_cashregister_quantitydoc'],2)."\n");
+        $printer -> text("Documentos: ".$rs_cashregister['cashregister']['tx_cashregister_quantitydoc']."\n");
         $printer -> text("Venta Bruta: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_grosssale'],2)."\n");
         $printer -> text("Descuento: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_discount'],2)."\n");
         $printer -> text("Venta Real: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_realsale'],2)."\n");
@@ -304,11 +311,16 @@ class cashregisterController extends Controller
         $printer -> text("Impuesto: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_tax'],2)."\n");
         $printer -> text("Impuesto NC: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_returntax'],2)."\n");
 
+        $printer -> feed(3);
+
         /* Cut the receipt and open the cash drawer */
         $printer -> cut();
         $printer -> pulse();
         
         $printer -> close();
+
+        return response()->json(['status'=>'success','message'=>'Reporte Impreso.']);
+
     }
 
 }

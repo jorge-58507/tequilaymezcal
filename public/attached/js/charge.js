@@ -1435,7 +1435,19 @@ class class_cashregister{
     return content;
   }
   print_cashregister(cashregister_id){
-    cls_general.print_html('/print_cashregister/'+cashregister_id);
+    var url = '/print_cashregister/' + cashregister_id;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+    // cls_general.print_html('/print_cashregister/'+cashregister_id);
   }
   create(){
     var today = cls_general.getDate();
