@@ -877,6 +877,7 @@ class class_creditnote{
     this.selected = [];
     this.active_list = active;
     this.inactive_list = inactive;
+    this.pass = 'jadecafe2023';
   }
   index(){
     var content = `
@@ -1169,7 +1170,7 @@ class class_creditnote{
     if (Modal != null) {
       Modal.hide();
     }
-    document.getElementById('btn_creditnoteProcess').addEventListener('click', ()=>{cls_creditnote.process(charge_slug); });
+    document.getElementById('btn_creditnoteProcess').addEventListener('click', ()=>{  cls_creditnote.process(charge_slug);  });
 
   }
   generate_articlecharge(raw_article) {
@@ -1246,27 +1247,59 @@ class class_creditnote{
     document.getElementById('container_tocancel').innerHTML = content;
   }
   process(charge_slug){
+    cls_general.disable_submit(document.getElementById('btn_creditnoteProcess'));
     if (cls_creditnote.selected.length < 1) {
       cls_general.shot_toast_bs('Debe incluir productos.', { bg: 'text-bg-warning' }); return false;
     }
-    var reason = document.getElementById('creditnoteReason').value;
-    var url = '/creditnote/';
-    var method = 'POST';
-    var body = JSON.stringify({ a: charge_slug, b: cls_creditnote.selected, c: reason });
-    var funcion = function (obj) {
-      if (obj.status === 'success') {
-        cls_creditnote.selected = [];
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-        cls_charge.index();
-        cls_request.render('open', cls_request.open_request);
-        cls_request.render('closed', cls_request.closed_request);
-        cls_request.render('canceled', cls_charge.charge_list);
 
-      } else {
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+    swal({
+      title: "Contraseña",
+      text: "Ingrese la clave para Notas de Crédito.",
+
+      content: {
+        element: "input",
+        attributes: {
+          placeholder: "Contraseña",
+          type: "password",
+        },
+      },
+    })
+    .then((password) => {
+      if (cls_general.is_empty_var(password) === 0) {
+        return swal("Debe ingresar la contraseña.");
       }
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
+      if (password != cls_creditnote.pass) {
+        return swal("La contraseña no coincide.");
+      }
+
+
+
+      var reason = document.getElementById('creditnoteReason').value;
+      var url = '/creditnote/';
+      var method = 'POST';
+      var body = JSON.stringify({ a: charge_slug, b: cls_creditnote.selected, c: reason });
+      var funcion = function (obj) {
+        if (obj.status === 'success') {
+          cls_creditnote.selected = [];
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+          cls_charge.index();
+          cls_request.render('open', cls_request.open_request);
+          cls_request.render('closed', cls_request.closed_request);
+          cls_request.render('canceled', cls_charge.charge_list);
+
+        } else {
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+      cls_general.async_laravel_request(url, method, funcion, body);
+
+
+
+
+
+
+    });
+
   }
   generate_creditnote(raw_creditnote) {
     var content = ``;

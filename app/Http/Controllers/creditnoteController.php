@@ -48,7 +48,7 @@ class creditnoteController extends Controller
      */
     public function store(Request $request)
     {
-        if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
+        if ( auth()->user()->hasAnyRole(['admin','super','cashier']) != true){ 
            return response()->json(['status'=>'failed','message'=>'Debe ingresar como supervisor.']);
         }
 

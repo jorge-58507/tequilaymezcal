@@ -148,10 +148,7 @@ class chargeController extends Controller
     }
 
     public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change){
-        // $connector = new WindowsPrintConnector("recibo");
-        // $connector = new WindowsPrintConnector("printreceipt");
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
-        //$connector = new WindowsPrintConnector("recibo");
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -210,18 +207,17 @@ class chargeController extends Controller
                 $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
                 foreach ($raw_recipe as $ingredient) {
                     foreach ($ingredient as $k => $formule) {
-                        $printer -> text('   -'.$k."\n");
+                        $ing = explode(")",$k,2);
+                        $printer -> text('   -'.$ing."\n");
                     }
                 }
                 if (strlen($content_observation) > 0) {
                     $position = strpos($content_observation,$item['tx_command_observation']);
                     if ($position === false) {
-                        // $printer -> text("OBS. ".$item['tx_command_observation']."\n");
                         $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
                         $content_observation .= $item['tx_command_observation']."\n";
                     }
                 }else{
-                    // $printer -> text("OBS. ".$item['tx_command_observation']."\n");
                     $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
                     $content_observation .= $item['tx_command_observation']."\n";
                 }
@@ -231,7 +227,6 @@ class chargeController extends Controller
                 }
             }
         }
-        // $printer -> text($content_observation);
 
         $printer -> feed(2);
         $printer -> setJustification(Printer::JUSTIFY_RIGHT);
