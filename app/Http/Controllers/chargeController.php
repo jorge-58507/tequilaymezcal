@@ -208,7 +208,7 @@ class chargeController extends Controller
                 foreach ($raw_recipe as $ingredient) {
                     foreach ($ingredient as $k => $formule) {
                         $ing = explode(")",$k,2);
-                        $printer -> text('   -'.$ing."\n");
+                        $printer -> text('   -'.$ing[1]."\n");
                     }
                 }
                 if (strlen($content_observation) > 0) {
