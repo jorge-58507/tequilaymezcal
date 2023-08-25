@@ -1288,7 +1288,7 @@ class class_article {
       var content_bottom = `
           <div class="row">
             <div class="col-lg-12 text-center pt-2">
-              <button type="button" class="btn btn-warning" onclick="cls_article.delete(this,${article.tx_article_slug});">Eliminar Art&iacute;culo</button>
+              <button type="button" class="btn btn-warning" onclick="cls_article.delete(this,'${article.tx_article_slug}');">Eliminar Art&iacute;culo</button>
               <button type="button" class="btn btn-secondary" onclick="cls_article.render()">Volver</button>
               <button type="button" class="btn btn-success" name="${article.ai_article_id}" id="btn_articleModal_update" onclick="cls_article.update(this,this.name)">Guardar Artículo</button>
             </div>
@@ -1305,12 +1305,30 @@ class class_article {
     var code = document.getElementById('articleCode').value;
     var category = document.getElementById('articleCategory').value;
     var promotion = (document.getElementById('articlePromotion').checked) ? 1 : 0;
-    var status = (document.getElementById('articleStatus').checked) ? 1 : 0;
     var taxrate = document.getElementById('articleTaxrate').value;
     var discountrate = document.getElementById('articleDiscountrate').value;
+    var status = (document.getElementById('articleStatus').checked) ? 1 : 0;
     var article_option = document.getElementById('articleOption').value;
-    if (cls_general.is_empty_var(description) === 0 || cls_general.is_empty_var(code) === 0 || cls_general.is_empty_var(category) === 0 || cls_general.is_empty_var(taxrate) === 0 || cls_general.is_empty_var(discountrate) === 0) {
-      cls_general.shot_toast_bs('Llene todos los campos.', { bg: 'text-bg-warning' });
+
+    if (cls_general.is_empty_var(code) === 0) {
+      cls_general.shot_toast_bs('Ingrese el código.', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (cls_general.is_empty_var(description) === 0) {
+      console.log(description);
+      cls_general.shot_toast_bs('Ingrese la descripción.', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (cls_general.is_empty_var(category) === 0) {
+      cls_general.shot_toast_bs('Seleccione la categoría.', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (cls_general.is_empty_var(taxrate) === 0) {
+      cls_general.shot_toast_bs('Ingrese la tasa imponible.', { bg: 'text-bg-warning' });
+      return false;
+    }
+    if (cls_general.is_empty_var(discountrate) === 0) {
+      cls_general.shot_toast_bs('Ingrese la tasa de descuento.', { bg: 'text-bg-warning' });
       return false;
     }
     

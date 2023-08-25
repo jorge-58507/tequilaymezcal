@@ -48,6 +48,7 @@ Route::get('dataproductinput/{param}', 'productinputController@show_data')->midd
 Route::get('provider/{param}/requisition', 'requisitionController@get_requisitionByRequisition')->middleware('auth');
 Route::get('userlog/{param}', 'articleController@get_user');
 Route::get('kitchen/reload', 'kitchenController@reload');
+Route::get('/charge/{param_a}/{param_b}/{param_c}/{param_d}', 'chargeController@filter');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
 // Route::post('article/product', 'measureproductController@save')->middleware('auth');

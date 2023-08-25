@@ -185,7 +185,7 @@ class articleController extends Controller
             $filename = time().$avatar->getClientOriginalName();      
             $avatar->move(public_path().'/attached/image/article/',$filename);
         }else{
-            $filename = $imagePlaceholder;
+            $filename = ($imagePlaceholder === 'null') ? '' : $imagePlaceholder;
         }
 
 

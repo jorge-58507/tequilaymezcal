@@ -207,8 +207,11 @@ class chargeController extends Controller
                 $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
                 foreach ($raw_recipe as $ingredient) {
                     foreach ($ingredient as $k => $formule) {
-                        $ing = explode(")",$k,2);
-                        $printer -> text('   -'.$ing[1]."\n");
+                        $splited_formule = explode(",",$formule);
+                        if ($splited_formule[3] === 'show') {
+                            $ing = explode(")",$k,2);
+                            $printer -> text('   -'.$ing[1]."\n");
+                        }
                     }
                 }
                 if (strlen($content_observation) > 0) {
@@ -282,6 +285,18 @@ class chargeController extends Controller
         $rs = $this->showIt($slug);
         return response()->json(['status'=>'success','message'=>'','data'=>['charge'=>$rs['charge'], 'payment'=>$rs['payment'], 'article'=>$rs['article']]]);
     }
+    public function filter($str,$from,$to,$limit){
+        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at')
+        ->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')
+        ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
+        ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)
+        ->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))
+        ->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))
+        ->where('tm_requests.tx_request_title','LIKE',"%{$str}%")
+        ->orderby('tm_charges.created_at','DESC')->limit($limit)->get();
+        return response()->json(['status'=>'success','message'=>'','data'=>['canceled'=>$rs_canceledrequest]]);
+    }
+
     public function showIt($slug){
         $qry = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_clients.tx_client_direction','tm_clients.tx_client_telephone','tm_clients.tx_client_email',
         'tm_tables.tx_table_value',
@@ -307,7 +322,7 @@ class chargeController extends Controller
         $cashregister = $this->get_cashregister($date,$user);
         return response()->json(['status'=>'success','message'=>'','data'=>['cashregister'=>$cashregister]]);
     }
-
+    
     public function get_cashregister($date,$user){
         // gross_sale la suma de la totalidad de las ventas sin descuentos, 
         // Venta real: gross_sale - descuento

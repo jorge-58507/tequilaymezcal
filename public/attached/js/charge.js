@@ -175,8 +175,10 @@ class class_request{
       if (obj.status === 'success') {
         cls_request.open_request = obj.data.open_request;
         cls_request.closed_request = obj.data.closed_request;
-        cls_charge.charge_list = obj.data.canceled_request;
+        // cls_charge.charge_list = obj.data.canceled_request;
         console.log('requ act');
+        cls_request.filter('closed', document.getElementById('filter_closedrequest').value);
+        cls_request.filter('open', document.getElementById('filter_openrequest').value);
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
@@ -187,7 +189,7 @@ class class_request{
 
 }
 class class_charge{
-  constructor(charge_list){
+  constructor(charge_list=''){
     this.charge_request=[];
     this.charge_list = charge_list;
   }
@@ -289,7 +291,7 @@ class class_charge{
           </div>
           <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_canceledrequest"  role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
             <div class="row">
-              <div class="col-md-12 col-lg-6">
+              <div class="col-md-12 col-lg-3">
                 <div class="input-group my-3">
                   <input type="text" id="filter_canceledrequest" class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('canceled',this.value)">
                   <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('canceled',document.getElementById('filter_canceledrequest').value)">
@@ -299,7 +301,19 @@ class class_charge{
                   </button>
                 </div>
               </div>
-              <div class="col-md-12 col-lg-6 pt-3">
+              <div class="col-md-6 col-lg-3">
+                <div class="input-group my-3">
+                  <label class="input-group-text" for="canceledFromDatefilter">Desde</label>
+                  <input type="text" name="canceledFromDatefilter" id="canceledFromDatefilter" class="form-control" value="" readonly onkeyup="this.value = ''">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3">
+                <div class="input-group my-3">
+                  <label class="input-group-text" for="canceledToDatefilter">Hasta</label>
+                  <input type="text" name="canceledToDatefilter" id="canceledToDatefilter" class="form-control" value="" readonly onkeyup="this.value = ''">
+                </div>
+              </div>
+              <div class="col-md-12 col-lg-3 pt-3">
                 <div class="input-group mb-3">
                   <label class="input-group-text" for="canceledrequestLimit">Mostrar</label>
                   <select id="canceledrequestLimit" class="form-select">
@@ -323,6 +337,42 @@ class class_charge{
     cls_request.render('open', cls_request.open_request.slice(0, 10));
     cls_request.render('closed', cls_request.closed_request.slice(0, 10));
     cls_request.render('canceled', cls_charge.charge_list.slice(0, 10));
+
+    $(function () {
+      var dateFormat = "mm/dd/yy",
+        from = $("#canceledFromDatefilter")
+          .datepicker({
+            defaultDate: "+1w",
+            changeMonth: true,
+            numberOfMonths: 1
+          })
+          .on("change", function () {
+            // to.datepicker( "option", "maxDate", '+30d' );
+            to.datepicker("option", "minDate", getDate(this));
+          }),
+        to = $("#canceledToDatefilter").datepicker({
+          defaultDate: "+1w",
+          changeMonth: true,
+          numberOfMonths: 1
+        })
+          .on("change", function () {
+            from.datepicker("option", "maxDate", getDate(this));
+            // from.datepicker( "option", "minDate", '-30d' );
+          });
+
+      function getDate(element) {
+        var raw_value = (element.value).split('-');
+        var date_value = raw_value[1] + '/' + raw_value[0] + '/' + raw_value[2];
+        var date;
+        try {
+          date = $.datepicker.parseDate(dateFormat, date_value);
+        } catch (error) {
+          date = null;
+        }
+        return date;
+      }
+    });
+
   }
   show(request_slug){
     document.getElementById('giftcardModal_content').innerHTML = '';
@@ -411,21 +461,66 @@ class class_charge{
     return new Promise(resolve => {
       clearTimeout(this.timer);
       this.timer = setTimeout(function () {
-        var haystack = cls_charge.charge_list;
+        // var haystack = cls_charge.charge_list;
         var limit = document.getElementById('canceledrequestLimit').value;
-        var needles = str.split(' ');
-        var raw_filtered = [];
-        for (var i in haystack) {
-          if (i == limit) { break;  }
-          var ocurrencys = 0;
-          for (const a in needles) {
-            if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_charge_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
-          }
-          if (ocurrencys === needles.length) {
-            raw_filtered.push(haystack[i]);
+        var date_i = document.getElementById('canceledFromDatefilter').value;
+        var date_f = document.getElementById('canceledToDatefilter').value;
+        let fechaFrom = new Date(cls_general.date_converter('dmy', 'ymd', date_i))
+        let fechaTo = new Date(cls_general.date_converter('dmy', 'ymd', date_f))
+        let yearDiff = fechaTo.getFullYear() - fechaFrom.getFullYear();
+        let MonthDiff = fechaTo.getMonth() - fechaFrom.getMonth();
+        if (yearDiff > 0) {
+          cls_general.shot_toast_bs('El rango de fecha debe ser maximo 30 dias.', { bg: 'text-bg-warning' }); return false;
+        }
+        if (MonthDiff > 1) {
+          cls_general.shot_toast_bs('El rango de fecha debe ser maximo 30 dias.', { bg: 'text-bg-warning' }); return false;
+        }
+
+        if (cls_general.is_empty_var(str) === 0) {
+          cls_general.shot_toast_bs('Ingrese el codigo o título.', { bg: 'text-bg-warning' }); return false;
+        }
+        if (cls_general.is_empty_var(date_i) === 0 || cls_general.is_empty_var(date_f) === 0) {
+          cls_general.shot_toast_bs('Ingrese las fechas.', { bg: 'text-bg-warning' }); return false;
+        }
+
+        var url = '/charge/' + str + "/" + date_i + "/" + date_f + "/" + limit;
+        var method = 'GET';
+        var body = '';
+        var funcion = function (obj) {
+          if (obj.status === 'success') {
+            var haystack = obj.data.canceled;
+            var needles = str.split(' ');
+            var raw_filtered = [];
+            for (var i in haystack) {
+              if (i == limit) { break;  }
+              var ocurrencys = 0;
+              for (const a in needles) {
+                if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_charge_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+              }
+              if (ocurrencys === needles.length) {
+                raw_filtered.push(haystack[i]);
+              }
+            }
+            resolve(raw_filtered)
+          } else {
+            cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
           }
         }
-        resolve(raw_filtered)
+        cls_general.async_laravel_request(url, method, funcion, body);
+
+        // var needles = str.split(' ');
+        // var raw_filtered = [];
+        // for (var i in haystack) {
+        //   if (i == limit) { break;  }
+        //   var ocurrencys = 0;
+        //   for (const a in needles) {
+        //     if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_charge_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+        //   }
+        //   if (ocurrencys === needles.length) {
+        //     raw_filtered.push(haystack[i]);
+        //   }
+        // }
+        // resolve(raw_filtered)
       }, 500)
     });
   }

@@ -357,6 +357,7 @@ class class_request {
         cls_request.open_request = obj.data.open_request;
         cls_request.closed_request = obj.data.closed_request;
         cls_request.canceled_request = obj.data.canceled_request;
+        
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
@@ -710,20 +711,29 @@ class class_command{
     return content;
   }
   generate_recipe_option(article_product){
+    console.log(article_product);
     var content_recipe = '';
     article_product.map((ap, i) => {
       var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
-	  if (raw_ingredient.length > 1) {
-
-		  content_recipe += `
-			  <div class="col-md-12 col-lg-6">
-				<label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
-				<select class="form-select" id="ingredient_${i}">`;
-		  raw_ingredient.map((ingredient) => {
-			content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
-		  })
-		  content_recipe += `</select></div>`;
-	  }
+      if (raw_ingredient.length > 1) {
+        content_recipe += `
+          <div class="col-md-12 col-lg-6">
+          <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
+          <select class="form-select" name="show" id="ingredient_${i}">`;
+        raw_ingredient.map((ingredient) => {
+          content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+        })
+        content_recipe += `</select></div>`;
+      }else{
+        content_recipe += `
+          <div class="col-md-12 col-lg-6 display_none">
+            <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
+            <select class="form-select" name="noshow" id="ingredient_${i}">`;
+              raw_ingredient.map((ingredient) => {
+                content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+              })
+        content_recipe += `</select></div>`;
+      }
     })
     return content_recipe;
   }
@@ -863,7 +873,8 @@ class class_command{
     var raw_recipe = [];
     $('#container_recipe').find('select').each(function () {
       var index = $(this.selectedOptions).text();
-      raw_recipe.push({ [index] : $(this).val() })
+      let show = this.getAttribute("name");
+      raw_recipe.push({ [index]: $(this).val() + ',' + show })
     });
     var select_presentation = document.getElementById('articlePresentation');
     cls_command.command_list.push({
@@ -1028,19 +1039,39 @@ class class_command{
   }
   process(request_slug, table_slug){
     if (cls_general.is_empty_var(request_slug) === 0) {
-      cls_command.store(table_slug);
+      const Modal = bootstrap.Modal.getInstance('#commandModal');
+      Modal.hide();
+
+      swal({
+        title: 'Titulo',
+        text: "Ingrese un título para este pedido.",
+
+        content: {
+          element: "input",
+          attributes: {
+            placeholder: "",
+            type: "text",
+          },
+        },
+      })
+        .then((title) => {
+          if (cls_general.is_empty_var(title) === 0) {
+            title = 'Contados';
+          }
+          cls_command.store(table_slug,title);
+        });
     } else {
       cls_command.update(request_slug, table_slug);
     }
   }
-  store(table_slug){
+  store(table_slug,title){
     var command_list = cls_command.command_list;
     var client = document.getElementById('requestClient');
     var consumption = document.getElementById('commandConsumption').value;
     var observation = document.getElementById('commandObservation').value;
 
     var url = '/command/'; var method = 'POST';
-    var body = JSON.stringify({a: command_list, b: table_slug, c: client.name, d: 'Ped.'+client.value.replace(' ',''), e: consumption, f: observation });
+    var body = JSON.stringify({a: command_list, b: table_slug, c: client.name, d: 'Ped.'+title, e: consumption, f: observation });
     var funcion = function (obj) {
       if (obj.status === 'success') {
         document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
@@ -1054,8 +1085,8 @@ class class_command{
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ '+cls_general.val_price(total_sale.total,2,1,1);
 
-        const Modal = bootstrap.Modal.getInstance('#commandModal');
-        Modal.hide();
+        // const Modal = bootstrap.Modal.getInstance('#commandModal');
+        // Modal.hide();
 
         if (obj.data.cashier === 1) {
           swal({

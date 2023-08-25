@@ -216,7 +216,6 @@
       </div>
     </div>
   </div>
-
   <!-- Modal -->
   <div class="modal fade  modal-lg" id="inspectCRModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-scrollable">

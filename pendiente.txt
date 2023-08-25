@@ -8,6 +8,7 @@ VERIFICAR QUE SOLO SE MUESTRAN LOS PRECIOS DE LOS ARTICULOS QUE TIENEN RECETA
 al actualizar mesa si la imagen esta vacia se desconfigura y se guarda como null
 mostrar 100 articulos filtro de request
 en paydesk el filtro de pagado al darle al boton filtrar directament por ajax
+ponerle un titulo entendible
 
 
 descuento de jubilados
