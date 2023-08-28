@@ -220,6 +220,7 @@ class chargeController extends Controller
                         $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
                         $content_observation .= $item['tx_command_observation']."\n";
                     }
+                    $last_observation = "";
                 }else{
                     $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
                     $content_observation .= $item['tx_command_observation']."\n";

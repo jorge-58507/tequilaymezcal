@@ -2,7 +2,6 @@ agregar roles eliminar roles y funciones de actualizar la informacion
 ingresar motivo de anulacion de una comanda
 ingreso de mercancia a traves de lector de codigo de barras
 Productos con varios codigos de barra
-
 reporte de inventario (ventas por productos)
 
 
