@@ -57,7 +57,7 @@ class commanddataController extends Controller
 
     }
     public function reportAnnulled($from, $to){
-        $rs = tm_commanddata::select('tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.tx_commanddata_description','tm_presentations.tx_presentation_value','tm_commanddatas.created_at')->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')->where('tm_commanddatas.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_commanddatas.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->orderby('tm_commanddatas.created_at','DESC')->get();
+        $rs = tm_commanddata::select('tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.tx_commanddata_description','tm_presentations.tx_presentation_value','tm_commanddatas.created_at')->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')->where('tm_commanddatas.tx_commanddata_status',0)->where('tm_commanddatas.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_commanddatas.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->orderby('tm_commanddatas.created_at','DESC')->get();
 
         return [ 'annulled' => $rs ];
     }
