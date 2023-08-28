@@ -13,8 +13,20 @@ class kitchenController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function all(){
-        $rs_notready =  tm_command::select('tm_commands.ai_command_id', 'tm_commands.tx_command_observation','tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')->where('tx_command_delivered',0)->orderby('created_at','ASC')->get();
-        $rs_ready =     tm_command::select('tm_commands.ai_command_id', 'tm_commands.tx_command_observation','tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')->where('tx_command_delivered',1)->orderby('updated_at','DESC')->get();
+        $rs_notready =  tm_command::select('tm_commands.ai_command_id', 'tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')
+        ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
+        ->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')
+        ->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')
+        ->where('tx_command_delivered',0)->orderby('created_at','ASC')->get();
+
+        $rs_ready =     tm_command::select('tm_commands.ai_command_id', 'tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')
+        ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
+        ->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')
+        ->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')
+        ->where('tx_command_delivered',1)->orderby('updated_at','DESC')->get();
+        
+        // $rs_notready =  tm_command::select('tm_commands.ai_command_id', 'tm_commands.tx_command_observation','tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')->where('tx_command_delivered',0)->orderby('created_at','ASC')->get();
+        // $rs_ready =     tm_command::select('tm_commands.ai_command_id', 'tm_commands.tx_command_observation','tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')->where('tx_command_delivered',1)->orderby('updated_at','DESC')->get();
         $data = [
             'notready' => $rs_notready,
             'ready' => $rs_ready

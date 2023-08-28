@@ -175,8 +175,6 @@ class class_request{
       if (obj.status === 'success') {
         cls_request.open_request = obj.data.open_request;
         cls_request.closed_request = obj.data.closed_request;
-        // cls_charge.charge_list = obj.data.canceled_request;
-        console.log('requ act');
         cls_request.filter('closed', document.getElementById('filter_closedrequest').value);
         cls_request.filter('open', document.getElementById('filter_openrequest').value);
       } else {

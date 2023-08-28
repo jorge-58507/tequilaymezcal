@@ -96,7 +96,6 @@ class class_command
     var array_command = [];
     notready.map((command) => {
       array_command.push(command);
-      // if (command_id != command.ai_command_id && command_id > 0) {
       if (command_id != command.ai_command_id || command_id === 0) {
         raw_notready.push(array_command);
         array_command = [];
@@ -114,23 +113,25 @@ class class_command
         observation = (cls_general.is_empty_var(command.tx_command_observation) === 1) ? command.tx_command_observation : '';
         command_text += `
           <h5 class="card-title text-truncate">${command.tx_commanddata_description}</h5>
-          <ul>
         `;
         if (cls_general.is_empty_var(command.tx_commanddata_option) === 1) {
+          command_text += `Opciones <ul>`;
           var split_option = command.tx_commanddata_option.split(',');
           split_option.map((option) => {
             command_text += `<li class="card-text">${option}</li>`;
           })
+          command_text += `</ul>`;
         }
-        command_text += `</ul>`;
       })
       content += `
         <div class="col-sm-3 pt-3">
           <div class="card">
             <h5 class="card-header cursor_pointer text-bg-dark" onclick="cls_command.show_command(${command_id});">${title}</h5>
             <div class="card-body">
-              ${observation}
-              ${command_text}
+              <div class="cursor_pointer" onclick="cls_command.show_command(${command_id});">
+                ${observation}
+                ${command_text}
+              </div>
               <button class="btn btn-warning btn-lg" onclick="cls_general.disable_submit(this,0); cls_command.set_ready(${command_id},this)">Listo</button>
             </div>
           </div>
@@ -149,15 +150,32 @@ class class_command
         
         var command_list = '';
         obj.data.commanddata.map((command) => {
-          command_list += `<p class="mb-0">${command.tx_commanddata_description}</p>`;
+          command_list += `<p class="mb-0">${command.tx_commanddata_description} (${command.tx_presentation_value})</p>`;
           if (cls_general.is_empty_var(command.tx_commanddata_option) === 1) {
-            command_list += `<ul>`;
+            command_list += `Opciones<ul>`;
             var split_option = command.tx_commanddata_option.split(',');
             split_option.map((option) => {
               command_list += `<li>${option}</li>`;
             })
             command_list += `</ul>`;            
           }
+          var recipe_list = '';
+          if (cls_general.is_empty_var(command.tx_commanddata_recipe) === 1) {
+            var raw_recipe = JSON.parse(command.tx_commanddata_recipe);
+            if (raw_recipe.length > 0) {
+              recipe_list += `-Receta <ul>`;
+              raw_recipe.map((ingredient) => {
+                for (const x in ingredient) {
+                  var raw_ingredient = ingredient[x].split(',');
+                  if (raw_ingredient[3] === 'show') {
+                    recipe_list += `<li class="card-text">${x}</li>`;
+                  }
+                }
+              })
+              recipe_list += `</ul>`;
+            }
+          }
+          command_list += (recipe_list.length > 17) ? recipe_list : '';
         })
         document.getElementById('inspectCommandModal_content').innerHTML = `
           <div class="row">
@@ -175,7 +193,7 @@ class class_command
             <div class="col-md-12 col-lg-9 pt-2">
               <span class="fw-bold">Observaciones: </span><span>${(cls_general.is_empty_var(obj.data.info.tx_command_observation) === 1) ? obj.data.info.tx_command_observation : '' }</span>
             </div>
-            <div class="col-xs-12 pt-2">
+            <div class="col-12 pt-2">
               <span class="fw-bold">Comandas: </span>
               ${command_list}
             </div>

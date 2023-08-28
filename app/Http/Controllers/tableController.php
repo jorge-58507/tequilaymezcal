@@ -128,7 +128,7 @@ class tableController extends Controller
             $filename = time().$avatar->getClientOriginalName();      
             $avatar->move(public_path().'/attached/image/table/',$filename);
         }else{
-            $filename = $imagePlaceholder;
+            $filename = ($imagePlaceholder === "null" || $imagePlaceholder === null) ? '' : $imagePlaceholder;
         }
 
         $qry_table = $tm_table->where('ai_table_id',$id);

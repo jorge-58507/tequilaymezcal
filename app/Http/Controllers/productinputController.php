@@ -419,7 +419,9 @@ class productinputController extends Controller
     public function report($from, $to){
         $rs = tm_productinput::select('tm_productinputs.tx_productinput_number','tm_productinputs.tx_productinput_nontaxable','tm_productinputs.tx_productinput_taxable',
         'tm_productinputs.tx_productinput_discount','tm_productinputs.tx_productinput_tax','tm_productinputs.tx_productinput_total','tm_productinputs.tx_productinput_due',
-        'tm_productinputs.tx_productinput_date','tm_providers.tx_provider_value','tm_providers.tx_provider_ruc','tm_providers.tx_provider_dv')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->where('tm_productinputs.created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('tm_productinputs.created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
+        'tm_productinputs.tx_productinput_date','tm_providers.tx_provider_value','tm_providers.tx_provider_ruc','tm_providers.tx_provider_dv')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')
+        ->where('tm_productinputs.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))
+        ->where('tm_productinputs.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->get();
 
         return [ 'list' => $rs ];
     }
@@ -427,8 +429,8 @@ class productinputController extends Controller
         $rs = DB::table('tm_productinputs')
                 ->select(DB::raw('SUM(tm_productinputs.tx_productinput_taxable) as total_taxable'),DB::raw('SUM(tm_productinputs.tx_productinput_tax) as total_tax'), DB::raw('SUM(tm_productinputs.tx_productinput_nontaxable) as total_nontaxable'),'tm_providers.tx_provider_value','tm_providers.tx_provider_ruc','tm_providers.tx_provider_dv','tm_providers.tx_provider_status')
                 ->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')
-                ->where('tm_productinputs.created_at','>=',date('Y-m-d h:i:s',strtotime($from)))
-                ->where('tm_productinputs.created_at','<=',date('Y-m-d h:i:s',strtotime($to)))
+                ->where('tm_productinputs.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))
+                ->where('tm_productinputs.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))
                 ->groupby('tm_productinputs.productinput_ai_provider_id')
                 ->get();
 

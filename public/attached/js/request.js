@@ -632,7 +632,7 @@ class class_command{
   }
 
   filter_articlethumbnail(str) {
-    var filtered = cls_article.look_for(str, 40);
+    var filtered = cls_article.look_for(str, 100);
     var content = cls_command.generate_articlethumbnail_list(filtered)
     document.getElementById('container_articlethumbnail').innerHTML = content;
   }
@@ -681,7 +681,7 @@ class class_command{
 
 
   filter_article(str){
-    var filtered = cls_article.look_for(str,40);
+    var filtered = cls_article.look_for(str,100);
     var content = cls_command.generate_article_list(filtered)
     document.getElementById('article_list').innerHTML = content;
   }
@@ -711,7 +711,6 @@ class class_command{
     return content;
   }
   generate_recipe_option(article_product){
-    console.log(article_product);
     var content_recipe = '';
     article_product.map((ap, i) => {
       var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
@@ -1044,21 +1043,21 @@ class class_command{
 
       swal({
         title: 'Titulo',
-        text: "Ingrese un título para este pedido.",
+        text: "Puede ingresar un nombre para este pedido o dejarlo en blanco.",
 
         content: {
           element: "input",
           attributes: {
-            placeholder: "",
+            placeholder: "Solo letras",
             type: "text",
           },
         },
       })
         .then((title) => {
           if (cls_general.is_empty_var(title) === 0) {
-            title = 'Contados';
+            title = 'Contado';
           }
-          cls_command.store(table_slug,title);
+          cls_command.store(table_slug, title.replace(/[^a-zA-Z]/g, ""));
         });
     } else {
       cls_command.update(request_slug, table_slug);

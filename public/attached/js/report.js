@@ -72,7 +72,12 @@ class class_report
           case '6':
             cls_report.render_depletion(from, to, obj.data.depletion);
             break;
-
+          case '7':
+            cls_report.render_anulled(from, to, obj.data.annulled);
+            break;
+          case '8':
+            cls_report.render_commanddata(from, to, obj.data.commanddata);
+            break;
           default:
             cls_general.shot_toast_bs('Opción incorecta.',{bg: 'text-bg-danger'});
             break;
@@ -490,4 +495,60 @@ class class_report
     list += `</div>`;
     document.getElementById('container_report').innerHTML = list;
   }
+  render_anulled(from, to, raw_annuled) {
+    var list = '';
+    list += `
+      <h5>Listado de Comandas Anuladas, Desde: ${from} Hasta: ${to}</h5>
+      <div class="list-group">
+    `;
+    raw_annuled.map((annuled) => {
+      list += `
+        <a href="#" class="list-group-item  cursor_pointer text-truncate">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">${annuled.tx_commanddata_quantity} - ${annuled.tx_commanddata_description}</h5>
+            <small>${cls_general.datetime_converter(annuled.created_at)}</small>
+          </div>
+        </a>
+      `;
+    })
+    list += `</div>`;
+    document.getElementById('container_report').innerHTML = list;
+  }
+  render_commanddata(from, to, raw_commanddata) {
+    var list = '';
+    var raw_report = [];
+    raw_commanddata.map((commanddata) => {
+
+      var index = raw_report.findIndex((report) => { return report.article_id === commanddata.commanddata_ai_article_id && report.presentation_id === commanddata.commanddata_ai_presentation_id })
+      if (index != -1) {
+        raw_report[index].quantity += commanddata.tx_commanddata_quantity;
+      }else{
+        raw_report.push({
+          article_id: commanddata.commanddata_ai_article_id,
+          quantity: commanddata.tx_commanddata_quantity, 
+          article_description: commanddata.tx_commanddata_description,
+          presentation_value: commanddata.tx_presentation_value, 
+          presentation_id: commanddata.commanddata_ai_presentation_id 
+        })
+      }
+    })
+    list += `
+      <h5>Listado de Comandas, Desde: ${from} Hasta: ${to}</h5>
+      <div class="list-group">
+    `;
+    raw_report.map((line) => {
+      list += `
+        <a href="#" class="list-group-item  cursor_pointer text-truncate">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">${line.quantity} - ${line.article_description}</h5>
+            <small>${line.presentation_value}</small>
+          </div>
+        </a>
+      `;
+    })
+    list += `</div>`;
+    document.getElementById('container_report').innerHTML = list;
+  }
+  
+
 }

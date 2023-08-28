@@ -52,6 +52,16 @@ class reportController extends Controller
                 $rs_depletion = $depletionController->report($from,$to);
                 return response()->json([ 'status'=>'success','message'=>'','data'=>[ 'depletion' => $rs_depletion['list'] ] ]);
                 break;
+            case '7':
+                $commanddataController = new commanddataController;
+                $rs_commanddata = $commanddataController->reportAnnulled($from,$to);
+                return response()->json([ 'status'=>'success','message'=>'','data'=>[ 'annulled' => $rs_commanddata['annulled'] ] ]);
+                break;
+            case '8':
+                $commanddataController = new commanddataController;
+                $rs_commanddata = $commanddataController->report($from,$to);
+                return response()->json([ 'status'=>'success','message'=>'','data'=>[ 'commanddata' => $rs_commanddata['list'] ] ]);
+                break;
             default:
 
                 break;

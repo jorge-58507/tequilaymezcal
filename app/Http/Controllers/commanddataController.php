@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\tm_commanddata;
 
@@ -55,4 +56,21 @@ class commanddataController extends Controller
         return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command]]);
 
     }
+    public function reportAnnulled($from, $to){
+        $rs = tm_commanddata::select('tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.tx_commanddata_description','tm_presentations.tx_presentation_value','tm_commanddatas.created_at')->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')->where('tm_commanddatas.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_commanddatas.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->orderby('tm_commanddatas.created_at','DESC')->get();
+
+        return [ 'annulled' => $rs ];
+    }
+    public function report($from, $to){
+        $c_from = date('Y-m-d H:i:s',strtotime($from." 00:00:01"));
+        $c_to = date('Y-m-d H:i:s',strtotime($to." 23:59:00"));
+        $rs = tm_commanddata::select('tm_commanddatas.created_at','tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.commanddata_ai_article_id','tm_commanddatas.tx_commanddata_description','tm_commanddatas.commanddata_ai_presentation_id','tm_presentations.tx_presentation_value')
+        ->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')
+        ->where('tm_commanddatas.created_at','>=',$c_from)
+        ->where('tm_commanddatas.created_at','<=',$c_to)->get();
+        // ->groupby('tm_commanddatas.tx_commanddata_description','tm_presentations.tx_presentation_value')->get();
+
+        return [ 'list' => $rs ];
+    }
+    
 }

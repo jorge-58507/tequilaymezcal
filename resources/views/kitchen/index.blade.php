@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title','Caja')
+@section('title','Cocina')
 @section('css')
   <link rel="stylesheet" href="{{ asset('attached/css/jquery-ui.css') }}">
 @endsection

@@ -206,7 +206,7 @@ class depletionController extends Controller
     }
 
     public function report ($from,$to){
-        $rs = tm_depletion::select('tm_products.tx_product_value','tm_depletions.tx_depletion_quantity','tm_depletions.tx_depletion_status','tm_depletions.created_at')->join('tm_products','tm_products.ai_product_id','tm_depletions.depletion_ai_product_id')->where('tm_depletions.created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('tm_depletions.created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->orderby('created_at','DESC')->get();
+        $rs = tm_depletion::select('tm_products.tx_product_value','tm_depletions.tx_depletion_quantity','tm_depletions.tx_depletion_status','tm_depletions.created_at')->join('tm_products','tm_products.ai_product_id','tm_depletions.depletion_ai_product_id')->where('tm_depletions.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_depletions.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->orderby('created_at','DESC')->get();
 
         return [ 'list' => $rs ];
     }

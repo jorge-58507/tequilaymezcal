@@ -31,6 +31,8 @@
             <option value="4">Reporte Notas de Credito</option>
             <option value="5">Compras por proveedores</option>
             <option value="6">Merma</option>
+            <option value="7">Comanda Anulada</option>
+            <option value="8">Ventas por Art&iacute;culos</option>
           </optgroup>
         </select>
       </div>
