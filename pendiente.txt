@@ -3,7 +3,7 @@ ingresar motivo de anulacion de una comanda
 ingreso de mercancia a traves de lector de codigo de barras
 Productos con varios codigos de barra
 reporte de inventario (ventas por productos)
-
+reabrir pedidos cerrados
 
 reporte de ventas por articulo
 En la pantalla de cocina mostrar la presentacion y receta del producto

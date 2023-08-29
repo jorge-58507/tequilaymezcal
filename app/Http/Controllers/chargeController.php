@@ -507,7 +507,7 @@ class chargeController extends Controller
 
     public function report ($from,$to){
         $rs = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable','tm_charges.tx_charge_taxable','tm_charges.tx_charge_discount','tm_charges.tx_charge_tax','tm_charges.tx_charge_total','tm_charges.tx_charge_change','tm_charges.created_at')->join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->get();
-        $rs_paymentmethod = tm_charge::select('tm_payments.payment_ai_paymentmethod_id','tm_payments.tx_payment_amount','tm_payments.tx_payment_number','tm_charges.created_at')->join('tm_payments','tm_payments.payment_ai_charge_id','tm_charges.ai_charge_id')->where('tm_charges.created_at','>=',date('Y-m-d h:i:s',strtotime($from)))->where('tm_charges.created_at','<=',date('Y-m-d h:i:s',strtotime($to)))->get();
+        $rs_paymentmethod = tm_charge::select('tm_payments.payment_ai_paymentmethod_id','tm_payments.tx_payment_amount','tm_payments.tx_payment_number','tm_charges.created_at')->join('tm_payments','tm_payments.payment_ai_charge_id','tm_charges.ai_charge_id')->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->get();
 
         return [ 'list' => $rs, 'paymentmethod' => $rs_paymentmethod ];
     }
