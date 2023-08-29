@@ -131,10 +131,12 @@ class class_report
     var total_nontaxable = 0;
     var total_taxable = 0;
     var total_tax = 0;
+    var total_change = 0;
     raw_charge.map((charge) => {
       total_nontaxable += charge.tx_charge_nontaxable;
       total_taxable += charge.tx_charge_taxable;
       total_tax += charge.tx_charge_tax;
+      total_change += charge.tx_charge_change;
     })
 
     var cn_nontaxable = 0;
@@ -194,7 +196,7 @@ class class_report
       <div class="row">
         <div class="col-sm-3">
           <strong>Efectivo</strong><br>
-          B/ ${cls_general.val_price(raw_paymenttotal[1], 2, 1, 1) }
+          B/ ${cls_general.val_price(raw_paymenttotal[1]-total_change, 2, 1, 1) }
         </div>
         <div class="col-sm-3">
           <strong>Cheque</strong><br>
