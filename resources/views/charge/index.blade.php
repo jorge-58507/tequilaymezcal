@@ -383,6 +383,81 @@
     </div>
   </div>
 
+  <!-- Modal LOGIN TO PRINT -->
+  <div class="modal fade" id="print_chargeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="print_chargeModal_title">Ingresar Usuario</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="print_chargeModal_content" class="modal-body">
+          <p>Ingrese una contrase&ntilde;a de administrador o supervisor.</p>
+          <div class="form-group row">
+              <label for="useremailReprint" class="col-md-4 col-form-label text-md-right">{{ __('Correo E.') }}</label>
+              <div class="col-md-6 mb-3">
+                  <input id="hd_charge" type="hidden" class="form-control" required autocomplete="email" autofocus>
+                  <input id="useremailReprint" type="email" class="form-control" name="useremailReprint" required autocomplete="email" autofocus>
+              </div>
+          </div>
+          <div class="form-group row">
+              <label for="userpasswordReprint" class="col-md-4 col-form-label text-md-right">{{ __('Contraseña') }}</label>
+              <div class="col-md-6 mb-3">
+                  <input id="userpasswordReprint" type="password" class="form-control" name="userpasswordReprint" required autocomplete="current-password">
+              </div>
+          </div>
+          <div class="form-group row mb-0">
+              <div class="col-md-12 text-center">
+                  <button type="button" id="btn_loginuser_reprint" class="btn tmgreen_bg">
+                      {{ __('Ingresar') }}
+                  </button>
+              </div>
+          </div>
+        </div>
+        <div id="print_chargeModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal LOGIN TO CREDITNOTE -->
+  <div class="modal fade" id="login_creditnoteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="">Ingresar Usuario</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="" class="modal-body">
+          <p>Ingrese una contrase&ntilde;a de administrador o supervisor.</p>
+          <div class="form-group row">
+              <label for="useremailCreditnote" class="col-md-4 col-form-label text-md-right">{{ __('Correo E.') }}</label>
+              <div class="col-md-6 mb-3">
+                  <input id="hd_charge_creditnote" type="hidden" class="form-control" required autocomplete="email" autofocus>
+                  <input id="useremailCreditnote" type="email" class="form-control" name="useremailCreditnote" required autocomplete="email" autofocus>
+              </div>
+          </div>
+          <div class="form-group row">
+              <label for="userpasswordCreditnote" class="col-md-4 col-form-label text-md-right">{{ __('Contraseña') }}</label>
+              <div class="col-md-6 mb-3">
+                  <input id="userpasswordCreditnote" type="password" class="form-control" name="userpasswordCreditnote" required autocomplete="current-password">
+              </div>
+          </div>
+          <div class="form-group row mb-0">
+              <div class="col-md-12 text-center">
+                  <button type="button" id="btn_loginuser_creditnote" class="btn tmgreen_bg">
+                      {{ __('Ingresar') }}
+                  </button>
+              </div>
+          </div>
+        </div>
+        <div id="" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 	<div id="container_request" class="row"></div>
 
 @endsection
@@ -438,6 +513,8 @@
     document.getElementById('cashoutputDatefilter').value = cls_general.date_converter('ymd','dmy', fecha[0]);
     document.getElementById('cashoutputDateshow').innerHTML = cls_general.date_converter('ymd','dmy', fecha[0]);
     document.getElementById('btn_saveCashregister').addEventListener('click',() => { cls_cashregister.save(); });
+    document.getElementById('btn_loginuser_reprint').addEventListener('click',() => { cls_charge.checklogin_reprint(); });
+    document.getElementById('btn_loginuser_creditnote').addEventListener('click',() => { cls_charge.checklogin_creditnote(); });
 
 	</script>
 	{{-- ##############    JQUERY   ############### --}}

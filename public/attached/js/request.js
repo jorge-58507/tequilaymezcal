@@ -112,7 +112,7 @@ class class_request {
             </div>
           </div>
           <div class="col-md-8 col-lg-3 pt-2">
-            <select class="form-select" id="requestStatus">
+            <select class="form-select" id="requestStatus" onchange="cls_request.filter(document.getElementById('requestFilter').value)">
               <option value="0" selected>Abierto</option>
               <option value="1">Cerrado</option>
               <option value="2">Cobrada</option>
@@ -161,7 +161,7 @@ class class_request {
   generate_closedrequest(open) {
     var content = '<ul class="list-group">';
     open.map((request) => {
-      content += `<li class="list-group-item cursor_pointer"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5><small>${request.tx_request_title} - ${request.tx_table_value} (${cls_general.time_converter(request.created_at)})</small></li>`;
+      content += `<li class="list-group-item cursor_pointer" onclick="cls_request.reopenRequest('${request.tx_request_slug}')"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5><small>${request.tx_request_title} - ${request.tx_table_value} (${cls_general.time_converter(request.created_at)})</small></li>`;
     })
     content += '</ul>';
     return content;
@@ -229,6 +229,23 @@ class class_request {
       var table_slug = obj.data.table.tx_table_slug;
       cls_command.command_procesed = obj.data.command_procesed;
       cls_request.render_request(obj.data.request, table_slug);
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  reopenRequest(request_slug)  {
+    var url = '/request/' + request_slug + '/open/';
+    var method = 'POST';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_request.open_request = obj.data.open_request;
+        cls_request.closed_request = obj.data.closed_request;
+        cls_request.canceled_request = obj.data.canceled_request;
+
+        cls_request.showByRequest(request_slug);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
@@ -363,9 +380,7 @@ class class_request {
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-
   }
-
 }
 class class_article {
   constructor(article_list){
@@ -962,7 +977,7 @@ class class_command{
         raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
         var bg_status = '';
         var btn = `
-          <button type="button" class="btn btn-secondary" onclick="event.preventDefault(); cls_command.cancel(${command.ai_commanddata_id})">Anular</button>
+          <button type="button" class="btn btn-secondary" onclick="event.preventDefault(); cls_command.loginuser_cancel(${command.ai_commanddata_id})">Anular</button>
         `;
       }
       var recipe = JSON.parse(command.tx_commanddata_recipe);
@@ -1171,6 +1186,42 @@ class class_command{
     if (Modal != null) {
       Modal.hide();
     }
+
+  }
+
+  loginuser_cancel(commanddata_id) {
+    document.getElementById('hd_command_cancel').value = commanddata_id;
+
+    const modal = new bootstrap.Modal('#login_cancelModal', {})
+    modal.show();
+    setTimeout(() => {
+      document.getElementById('useremailCancel').focus();
+    }, 1000);
+  }
+  checklogin_cancel() {
+    var email = document.getElementById('useremailCancel').value;
+    var password = document.getElementById('userpasswordCancel').value;
+    var commanddata_id = document.getElementById('hd_command_cancel').value;
+
+    if (cls_general.is_empty_var(email) === 0 || cls_general.is_empty_var(password) === 0) {
+      cls_general.shot_toast_bs("Ingrese el usuario y contraseña");
+    }
+    var url = '/checklogin_cancel/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: email, b: password });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_command.cancel(commanddata_id);
+        document.getElementById('useremailCancel').value = '';
+        document.getElementById('userpasswordCancel').value = '';
+
+        const modal_inspect = bootstrap.Modal.getInstance('#login_cancelModal');
+        modal_inspect.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
 
   }
   cancel(commanddata_id){

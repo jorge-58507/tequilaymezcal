@@ -775,6 +775,9 @@ class class_product{
             <div class="col-xs-12">
               <h5>Listado de Productos</h5>
             </div>
+            <div class="col-xs-12">
+              <input type="text" class="form-control" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_product.filter(this.value,20)" placeholder="Buscar producto por nombre, referencia o c&oacute;digo" >
+            </div>
             <div id="container_productList" class="col-xs-12 border-top">
               ${list}
             </div>

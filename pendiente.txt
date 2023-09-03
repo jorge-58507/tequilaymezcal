@@ -4,7 +4,11 @@ ingreso de mercancia a traves de lector de codigo de barras
 Productos con varios codigos de barra
 reporte de inventario (ventas por productos)
 reabrir pedidos cerrados
+EDITAR LAS RECETAS DE LOS ARTICULOS para no tener que recomenzar cada vez
+mermas por articulos
 
+
+reabrir ordees
 reporte de ventas por articulo
 En la pantalla de cocina mostrar la presentacion y receta del producto
 verificar las anulaciones

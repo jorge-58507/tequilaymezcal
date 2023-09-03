@@ -27,7 +27,7 @@ Route::get('/report', function () {
     return view('report.index');
 })->middleware('auth');
 
-Route::get('test/{param}', 'cashregisterController@print_rollpaper_cashregister');
+Route::get('test/{param_a}/{param_b}', 'userController@check_user');
 
 
 Route::get('configuration', 'configurationController@index')->middleware('auth');
@@ -61,6 +61,10 @@ Route::post('/paymentprovider/productinput', 'paymentproviderController@create')
 Route::post('/report/show', 'reportController@show');
 Route::post('/article/product', 'articleproductController@save');
 Route::post('/articleproduct/', 'articleproductController@store');
+Route::post('/request/{param}/open', 'requestController@reopen');
+Route::post('/checklogin_reprint/', 'chargeController@checklogin_reprint');
+Route::post('/checklogin_creditnote/', 'chargeController@checklogin_creditnote');
+Route::post('/checklogin_cancel/', 'commanddataController@checklogin_cancel');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
@@ -106,6 +110,7 @@ Route::resource('user', 'userController')->middleware('auth');
 
 // PRINT
 Route::get('print_cashregister/{param}', 'cashregisterController@print_rollpaper_cashregister');
+Route::get('print_commanddata/{param}', 'cashregisterController@print_cashregister_commanddata');
 Route::get('print_requisition/{param}', 'printController@print_requisition');
 Route::get('print_productoutput/{param}', 'printController@print_productoutput');
 Route::get('print_paymentprovider/{param}', 'printController@print_paymentprovider');

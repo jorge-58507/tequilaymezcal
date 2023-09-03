@@ -77,6 +77,42 @@
       </div>
     </div>
   </div>
+  <!-- Modal LOGIN TO CREDITNOTE -->
+  <div class="modal fade" id="login_cancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="">Ingresar Usuario</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="" class="modal-body">
+          <p>Ingrese una contrase&ntilde;a de administrador o supervisor.</p>
+          <div class="form-group row">
+              <label for="useremailCancel" class="col-md-4 col-form-label text-md-right">{{ __('Correo E.') }}</label>
+              <div class="col-md-6 mb-3">
+                  <input id="hd_command_cancel" type="hidden" class="form-control" required autocomplete="email" autofocus>
+                  <input id="useremailCancel" type="email" class="form-control" name="useremailCancel" required autocomplete="email" autofocus>
+              </div>
+          </div>
+          <div class="form-group row">
+              <label for="userpasswordCancel" class="col-md-4 col-form-label text-md-right">{{ __('Contraseña') }}</label>
+              <div class="col-md-6 mb-3">
+                  <input id="userpasswordCancel" type="password" class="form-control" name="userpasswordCancel" required autocomplete="current-password">
+              </div>
+          </div>
+          <div class="form-group row mb-0">
+              <div class="col-md-12 text-center">
+                  <button type="button" id="btn_loginuser_cancel" class="btn tmgreen_bg">
+                      {{ __('Ingresar') }}
+                  </button>
+              </div>
+          </div>
+        </div>
+        <div id="" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
 
 	<div id="container_request" class="row"></div>
 
@@ -123,6 +159,7 @@
       }, 60000);
 		});
 
+    document.getElementById('btn_loginuser_cancel').addEventListener('click',() => { cls_command.checklogin_cancel(); });
 
 	</script>
 	{{-- ##############    JQUERY   ############### --}}

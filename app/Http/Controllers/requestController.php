@@ -242,4 +242,11 @@ class requestController extends Controller
         $raw_request = $this->getAll();
         return response()->json(['status'=>'success','message'=>'','data'=>['open_request'=>$raw_request['open_request'], 'closed_request'=>$raw_request['closed_request'], 'canceled_request'=>$raw_request['canceled_request']]]);
     }
+    public function reopen($request_slug){
+        tm_request::where('tx_request_slug',$request_slug)->update(['tx_request_status'=>0]);
+        
+        $raw_request = $this->getAll();
+        return response()->json(['status'=>'success','message'=>'','data'=>['open_request'=>$raw_request['open_request'], 'closed_request'=>$raw_request['closed_request'], 'canceled_request'=>$raw_request['canceled_request']]]);
+    }
+
 }

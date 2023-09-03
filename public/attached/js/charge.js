@@ -643,8 +643,45 @@ class class_charge{
     document.getElementById('inspectModal_footer').innerHTML = footer;
     document.getElementById('inspectModal_title').innerHTML = 'Inspeccionar Venta';
 
-    document.getElementById('btn_chargeCreditnote').addEventListener('click', () => { cls_charge.make_creditnote(charge_slug); });
-    document.getElementById('btn_chargePrint').addEventListener('click', () => { cls_charge.print(charge_slug); });
+    document.getElementById('btn_chargeCreditnote').addEventListener('click', () => { cls_charge.loginuser_creditnote(charge_slug); });
+    document.getElementById('btn_chargePrint').addEventListener('click', () => { cls_charge.loginuser_reprint(charge_slug); });
+  }
+  loginuser_creditnote(charge_slug) {
+    document.getElementById('hd_charge_creditnote').value = charge_slug;
+    const modal_inspect = bootstrap.Modal.getInstance('#inspectModal');
+    modal_inspect.hide();
+
+    const modal = new bootstrap.Modal('#login_creditnoteModal', {})
+    modal.show();
+    setTimeout(() => {
+      document.getElementById('useremailCreditnote').focus();
+    }, 1000);
+  }
+  checklogin_creditnote() {
+    var email = document.getElementById('useremailCreditnote').value;
+    var password = document.getElementById('userpasswordCreditnote').value;
+    var charge_slug = document.getElementById('hd_charge_creditnote').value;
+
+    if (cls_general.is_empty_var(email) === 0 || cls_general.is_empty_var(password) === 0) {
+      cls_general.shot_toast_bs("Ingrese el usuario y contraseña");
+    }
+    var url = '/checklogin_creditnote/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: email, b: password });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_charge.make_creditnote(charge_slug);
+        document.getElementById('useremailCreditnote').value = '';
+        document.getElementById('userpasswordCreditnote').value = '';
+
+        const modal_inspect = bootstrap.Modal.getInstance('#login_creditnoteModal');
+        modal_inspect.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
   }
   make_creditnote(charge_slug){
     var url = '/paydesk/' + charge_slug +'/creditnote';
@@ -682,6 +719,44 @@ class class_charge{
     cls_general.async_laravel_request(url, method, funcion, body);
 
   }
+
+  loginuser_reprint(charge_slug){
+    document.getElementById('hd_charge').value = charge_slug;
+    const modal_inspect = bootstrap.Modal.getInstance('#inspectModal');
+    modal_inspect.hide();
+
+    const modal = new bootstrap.Modal('#print_chargeModal', {})
+    modal.show();
+    setTimeout(() => {
+      document.getElementById('useremailReprint').focus();
+    }, 1000);
+  }
+  checklogin_reprint() {
+    var email = document.getElementById('useremailReprint').value;
+    var password = document.getElementById('userpasswordReprint').value;
+    var charge_slug = document.getElementById('hd_charge').value;
+
+    if (cls_general.is_empty_var(email) === 0 || cls_general.is_empty_var(password) === 0) {
+      cls_general.shot_toast_bs("Ingrese el usuario y contraseña");
+    }
+    var url = '/checklogin_reprint/';
+    var method = 'POST';
+    var body = JSON.stringify({a: email, b: password});
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_charge.print(charge_slug);
+        document.getElementById('useremailReprint').value = '';
+        document.getElementById('userpasswordReprint').value = '';
+
+        const modal_inspect = bootstrap.Modal.getInstance('#print_chargeModal');
+        modal_inspect.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+  }
   print(charge_slug){
     // cls_general.print_html('/print_charge/' + charge_slug);
     var url = '/print_charge/'+charge_slug;
@@ -695,8 +770,8 @@ class class_charge{
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-
   }
+
   create_discount(request_slug){
     swal({
       title: 'Porcentaje de Descuento',
@@ -1345,53 +1420,25 @@ class class_creditnote{
       cls_general.shot_toast_bs('Debe incluir productos.', { bg: 'text-bg-warning' }); return false;
     }
 
-    swal({
-      title: "Contraseña",
-      text: "Ingrese la clave para Notas de Crédito.",
+    var reason = document.getElementById('creditnoteReason').value;
+    var url = '/creditnote/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: charge_slug, b: cls_creditnote.selected, c: reason });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_creditnote.selected = [];
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+        cls_charge.index();
+        cls_request.render('open', cls_request.open_request);
+        cls_request.render('closed', cls_request.closed_request);
+        cls_request.render('canceled', cls_charge.charge_list);
 
-      content: {
-        element: "input",
-        attributes: {
-          placeholder: "Contraseña",
-          type: "password",
-        },
-      },
-    })
-    .then((password) => {
-      if (cls_general.is_empty_var(password) === 0) {
-        return swal("Debe ingresar la contraseña.");
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
-      if (password != cls_creditnote.pass) {
-        return swal("La contraseña no coincide.");
-      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
 
-
-
-      var reason = document.getElementById('creditnoteReason').value;
-      var url = '/creditnote/';
-      var method = 'POST';
-      var body = JSON.stringify({ a: charge_slug, b: cls_creditnote.selected, c: reason });
-      var funcion = function (obj) {
-        if (obj.status === 'success') {
-          cls_creditnote.selected = [];
-          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-          cls_charge.index();
-          cls_request.render('open', cls_request.open_request);
-          cls_request.render('closed', cls_request.closed_request);
-          cls_request.render('canceled', cls_charge.charge_list);
-
-        } else {
-          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-        }
-      }
-      cls_general.async_laravel_request(url, method, funcion, body);
-
-
-
-
-
-
-    });
 
   }
   generate_creditnote(raw_creditnote) {
@@ -1544,15 +1591,23 @@ class class_cashregister{
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
               <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
               <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-            </svg>
+            </svg><br/> Reimprimir
           </button>
           &nbsp;&nbsp;
           <button class="badge btn btn-info" onclick="cls_cashregister.show(${cashregister['ai_cashregister_id']})">
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
               <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
               <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
-            </svg>
+            </svg><br/> Ver
           </button>
+          &nbsp;&nbsp;
+          <button class="badge btn btn-warning" onclick="cls_cashregister.print_commanddata(${cashregister['ai_cashregister_id']})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+              <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+              <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+            </svg><br/> Comandas
+          </button>
+          &nbsp;&nbsp;
 
         </li>
       `;
@@ -1575,6 +1630,22 @@ class class_cashregister{
 
     // cls_general.print_html('/print_cashregister/'+cashregister_id);
   }
+  print_commanddata(cashregister_id) {
+    var url = '/print_commanddata/' + cashregister_id;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+    // cls_general.print_html('/print_cashregister/'+cashregister_id);
+  }
+
   create(){
     var today = cls_general.getDate();
     var url = '/charge/' + today[0] +'/cashregister';
@@ -1726,8 +1797,6 @@ class class_cashregister{
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-  }
-  print(cashregister_id){
   }
   generate_inspectedCR(cashregister,payment,canceled,giftcard){
     var title = 'Arqueo del '+cls_general.datetime_converter(cashregister.created_at)+' a las '+cls_general.time_converter(cashregister.created_at);

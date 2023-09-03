@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Auth;
 use Illuminate\Http\Request;
 use App\user;
+use Illuminate\Database\Eloquent\Builder;
 
 
 class userController extends Controller
@@ -95,5 +96,23 @@ class userController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function check_user($email,$password, $raw_role)
+    {
+        $rs_user = User::select('users.name')->join('role_users','role_users.user_id','users.id')->join('roles','roles.id','role_users.role_id')->wherein('roles.name',$raw_role)->get();
+        $raw_user = [];
+        foreach ($rs_user as $value) {
+            array_push($raw_user,$value['name']);
+        }
+        if (Auth::once([
+            'email' => $email, 
+            'password' => $password, 
+            'name' => $raw_user
+        ])) {
+            return ["check" => 1,"user" => json_encode($raw_user)];
+        }else{
+            return ["check" => 0];
+        }
     }
 }

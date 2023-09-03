@@ -142,9 +142,216 @@ class chargeController extends Controller
             $qry_giftcard->update(['tx_giftcard_amount' => ($rs_giftcard['tx_giftcard_amount'] - $payment['amount'])]);
         }
         $charge_data = $this->showIt($charge_slug);
-        $this->print_receipt($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
+        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
+        // $this->print_receipt($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
 
         return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
+    }
+
+    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change){
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $printer = new Printer($connector);
+
+        /* Information for the receipt */
+        
+        // ############ COMANDA  ############
+
+        /* Start the printer */
+        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
+        // $printer = new Printer($connector);
+        
+        // PRINT TOP DATE
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> text(date('d-m-Y')."\n");
+
+        /* Print top logo */
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> bitImage($logo);
+        
+        /* Name of shop */
+        $printer -> text("Cancino Nuñez, S.A.\n");
+        $printer -> text("155732387-2-2023 DV 14.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> feed();
+        
+        /* Title of receipt */
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("Facturación #".$number."\n");
+        $printer -> setEmphasis(false);
+
+        /* Client Info */
+        $printer -> selectPrintMode();
+        $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
+        $printer -> text("Cliente: ".$client_name."\n");
+        $printer -> text("RUC: ".$client_ruc."\n");
+
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("COMANDA\n");
+        $printer -> selectPrintMode();
+        $printer -> setJustification(Printer::JUSTIFY_LEFT);
+
+        $printer -> feed(2);
+        
+        /* Items */
+        $printer -> text("Articulos de la Comanda.\n");
+
+        $content_observation = '';
+        $last_observation = '';
+        $command_id = 0 ;
+        foreach ($raw_item as $item) {
+            if ($item['tx_commanddata_status'] === 1) {  
+                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
+                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+
+                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+                foreach ($raw_recipe as $ingredient) {
+                    foreach ($ingredient as $k => $formule) {
+                        $splited_formule = explode(",",$formule);
+                        if ($splited_formule[3] === 'show') {
+                            $ing = explode(")",$k,2);
+                            $printer -> text('   -'.$ing[1]."\n");
+                        }
+                    }
+                }
+                if (strlen($content_observation) > 0) {
+                    $position = strpos($content_observation,$item['tx_command_observation']);
+                    if ($position === false) {
+                        $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
+                        $content_observation .= $item['tx_command_observation']."\n";
+                    }
+                    $last_observation = "";
+                }else{
+                    $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
+                    $content_observation .= $item['tx_command_observation']."\n";
+                }
+                if ($command_id != $item['ai_command_id']) {
+                    $printer -> text("OBS. ".$last_observation."\n");
+                    $command_id = $item['ai_command_id'];
+                }
+            }
+        }
+
+        /* Cut the receipt */
+        $printer -> cut();
+
+        // ############ RECIBO  ############
+
+        /* Start the printer */
+        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
+        // $printer = new Printer($connector);
+        
+        // PRINT TOP DATE
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> text(date('d-m-Y')."\n");
+
+        /* Print top logo */
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> bitImage($logo);
+        
+        /* Name of shop */
+        $printer -> text("Cancino Nuñez, S.A.\n");
+        $printer -> text("155732387-2-2023 DV 14.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> feed();
+        
+        /* Title of receipt */
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("RECIBO DE FACTURACIÓN #".$number."\n");
+        $printer -> setEmphasis(false);
+
+        /* Client Info */
+        $printer -> selectPrintMode();
+        $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
+        $printer -> text("Cliente: ".$client_name."\n");
+        $printer -> text("RUC: ".$client_ruc."\n");
+        $printer -> feed(2);
+        
+        /* Items */
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> setJustification(Printer::JUSTIFY_LEFT);
+        $printer -> text("Articulos Relacionados.\n");
+
+        $content_observation = '';
+        $last_observation = '';
+        $command_id = 0 ;
+        foreach ($raw_item as $item) {
+            if ($item['tx_commanddata_status'] === 1) {  
+                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
+                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+
+                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+                foreach ($raw_recipe as $ingredient) {
+                    foreach ($ingredient as $k => $formule) {
+                        $splited_formule = explode(",",$formule);
+                        if ($splited_formule[3] === 'show') {
+                            $ing = explode(")",$k,2);
+                            $printer -> text('   -'.$ing[1]."\n");
+                        }
+                    }
+                }
+                if (strlen($content_observation) > 0) {
+                    $position = strpos($content_observation,$item['tx_command_observation']);
+                    if ($position === false) {
+                        $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
+                        $content_observation .= $item['tx_command_observation']."\n";
+                    }
+                    $last_observation = "";
+                }else{
+                    $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
+                    $content_observation .= $item['tx_command_observation']."\n";
+                }
+                if ($command_id != $item['ai_command_id']) {
+                    $printer -> text("OBS. ".$last_observation."\n");
+                    $command_id = $item['ai_command_id'];
+                }
+            }
+        }
+
+        $printer -> feed(2);
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("Subtotal. B/ ".number_format($subtotal,2)."\n");
+        $printer -> setEmphasis(false);
+        
+        /* Tax and total */
+        $printer -> text("Descuento. B/ ".number_format($discount,2)."\n");
+        $printer -> text("ITBMS. B/ ".number_format($tax,2)."\n");
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("TOTAL. B/ ".number_format($total,2)."\n");
+        $printer -> selectPrintMode();
+        $printer -> feed(1);
+        $printer -> text("Pagos Relacionados.\n");
+        foreach ($raw_payment as $payment) {
+            $printer -> text($payment['tx_paymentmethod_value'].": ".number_format($payment['tx_payment_amount'],2)."\n");
+        }
+        $printer -> text("Cambio: ".number_format($change,2)."\n");
+
+        /* Footer */
+        $printer -> feed(2);
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> text("Gracias por su compra en Jade Café\n");
+        $printer -> text("Lo esperamos pronto.\n");
+        $printer -> feed(2);
+        
+        /* Cut the receipt and open the cash drawer */
+        $printer -> cut();
+        $printer -> pulse();
+        
+        $printer -> close();
     }
 
     public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change){
@@ -621,6 +828,29 @@ class chargeController extends Controller
         
         $printer -> close();
 
+    }
+
+    public function checklogin_reprint(Request $request){
+        // ESTA FUNCION LLAMA AL CHECKLOGIN DE USER para corroborar que lo indicado es correcto y devuelve un JSON
+        
+        $userController = new userController;
+        $login = $userController->check_user($request->input('a'),$request->input('b'), ['admin','super']);
+        if($login['check'] === 1){
+            return response()->json(['status'=>'success']);
+        }else{
+            return response()->json(['status'=>'failed','message'=>'Los datos no coinciden.']);
+        }
+        
+    }
+
+    public function checklogin_creditnote(Request $request){
+        $userController = new userController;
+        $login = $userController->check_user($request->input('a'),$request->input('b'), ['admin','super']);
+        if($login['check'] === 1){
+            return response()->json(['status'=>'success']);
+        }else{
+            return response()->json(['status'=>'failed','message'=>'Los datos no coinciden.']);
+        }
     }
 
 }

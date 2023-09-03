@@ -508,7 +508,7 @@ class class_report
         <a href="#" class="list-group-item  cursor_pointer text-truncate">
           <div class="d-flex w-100 justify-content-between">
             <h5 class="mb-1">${annuled.tx_commanddata_quantity} - ${annuled.tx_commanddata_description}</h5>
-            <small>${cls_general.datetime_converter(annuled.created_at)}</small>
+            <small>${cls_general.datetime_converter(annuled.created_at)} ${cls_general.time_converter(annuled.created_at,1)}</small>
           </div>
         </a>
       `;

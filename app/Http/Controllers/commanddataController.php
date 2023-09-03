@@ -72,5 +72,15 @@ class commanddataController extends Controller
 
         return [ 'list' => $rs ];
     }
+    public function checklogin_cancel(Request $request){
+        $userController = new userController;
+        $login = $userController->check_user($request->input('a'),$request->input('b'), ['admin','super']);
+        if($login['check'] === 1){
+            return response()->json(['status'=>'success']);
+        }else{
+            return response()->json(['status'=>'failed','message'=>'Los datos no coinciden.']);
+        }
+    }
+
     
 }
