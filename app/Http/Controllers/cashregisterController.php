@@ -315,67 +315,7 @@ class cashregisterController extends Controller
         $printer -> feed(3);
 
         /* Cut the receipt */
-        $printer -> cut();
-        
-        
-        // ########## LISTADO DE ARTICULOS
-        
-        $rs = tm_commanddata::select('tm_commanddatas.created_at','tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.tx_commanddata_price','tm_commanddatas.commanddata_ai_article_id','tm_commanddatas.tx_commanddata_description','tm_commanddatas.commanddata_ai_presentation_id','tm_presentations.tx_presentation_value')
-        ->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')
-        ->join('tm_commands','tm_commands.ai_command_id','tm_commanddatas.commanddata_ai_command_id')
-        ->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')
-        ->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')
-        ->where('tm_charges.charge_ai_cashregister_id', $cashregister_id)->get();
-        
-        $list = '';
-        $raw_report = [];
-
-        foreach ($rs as $commanddata) {
-            /* VERIFICA SI el articulo ya fue ingresado al listado */ 
-            $already = 0;
-            if (count($raw_report) > 0) {
-                foreach ($raw_report as $key => $line) {
-                    if ($line['article_id'] === $commanddata['commanddata_ai_article_id'] && $line['presentation_id'] === $commanddata[commanddata_ai_presentation_id]) {
-                        $already = 1;
-                        break;
-                    }
-                }
-            }
-            if ($already = 1) {
-                $raw_report[$key]['quantity'] += $commanddata['tx_commanddata_quantity'];
-            }else{
-                array_push($raw_report,[
-                    'article_id' => $commanddata['commanddata_ai_article_id'], 
-                    'quantity' => $commanddata['tx_commanddata_quantity'], 
-                    'article_description' => $commanddata['tx_commanddata_description'], 
-                    'presentation_value' => $commanddata['tx_presentation_value'], 
-                    'presentation_id' => $commanddata['commanddata_ai_presentation_id'], 
-                    'price' => $commanddata['tx_commanddata_price'] 
-                ]);
-            }
-        }
-        
-        /* Title of receipt */
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-        $printer -> setEmphasis(true);
-        $printer -> text("CIERRE DE CAJA ".date('d-m-Y h:i s', strtotime($rs_cashregister['cashregister']['created_at']))."\n");
-        $printer -> setEmphasis(false);
-        $printer -> feed(2);
-        $printer -> text("LISTADO DE COMANDAS \n");
-        $printer -> selectPrintMode();
-        $printer -> feed(2);
-
-        foreach ($raw_report as $value) {
-            $printer -> text($value['quantity']." - ".$value['article_description']." (".$value['presentation_value'].") ".$value['price']."\n");
-        }
-        
-        $printer -> feed(3);
-
-        /* Cut the receipt */
-        $printer -> cut();
-
-        
-        
+        $printer -> cut();        
         $printer -> close();
 
         return response()->json(['status'=>'success','message'=>'Reporte Impreso.']);
