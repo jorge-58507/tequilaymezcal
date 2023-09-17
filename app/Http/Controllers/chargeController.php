@@ -204,7 +204,13 @@ class chargeController extends Controller
         foreach ($raw_item as $item) {
             if ($item['tx_commanddata_status'] === 1) {  
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
+                $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+                $printer -> setEmphasis(true);
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+                $printer -> setEmphasis(false);
+                $printer -> selectPrintMode();
+
+
 
                 $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
                 foreach ($raw_recipe as $ingredient) {

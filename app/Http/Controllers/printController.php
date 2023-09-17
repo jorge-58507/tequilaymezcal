@@ -1179,7 +1179,7 @@ class printController extends Controller
 		$total = 0;
 		foreach ($raw_report as $value) {
 			$data_content .= '
-				<tr>
+				<tr class="bs_1">
 					<td class="text_center">'.$value['quantity'].'</td>
 					<td class="">'.$value['product_description'].'</td>
 					<td class="text_center">'.$value['measure_value'].'</td>
@@ -1190,7 +1190,6 @@ class printController extends Controller
 		}
 		$content = '
 			<div>
-			
 				<h4>Listado de Productos Comprados, Desde: '.date('d-m-Y',strtotime($from)).' Hasta: '.date('d-m-Y',strtotime($to)).'</h4>
 				<table class="table h_70">
 					<thead>
