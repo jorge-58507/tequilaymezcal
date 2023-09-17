@@ -1,10 +1,11 @@
 agregar roles eliminar roles y funciones de actualizar la informacion
 ingreso de mercancia a traves de lector de codigo de barras
 Productos con varios codigos de barra
-reporte de inventario (compras por productos)
 EDITAR LAS RECETAS DE LOS ARTICULOS para no tener que recomenzar cada vez
-Imprimir nc <- PROBAR
+en la comanda impresa incrementar el tamaño a las cantidades
 
+Imprimir nc <- PROBAR
+reporte de inventario (compras por productos)
 eN PROVEEDOR, EN EL LISTADO DE FACTURAS COMPRADAS, MOSTRAR EL TOTAL COMPRADO
 reabrir pedidos cerrados
 mermas por articulos
