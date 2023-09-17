@@ -57,7 +57,17 @@ class datacreditnoteController extends Controller
      */
     public function show($id)
     {
-        //
+    }
+    public function getIt($id)
+    {
+        $rs = tm_datacreditnote::select('tm_articles.tx_article_code','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_price','tm_commanddatas.tx_commanddata_quantity','tm_presentations.tx_presentation_value')
+        ->join('tm_commanddatas','tm_commanddatas.ai_commanddata_id','tm_datacreditnotes.datacreditnote_ai_commanddata_id')
+        ->join('tm_creditnotes','tm_creditnotes.ai_creditnote_id','tm_datacreditnotes.datacreditnote_ai_creditnote_id')
+        ->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')
+        ->join('tm_presentations','tm_presentations.ai_presentation_id','tm_datacreditnotes.datacreditnote_ai_presentation_id')
+        ->where('ai_creditnote_id',$id)->get();
+
+        return $rs;
     }
 
     /**

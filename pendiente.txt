@@ -1,13 +1,13 @@
 agregar roles eliminar roles y funciones de actualizar la informacion
-ingresar motivo de anulacion de una comanda
 ingreso de mercancia a traves de lector de codigo de barras
 Productos con varios codigos de barra
-reporte de inventario (ventas por productos)
-reabrir pedidos cerrados
+reporte de inventario (compras por productos)
 EDITAR LAS RECETAS DE LOS ARTICULOS para no tener que recomenzar cada vez
+Imprimir nc <- PROBAR
+
+eN PROVEEDOR, EN EL LISTADO DE FACTURAS COMPRADAS, MOSTRAR EL TOTAL COMPRADO
+reabrir pedidos cerrados
 mermas por articulos
-
-
 reabrir ordees
 reporte de ventas por articulo
 En la pantalla de cocina mostrar la presentacion y receta del producto

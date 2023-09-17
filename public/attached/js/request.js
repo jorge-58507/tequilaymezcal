@@ -777,21 +777,6 @@ class class_command{
       
       var content_recipe = cls_command.generate_recipe_option(obj.data.articleproduct);
 
-      // var article_product = obj.data.articleproduct; //SELECT PARA LAS RECETAS
-      // var content_recipe = '';
-      // article_product.map((ap,i) => {
-      //   var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
-      //   content_recipe += `
-      //     <div class="col-md-12 col-lg-6">
-      //       <label for="ingredient_${i}">${i+1}.- Ingrediente</label>
-      //       <select class="form-select" id="ingredient_${i}">`;
-      //       raw_ingredient.map((ingredient) => {
-      //         // content_recipe += `<option value="${JSON.stringify(ingredient)}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
-      //         content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
-      //       })
-      //   content_recipe += `</select></div>`;
-      // })
-
       var content = `
         <div class="row">
           <div class="col-md-12 col-lg-4">
@@ -1055,7 +1040,7 @@ class class_command{
     if (cls_general.is_empty_var(request_slug) === 0) {
       const Modal = bootstrap.Modal.getInstance('#commandModal');
       Modal.hide();
-
+      cls_general.disable_submit(document.getElementById('commandModal'));
       swal({
         title: 'Titulo',
         text: "Puede ingresar un nombre para este pedido o dejarlo en blanco.",

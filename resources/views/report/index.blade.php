@@ -33,6 +33,7 @@
             <option value="6">Merma</option>
             <option value="7">Comanda Anulada</option>
             <option value="8">Ventas por Art&iacute;culos</option>
+            <option value="9">Compras por Producto</option>
           </optgroup>
         </select>
       </div>
@@ -59,12 +60,14 @@
 	
 	<script type="text/javascript">
 		var cls_report = new class_report();
+		var cls_commanddata = new class_commanddata();
+		var cls_dataproductinput = new class_dataproductinput();
 
     $( function() {
       var dateFormat = "mm/dd/yy",
         from = $( "#reportFromDatefilter" )
           .datepicker({
-            defaultDate: "+1w",
+            defaultDate: "today",
             changeMonth: true,
             numberOfMonths: 1
           })

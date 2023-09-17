@@ -426,7 +426,7 @@ class general_funct {
     }
     return answer;
   }
-  val_price(str, decimal, refill, split) {
+  val_price(str, decimal=2, refill=1, split=1) {
     //decimal = cantidad de decimales permitidos
     //refill  = rellenar la cantidad de decimales con ceros
     //split   = hay que cortar el string al limite indicado

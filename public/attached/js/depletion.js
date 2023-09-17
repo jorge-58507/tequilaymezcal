@@ -62,6 +62,7 @@ class class_product {
           cls_depletion.selected.push(obj.data.product);
 
           var selected = cls_depletion.generate_selected(cls_depletion.selected);
+          console.log(obj.data.product);
           document.getElementById('product_selected').innerHTML = selected.content;
         });
       } else {
@@ -96,23 +97,44 @@ class class_article {
   generate_selectablelist(filtered){
     var content = '<ul class="list-group">';
     filtered.map((article) => {
-      content += `<li class="list-group-item cursor_pointer fs_20 text-truncate" onclick="cls_article.add_selected('${article.tx_article_slug}','${article.tx_article_value}')">${article.tx_article_code} - ${article.tx_article_value}</li>`;
+      content += `<li class="list-group-item cursor_pointer fs_20 text-truncate" onclick="cls_article.show_article('${article.tx_article_slug}','${article.tx_article_value}')">${article.tx_article_code} - ${article.tx_article_value}</li>`;
     })
     content += '</ul>';
     return content;
   }
-  add_selected(slug,value){
-    var url = '/depletion/'+slug+'/article';
+  generate_recipe_option(article_product) {
+    var content_recipe = '';
+    article_product.map((ap, i) => {
+      var raw_ingredient = JSON.parse(ap.tx_articleproduct_ingredient);
+      if (raw_ingredient.length > 1) {
+        content_recipe += `
+          <div class="col-md-12 col-lg-6">
+          <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
+          <select class="form-select" name="show" id="ingredient_${i}">`;
+        raw_ingredient.map((ingredient) => {
+          content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+        })
+        content_recipe += `</select></div>`;
+      } else {
+        content_recipe += `
+          <div class="col-md-12 col-lg-6 display_none">
+            <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
+            <select class="form-select" name="noshow" id="ingredient_${i}">`;
+        raw_ingredient.map((ingredient) => {
+          content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+        })
+        content_recipe += `</select></div>`;
+      }
+    })
+    return content_recipe;
+  }
+  modal_set_recipe(presentation_id, article_slug) {
+    var url = '/recipe/' + presentation_id + '/' + article_slug;
     var method = 'GET';
     var body = '';
     var funcion = function (obj) {
       if (obj.status === 'success') {
-        console.log(obj.data.product_list);
-        obj.data.product_list.map((product)=>{
-          cls_depletion.selected.push(product);
-        })
-        var selected = cls_depletion.generate_selected(cls_depletion.selected);
-        document.getElementById('product_selected').innerHTML = selected.content;
+        document.getElementById('container_recipe').innerHTML = cls_article.generate_recipe_option(obj.data.recipe);;
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
@@ -120,6 +142,141 @@ class class_article {
     cls_general.async_laravel_request(url, method, funcion, body);
 
   }
+
+  show_article(article_slug, description) {
+    var url = '/article/' + article_slug; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      var option_presentation = ``; //OPTION PARA LAS PRESENTACIONES DEL ARTICULO, AL CAMBIAR CAMBIAR LOS PRECIOS
+      obj.data.price.map((price) => {
+        option_presentation += `<option alt="${price.tx_price_three},${price.tx_price_two},${price.tx_price_one}" value="${price.ai_presentation_id}">${price.tx_presentation_value}</option>`;
+      })
+
+
+      var content_recipe = cls_article.generate_recipe_option(obj.data.articleproduct);
+
+      var content = `
+        <div class="row">
+          <div class="col-md-12 col-lg-4">
+            <label for="articlePresentation">Presentation</label>
+            <select class="form-select" id="articlePresentation" onchange="cls_article.modal_set_recipe(this.value, '${article_slug}')">
+              ${option_presentation}
+            </select>
+          </div>
+          <div class="col-sm-12">
+            <div id="container_recipe" class="row">
+              ${content_recipe}
+            </div>
+          </div>
+        </div>
+      `;
+      var footer = `
+        <div class="row">
+          <div class="col-sm-12">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" onclick="cls_general.disable_submit(this); cls_article.add_selected('${article_slug}','${description}','${obj.data.article.ai_article_id}');">Guardar</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('commandModal_title').innerHTML = 'Agregar Art&iacute;culo';
+      document.getElementById('commandModal_content').innerHTML = content;
+      document.getElementById('commandModal_footer').innerHTML = footer;
+
+
+      cls_article.modal_set_recipe(obj.data.price[0].ai_presentation_id, article_slug); //OPTION PARA Los PRECIOS DEL ARTICULO
+
+      const Modal = bootstrap.Modal.getInstance('#modalArticleList');
+      if (Modal) {
+        Modal.hide();
+      }
+
+      const modal = new bootstrap.Modal('#commandModal', {})
+      modal.show();
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  add_selected() {
+    var raw_recipe = [];
+    var raw_quantity = [];
+    $('#container_recipe').find('select').each(function () {
+      // var index = $(this.selectedOptions).text();
+      // let show = this.getAttribute("name");
+      var splited = $(this).val().split(',');
+      raw_recipe.push(splited[2])
+      raw_quantity.push(splited[0])
+    });
+
+    var url = '/DepletionByArticle';
+    var method = 'POST';
+    var body = JSON.stringify({ a: raw_recipe });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+
+        obj.data.product_list.map((line, i) => {
+          var product = line;
+          
+          product.tx_articleproduct_quantity = raw_quantity[i];
+          product.articleproduct_ai_product_id = line.ai_product_id;
+          cls_depletion.selected.push(product);
+
+        })
+
+        console.log(cls_depletion.selected);
+        var selected = cls_depletion.generate_selected(cls_depletion.selected);
+        document.getElementById('product_selected').innerHTML = selected.content;
+
+        // obj.data.product.tx_articleproduct_quantity = quantity;
+        // obj.data.product.articleproduct_ai_product_id = obj.data.product.ai_product_id;
+        // cls_depletion.selected.push(obj.data.product);
+
+        
+
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+    console.log(raw_recipe); 
+    // <-- ESTE ARAY CONTIENE LA RECETA CICLAR PARA OBTENER LOS PRODUCTOS CON UN WHERE IN Y LUEGO CICLAR EL RESULTADO PARA AGREGAR CADA LINEA AL ARRAY
+    // var select_presentation = document.getElementById('articlePresentation');
+    // cls_command.command_list.push({
+    //   'article_slug': article_slug,
+    //   'article_id': article_id,
+    //   'article_description': description,
+    //   'quantity': quantity,
+    //   'option': option.slice(0, -1),
+    //   'presentation_id': select_presentation.value,
+    //   'presentation_value': select_presentation.options[select_presentation.selectedIndex].text,
+    //   'price': document.getElementById('articlePrice').value,
+    //   'tax_rate': document.getElementById('articleTaxrate').value,
+    //   'discount_rate': document.getElementById('articleDiscountrate').value,
+    //   'recipe': raw_recipe
+    // });
+    const Modal = bootstrap.Modal.getInstance('#commandModal');
+    Modal.hide();
+  }
+
+  // add_selected(slug,value){
+  //   var url = '/depletion/'+slug+'/article';
+  //   var method = 'GET';
+  //   var body = '';
+  //   var funcion = function (obj) {
+  //     if (obj.status === 'success') {
+  //       obj.data.product_list.map((product)=>{
+  //         cls_depletion.selected.push(product);
+  //       })
+  //       var selected = cls_depletion.generate_selected(cls_depletion.selected);
+  //       document.getElementById('product_selected').innerHTML = selected.content;
+  //     } else {
+  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+  //     }
+  //   }
+  //   cls_general.async_laravel_request(url, method, funcion, body);
+
+  // }
 }
 class class_depletion {
   constructor(raw_processed) {

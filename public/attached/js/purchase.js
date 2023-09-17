@@ -126,14 +126,14 @@ class class_productinput{
   generate_notprocesed(raw_productinput) {
     var content_notprocesed = '<ul class="list-group">';
     raw_productinput.map((productinput) => {
-      content_notprocesed += `<li class="list-group-item cursor_pointer fs_20 text-truncate" onclick="cls_productinput.show_notprocesed('${productinput.tx_productinput_slug}')">${productinput.tx_productinput_number} - ${productinput.tx_provider_value} (${cls_general.datetime_converter(productinput.created_at)})</li>`;
+      content_notprocesed += `<li class="list-group-item cursor_pointer fs_20 text-truncate" onclick="cls_productinput.show_notprocesed('${productinput.tx_productinput_slug}')">${productinput.tx_productinput_number} - ${productinput.tx_provider_value} (${cls_general.datetime_converter(productinput.tx_productinput_date)})</li>`;
     })
     return content_notprocesed += '</ul>';
   }
   generate_processed(raw_productinput) {
     var content_procesed = '<ul class="list-group">';
     raw_productinput.map((productinput) => {
-      content_procesed += `<li class="list-group-item cursor_pointer fs_20 text-truncate" onclick="cls_productinput.show_procesed('${productinput.tx_productinput_slug}')">${productinput.tx_productinput_number} - ${productinput.tx_provider_value}  (${cls_general.datetime_converter(productinput.created_at)})</li>`;
+      content_procesed += `<li class="list-group-item cursor_pointer fs_20 text-truncate" onclick="cls_productinput.show_procesed('${productinput.tx_productinput_slug}')">${productinput.tx_productinput_number} - ${productinput.tx_provider_value}  (${cls_general.datetime_converter(productinput.tx_productinput_date)})</li>`;
 
     })
     return content_procesed += '</ul>';
@@ -141,14 +141,23 @@ class class_productinput{
   render(){
     var opened = cls_productinput.opened;
     var data_productinput = cls_productinput.generate_productlist(opened.dataproductinput,1);
+    var ticket = (cls_general.is_empty_var(opened.info.tx_productinput_ticket) === 0) ? '' : opened.info.tx_productinput_ticket;
     var content = `
       <div class="col-md-12">
         <div class="row">
-          <div class="col-md-12 col-lg-6">
+          <div class="col-12 col-lg-3">
             <label for="providerProductinput" class="form-label">Proveedor</label>
             <input type="text" id="providerProductinput" class="form-control" disabled onclick="cls_productinput.change_provider()" value="${opened.info.tx_provider_value}">
           </div>
-          <div class="col-md-12 col-lg-6">
+          <div class="col-12 col-lg-3">
+            <label for="dateProductinput" class="form-label">Fecha</label>
+            <input type="text" id="dateProductinput" name="dateProductinput"class="form-control" readonly value="${cls_general.date_converter('ymd', 'dmy', opened.info.tx_productinput_date)}" onkeyup="this.value = ''">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label for="ticketProductinput" class="form-label">Ticket Fiscal</label>
+            <input type="text" id="ticketProductinput" class="form-control" readonly value="${ticket}">
+          </div>
+          <div class="col-12 col-lg-3">
             <label for="numberProductinput" class="form-label">Numero</label>
             <span id="numberProductinput" class="form-control">#${opened.info.tx_productinput_number}</span>
           </div>
@@ -212,6 +221,56 @@ class class_productinput{
     document.getElementById('container_purchase').innerHTML = content;
     document.getElementById('processProductinput').addEventListener('click', () => { cls_general.disable_submit(document.getElementById('processProductinput')); cls_productinput.process(document.getElementById('processProductinput').name) });
     document.getElementById('deleteProductinput').addEventListener('click', () =>   { cls_productinput.delete(document.getElementById('processProductinput').name) });
+    document.getElementById('ticketProductinput').addEventListener('click', () => {   
+      swal({
+        title: 'Numero de Factura',
+        text: "Ingrese el numero de ticket fiscal.",
+
+        content: {
+          element: "input",
+          attributes: {
+            type: "text",
+          },
+        },
+      })
+      .then((number) => {
+        if (cls_general.is_empty_var(number) === 0) {
+          return swal("Debe ingresar un numero.");
+        }
+        var url = '/purchase/' + opened.info.tx_productinput_slug + '/ticket';
+        var method = 'PUT';
+        var body = JSON.stringify({ a: number });
+        var funcion = function (obj) {
+          if (obj.status === 'success') {
+            cls_productinput.opened = obj.data
+            document.getElementById('ticketProductinput').value = cls_productinput.opened.info.tx_productinput_ticket;
+          } else {
+            cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+          }
+        }
+        cls_general.async_laravel_request(url, method, funcion, body);
+      });
+
+
+    });
+
+    $(function () {
+      $("#dateProductinput").datepicker({
+        onSelect: function (selectedDate) {
+          var url = '/purchase/' + opened.info.tx_productinput_slug + '/date';
+          var method = 'PUT';
+          var body = JSON.stringify({ a: selectedDate });
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              cls_productinput.opened = obj.data
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+            }
+          }
+          cls_general.async_laravel_request(url, method, funcion, body);
+        }
+      });
+    });
   }
   edit_product(dataproductinput_id){
     var url = '/dataproductinput/'+dataproductinput_id;
@@ -450,21 +509,17 @@ class class_productinput{
       this.timer = setTimeout(function () {
         
         var haystack = (status === 0) ? cls_productinput.notprocesed : cls_productinput.procesed;
-        console.log(haystack);
         var needles = str.split(' ');
         var raw_filtered = [];
         for (var i in haystack) {
           var ocurrencys = 0;
           for (const a in needles) {
             if (date_i.length > 0) {
-              console.log('con fecha');
-              var raw_date = haystack[i]['created_at'].split(' ');
-              console.log(raw_date[0] + ' ' + date_i);
+              var raw_date = haystack[i]['tx_productinput_date'].split(' ');
               if (haystack[i]['tx_productinput_status'] === status && cls_general.datetime_converter(raw_date[0]) === date_i) { 
                 if (haystack[i]['tx_provider_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_productinput_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
               }
             }else{
-              console.log('sin fecha');
               if (haystack[i]['tx_productinput_status'] === status) {
                 if (haystack[i]['tx_provider_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_productinput_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
               }

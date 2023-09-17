@@ -78,8 +78,11 @@ class class_report
           case '8':
             cls_report.render_commanddata(from, to, obj.data.commanddata);
             break;
+          case '9':
+            cls_report.render_productinput_product(from, to, obj.data.dataproductinput);
+            break;
           default:
-            cls_general.shot_toast_bs('Opción incorecta.',{bg: 'text-bg-danger'});
+            cls_general.shot_toast_bs('Opción incorrecta.',{bg: 'text-bg-danger'});
             break;
         }
       } else {
@@ -271,7 +274,7 @@ class class_report
         <tfoot style="border:solid;">
           <tr>
             <td colspan="2" style="text-align: right;"><strong>Subtotal: </strong> B/ ${cls_general.val_price((total_nontaxable + total_taxable),2,1,1)}</td>
-            <td colspan="2" style="text-align: right;"><strong>Imp.: </strong> B/ ${total_tax}</td>
+            <td colspan="2" style="text-align: right;"><strong>Imp.: </strong> B/ ${cls_general.val_price(total_tax)}</td>
             <td colspan="2" style="text-align: right;"><strong>Total: </strong> B/ ${cls_general.val_price((total_nontaxable + total_taxable + total_tax), 2, 1, 1)}</td>
           </tr>
         </tfoot>
@@ -517,40 +520,258 @@ class class_report
     document.getElementById('container_report').innerHTML = list;
   }
   render_commanddata(from, to, raw_commanddata) {
-    var list = '';
     var raw_report = [];
     raw_commanddata.map((commanddata) => {
-
       var index = raw_report.findIndex((report) => { return report.article_id === commanddata.commanddata_ai_article_id && report.presentation_id === commanddata.commanddata_ai_presentation_id })
       if (index != -1) {
         raw_report[index].quantity += commanddata.tx_commanddata_quantity;
+        raw_report[index].price += commanddata.tx_commanddata_quantity * commanddata.tx_commanddata_price;
       }else{
         raw_report.push({
           article_id: commanddata.commanddata_ai_article_id,
           quantity: commanddata.tx_commanddata_quantity, 
           article_description: commanddata.tx_commanddata_description,
+          price: commanddata.tx_commanddata_quantity * commanddata.tx_commanddata_price,
           presentation_value: commanddata.tx_presentation_value, 
           presentation_id: commanddata.commanddata_ai_presentation_id 
         })
       }
     })
-    list += `
-      <h5>Listado de Comandas, Desde: ${from} Hasta: ${to}</h5>
-      <div class="list-group">
+    var list = `<h5>Listado de Comandas, Desde: ${from} Hasta: ${to}</h5>
+    <div class="row">
+      <div class="col-10 py-2">
+        <input type="text" id="filterCommanddata" class="form-control" onkeyup="cls_commanddata.filter(this.value)" placeholder="Buscar por nombre.">
+      </div>
+      <div class="col-2 py-2">
+        <button class="badge btn btn-info" onclick="cls_commanddata.print()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+            <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+            <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+          </svg>
+        </button>
+      </div>
     `;
+    raw_report.sort((a, b) => {
+      const nameA = a.article_description.toUpperCase(); // ignore upper and lowercase
+      const nameB = b.article_description.toUpperCase(); // ignore upper and lowercase
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+
+      // names must be equal
+      return 0;
+    });
+
+    cls_commanddata.filtered = raw_report;
+    list += `<div class="col-12 py-2" id="container_filtered">${cls_commanddata.generate_list(raw_report) }</div></div>`;
+    document.getElementById('container_report').innerHTML = list;
+  }
+  render_productinput_product(from, to, raw_productinput) {
+    var raw_report = [];
+    raw_productinput.map((linedata) => {
+      var index = raw_report.findIndex((report) => { return report.product_id === linedata.dataproductinput_ai_product_id && report.measure_id === linedata.dataproductinput_ai_measurement_id })
+      if (index != -1) {
+        raw_report[index].quantity += linedata.tx_dataproductinput_quantity;
+        raw_report[index].price += linedata.tx_dataproductinput_quantity * linedata.tx_dataproductinput_price;
+      } else {
+        raw_report.push({
+          product_id: linedata.dataproductinput_ai_product_id,
+          quantity: linedata.tx_dataproductinput_quantity,
+          product_description: linedata.tx_dataproductinput_description,
+          price: linedata.tx_dataproductinput_quantity * linedata.tx_dataproductinput_price,
+          measure_value: linedata.tx_measure_value,
+          measure_id: linedata.dataproductinput_ai_measurement_id
+        })
+      }
+    })
+    var list = `<h5>Listado de Productos Comprados, Desde: ${from} Hasta: ${to}</h5>
+    <div class="row">
+      <div class="col-10 py-2">
+        <input type="text" id="filterDataproductinput" class="form-control" onkeyup="cls_dataproductinput.filter(this.value)" placeholder="Buscar por nombre.">
+      </div>
+      <div class="col-2 py-2">
+        <button class="badge btn btn-info" onclick="cls_dataproductinput.print()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+            <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+            <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+    raw_report.sort((a, b) => {
+      const nameA = a.product_description.toUpperCase(); // ignore upper and lowercase
+      const nameB = b.product_description.toUpperCase(); // ignore upper and lowercase
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+
+      // names must be equal
+      return 0;
+    });
+    console.log(raw_report);
+    cls_dataproductinput.filtered = raw_report;
+    list += `<div class="col-12 py-2" id="container_filtered">${cls_dataproductinput.generate_list(raw_report)}</div></div>`;
+    document.getElementById('container_report').innerHTML = list;
+  }
+
+}
+
+class class_commanddata
+{
+  constructor(){
+    this.result = [];
+    this.filtered = [];
+  }
+
+  async filter(str) {
+    document.getElementById('container_filtered').innerHTML = cls_commanddata.generate_list(await cls_commanddata.look_for(str));
+  }
+  generate_list(raw_report){
+    cls_commanddata.result = raw_report;
+    var list = `<div class="list-group">`;
+    var total = 0;
     raw_report.map((line) => {
+      total += line.price;
       list += `
         <a href="#" class="list-group-item  cursor_pointer text-truncate">
           <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">${line.quantity} - ${line.article_description}</h5>
-            <small>${line.presentation_value}</small>
+            <h5 class="mb-1">${line.quantity} - ${line.article_description} (${line.presentation_value})</h5>
+            <small>B/ ${(line.price / line.quantity).toFixed(2)}</small>
           </div>
         </a>
       `;
     })
-    list += `</div>`;
-    document.getElementById('container_report').innerHTML = list;
+    list += `</div>
+      <div class="text-end">
+        <h4>Total: ${cls_general.val_price(total,2,1,1)}</h4>
+      </div>
+    `;
+    return list;
+  }
+  look_for(str) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_commanddata.filtered;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          var ocurrencys = 0;
+          for (const a in needles) {
+            if (haystack[i]['article_description'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+
+
+        raw_filtered.sort((a, b) => a.article_description - b.article_description);
+        raw_filtered.sort((a, b) => {
+          const nameA = a.article_description.toUpperCase(); // ignore upper and lowercase
+          const nameB = b.article_description.toUpperCase(); // ignore upper and lowercase
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          // names must be equal
+          return 0;
+        });
+
+        resolve(raw_filtered)
+      }, 500)
+    });
   }
   
+  print(){
+    var str = (cls_general.is_empty_var(document.getElementById('filterCommanddata').value) === 0) ? 'empty' : document.getElementById('filterCommanddata').value;
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportcommanddata/${from}/${to}/${str}`);
+  }
+}
 
+class class_dataproductinput {
+  constructor() {
+    this.result = [];
+    this.filtered = [];
+  }
+
+  async filter(str) {
+    document.getElementById('container_filtered').innerHTML = cls_dataproductinput.generate_list(await cls_dataproductinput.look_for(str));
+  }
+  generate_list(raw_report) {
+    cls_commanddata.result = raw_report;
+    var list = `<div class="list-group">`;
+    var total = 0;
+    raw_report.map((line) => {
+      total += line.price;
+      list += `
+        <a href="#" class="list-group-item  cursor_pointer text-truncate">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">${line.quantity} - ${line.product_description} (${line.measure_value})</h5>
+            <small>B/ ${(line.price / line.quantity).toFixed(2)}</small>
+          </div>
+        </a>
+      `;
+    })
+    list += `</div>
+      <div class="text-end">
+        <h4>Total: ${cls_general.val_price(total, 2, 1, 1)}</h4>
+      </div>
+    `;
+    return list;
+  }
+  look_for(str) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_dataproductinput.filtered;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          var ocurrencys = 0;
+          for (const a in needles) {
+            if (haystack[i]['product_description'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+
+        raw_filtered.sort((a, b) => a.product_description - b.product_description);
+        raw_filtered.sort((a, b) => {
+          const nameA = a.product_description.toUpperCase(); // ignore upper and lowercase
+          const nameB = b.product_description.toUpperCase(); // ignore upper and lowercase
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          // names must be equal
+          return 0;
+        });
+
+        resolve(raw_filtered)
+      }, 500)
+    });
+  }
+
+  print() {
+    var str = (cls_general.is_empty_var(document.getElementById('filterDataproductinput').value) === 0) ? 'empty' : document.getElementById('filterDataproductinput').value;
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportdataproductinput/${from}/${to}/${str}`);
+  }
 }

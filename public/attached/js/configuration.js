@@ -2351,6 +2351,11 @@ class class_payment {
     cls_payment.render();
   }
 }
+class class_role{
+  constructor(raw_role) {
+    this.role_list = raw_role;
+  }
+}
 class class_user {
   constructor (){
     this.info = [];
@@ -2366,16 +2371,17 @@ class class_user {
       var content = `
         <div class="row">
           <div class="col-xs-12 py-2 text-center">
-            <button type="button" class="btn btn-lg btn-primary" onclick="cls_product.create()">Crear producto</button>
-            &nbsp;
+            <button type="button" class="btn btn-lg btn-primary" onclick="cls_user.create()">Crear Usuario</button>
+            &nbsp;&nbsp;
+            <button type="button" class="btn btn-lg btn-info" onclick="cls_role.render()">Roles</button>
           </div>
           <div class="col-xs-12">
-            <h5>Listado de Productos</h5>
+            <h5>Listado de Usuarios</h5>
           </div>
           <div class="col-xs-12">
-            <input type="text" class="form-control" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_product.filter(this.value,20)" placeholder="Buscar producto por nombre, referencia o c&oacute;digo" >
+            <input type="text" class="form-control" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_user.filter(this.value,20)" placeholder="Buscar por nombre" >
           </div>
-          <div id="container_productList" class="col-xs-12 border-top">
+          <div id="container_userList" class="col-xs-12 border-top">
             ${list}
           </div>
         </div>
@@ -2392,6 +2398,92 @@ class class_user {
     list += '</div>';
     return list;
   }
+  create() {
+    var option_role = '';
+    var role_list = cls_role.role_list
+    role_list.map(x => option_role += `<option value="${x.id}">${x.description} </option>`)
+HACER ESTE CAMPO PARA CRAR USUARIOS
+    var content = `
+        <div class="row">
+          <div class="col-xs-12">
+            <label for="productValue" class="form-label">Descripci&oacute;n</label>
+            <input type="text" class="form-control" id="productValue" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 100, toast = 0)" onblur="cls_general.limitText(this, 100, toast = 0)">
+            <label for="productReference" class="form-label">Referencia</label>
+            <input type="text" class="form-control" id="productReference" value="" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 150, toast = 0)" onkeyup="cls_general.limitText(this, 150, toast = 0)">
+          </div>
+          <div class="row">
+            <div class="col-lg-6 col-md-12">
+              <label for="productCode" class="form-label">C&oacute;digo</label>
+              <input type="text" class="form-control" id="productCode" value="" onfocus="cls_general.validFranz(this.id, ['number'],'abcdefghijklmnñopqrstuvwxyzáéíóúABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ')" onkeyup="cls_general.limitText(this, 15, toast = 0)" onkeyup="cls_general.limitText(this, 15, toast = 0)" placeholder="00000000" >
+            </div>
+            <div class="col-lg-3 col-md-12">
+              <label for="productTaxrate" class="form-label">% Imp</label>
+              <input type="text" class="form-control" id="productTaxrate" value="${cls_option.option.TAX}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)">
+            </div>
+            <div class="col-lg-3 col-md-12">
+              <label for="productDiscountrate" class="form-label">% Desc</label>
+              <input type="text" class="form-control" id="productDiscountrate" value="0" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 3, toast = 0)" onkeyup="cls_general.limitText(this, 3, toast = 0)">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-6 col-md-12">
+              <label for="productMinimun" class="form-label">M&iacute;nimo</label>
+              <input type="text" class="form-control" id="productMinimum" value="" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 9, toast = 0)" onkeyup="cls_general.limitText(this, 9, toast = 0)">
+            </div>
+            <div class="col-lg-6 col-md-12">
+              <label for="productMaximun" class="form-label">M&aacute;ximo</label>
+              <input type="text" class="form-control" id="productMaximum" value="" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 9, toast = 0)" onkeyup="cls_general.limitText(this, 9, toast = 0)">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-6">
+              <label for="productMeasure" class="form-label">Medida M&iacute;nima = 1</label>
+              <select id="productMeasure" class="form-select"><option value="" disabled selected>Seleccione</option> ${option_productmeasure}</select>
+            </div>
+            <div class="col-lg-6">
+              <label for="productCategory" class="form-label">Categor&iacute;a</label>
+              <select id="productCategory" class="form-select"><option value="" disabled selected>Seleccione</option> ${option_productcategory}</select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-4">
+              <div class="form-check form-switch py-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="productStatus" checked>
+                <label class="form-check-label" for="productStatus">Activo</label>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="form-check form-switch py-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="productAlarm" checked>
+                <label class="form-check-label" for="productAlarm">Alarma</label>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="form-check form-switch py-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="productDiscountable" checked>
+                <label class="form-check-label" for="productDiscountable">Descontable</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      `;
+    var content_bottom = `          
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      <button type="button" class="btn btn-success" id="btn_productModal" onclick="cls_product.save()">Crear Producto</button>
+    `;
+
+    document.getElementById('productModal_content').innerHTML = content;
+    document.getElementById('productModal_footer').innerHTML = content_bottom;
+    document.getElementById('productModal_title').innerHTML = '<h4>Crear Producto</h4>';
+
+    const modalUbication = new bootstrap.Modal('#productModal', {})
+    modalUbication.show();
+
+  }
+
+
+
   show(user_id) {
     var url = '/user/' + user_id; var method = 'GET';
     var body = "";
@@ -2548,5 +2640,4 @@ class class_user {
 
 }
 
-// PASAR A LA SELECCION DEL PRODUCTO, AL CAMBIAR LA PRESENTACION VERIFICAR SI ALGUNO DE LOS INGREDIENTES TIENE OTRAS OPCIONES, SI ES ASI MOSTRAR UN SELECT CON LAS DIVERSAS OPCIONES
 

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\tm_cashregister;
+use App\tm_commanddata;
+use App\tm_dataproductinput;
 
 
 class printController extends Controller
@@ -51,7 +53,7 @@ class printController extends Controller
 				<div class="text-center col-sm-3 col_25" style="height: 100px; float: left;">&nbsp;</div>
 				<div class="text-center col-sm-6 col_25" style="height: 100px; float: left;">
 					<img width="115px" height="115px" src="./attached/image/logo_print.png">
-					<p style="font-size: 10pt;">Boulevard Penonomé, Via Interamericana</p>
+					<p style="font-size: 10pt;">Cancino Nuñez, S.A.</p>
 				</div>
 				<div class="text-center col-sm-3 col_25" style="height: 100px; float: left; text-align: right;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
 		</div>
@@ -577,6 +579,7 @@ class printController extends Controller
 		$pdf->loadHTML($this->full_page($raw_page));
 		return $pdf->stream();
 	}
+
 	public function print_paymentprovider ($paymentprovider_id){
 		$paymentproviderController = new paymentproviderController;
 		$rs_paymentprovider = $paymentproviderController->showit($paymentprovider_id);
@@ -974,4 +977,187 @@ class printController extends Controller
 		$chargeController->print_receipt($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
 		return response()->json(['status'=>'success','message'=>'Recibo Impreso.']);
 	}
+
+	public function print_reportcommanddata ($from,$to,$str){
+		$c_from = date('Y-m-d H:i:s',strtotime($from." 00:00:01"));
+		$c_to = date('Y-m-d H:i:s',strtotime($to." 23:59:00"));
+		$str = ($str === 'empty') ? '' : $str;
+
+		$rs = tm_commanddata::select('tm_commanddatas.created_at','tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.tx_commanddata_price','tm_commanddatas.commanddata_ai_article_id','tm_commanddatas.tx_commanddata_description','tm_commanddatas.commanddata_ai_presentation_id','tm_presentations.tx_presentation_value')
+		->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')
+		->where('tm_commanddatas.created_at','>=',$c_from)
+		->where('tm_commanddatas.created_at','<=',$c_to)
+		->where('tx_commanddata_description','like','%'.$str.'%')
+		->orderby('tx_commanddata_description')
+		->get();
+
+
+
+		$raw_report = [];
+		foreach ($rs as $key => $commanddata) {
+			$i = -1;
+			foreach ($raw_report as $key => $report) {
+				if($report['article_id'] === $commanddata['commanddata_ai_article_id'] && $report['presentation_id'] === $commanddata['commanddata_ai_presentation_id']){
+					$i = $key;
+					break;
+				}
+			}
+
+			if ($i != -1) {
+				$raw_report[$i]['quantity'] += $commanddata['tx_commanddata_quantity'];
+				$raw_report[$i]['price'] += $commanddata['tx_commanddata_quantity']*$commanddata['tx_commanddata_price'];
+			}else{
+				array_push($raw_report,[
+          'article_id' 	=> $commanddata['commanddata_ai_article_id'],
+          'quantity'		=> $commanddata['tx_commanddata_quantity'], 
+          'article_description'	=> $commanddata['tx_commanddata_description'],
+          'price' 			=> $commanddata['tx_commanddata_quantity'] * $commanddata['tx_commanddata_price'],
+          'presentation_value'	=> $commanddata['tx_presentation_value'], 
+          'presentation_id'			=> $commanddata['commanddata_ai_presentation_id'] 
+				]);
+			}
+		}
+
+		$data_content = '';
+		$total = 0;
+		foreach ($raw_report as $value) {
+			$data_content .= '
+				<tr>
+					<td class="text_center">'.$value['quantity'].'</td>
+					<td class="">'.$value['article_description'].'</td>
+					<td class="text_center">'.$value['presentation_value'].'</td>
+					<td class="text_center">'.number_format($value['price']/$value['quantity'],2).'</td>
+				</tr>
+			';
+			$total += $value['price'];
+		}
+		$content = '
+			<div>
+				<h4>Listado de Comandas, Desde: '.date('d-m-Y',strtotime($from)).' Hasta: '.date('d-m-Y',strtotime($to)).'</h4>
+				<table class="table h_70">
+					<thead>
+						<tr class="bs_1">
+							<th>Cantidad</td>
+							<th>Descripción</td>
+							<th>Medida</td>
+							<th>Precio Regular</td>
+						</tr>
+					</thead>
+					<tbody>
+						'.$data_content.'
+					</tbody>
+					<tfoot>
+						<tr class="bs_1">
+							<td colspan="3"></td>
+							<th>Total: '.number_format($total,2).'</td>
+						</tr>
+					</tfoot>
+
+				</table>
+			</div>
+		';
+		$content_bottom = '';
+
+		$raw_page = [
+			'date' => date('d-m-Y'),
+			'title'=>'Ventas por Art&iacute;culo' ,
+			'content'=>[$content],
+			'bottom'=>$content_bottom,
+			'title_page'=>"Ventas por Art&iacute;culo"
+		];
+		$pdf = \App::make('dompdf.wrapper');
+		$pdf->loadHTML($this->full_page($raw_page));
+		return $pdf->stream();
+	}
+
+	public function print_reportdataproductinput ($from,$to,$str){
+		$c_from = date('Y-m-d H:i:s',strtotime($from." 00:00:01"));
+		$c_to = date('Y-m-d H:i:s',strtotime($to." 23:59:00"));
+		$str = ($str === 'empty') ? '' : $str;
+
+		$rs = tm_dataproductinput::select('tm_dataproductinputs.created_at','tm_dataproductinputs.tx_dataproductinput_quantity','tm_dataproductinputs.tx_dataproductinput_price','tm_dataproductinputs.dataproductinput_ai_product_id','tm_dataproductinputs.tx_dataproductinput_description','tm_dataproductinputs.dataproductinput_ai_measurement_id','tm_measures.tx_measure_value')
+		->join('tm_measures','tm_measures.ai_measure_id','tm_dataproductinputs.dataproductinput_ai_measurement_id')
+		->where('tm_dataproductinputs.created_at','>=',$c_from)
+		->where('tm_dataproductinputs.created_at','<=',$c_to)
+		->where('tx_dataproductinput_description','like','%'.$str.'%')
+		->orderby('tx_dataproductinput_description')
+		->get();
+
+		$raw_report = [];
+		foreach ($rs as $key => $dataproductinput) {
+			$i = -1;
+			foreach ($raw_report as $key => $report) {
+				if($report['article_id'] === $dataproductinput['dataproductinput_ai_product_id'] && $report['measure_id'] === $dataproductinput['dataproductinput_ai_measure_id']){
+					$i = $key;
+					break;
+				}
+			}
+
+			if ($i != -1) {
+				$raw_report[$i]['quantity'] += $dataproductinput['tx_dataproductinput_quantity'];
+				$raw_report[$i]['price'] += $dataproductinput['tx_dataproductinput_quantity'] * $dataproductinput['tx_dataproductinput_price'];
+			}else{
+				array_push($raw_report,[
+          'article_id' 	=> $dataproductinput['dataproductinput_ai_product_id'],
+          'quantity'		=> $dataproductinput['tx_dataproductinput_quantity'], 
+          'product_description'	=> $dataproductinput['tx_dataproductinput_description'],
+          'price' 			=> $dataproductinput['tx_dataproductinput_quantity'] * $dataproductinput['tx_dataproductinput_price'],
+          'measure_value'	=> $dataproductinput['tx_measure_value'], 
+          'measure_id'			=> $dataproductinput['dataproductinput_ai_measure_id'] 
+				]);
+			}
+		}
+
+		$data_content = '';
+		$total = 0;
+		foreach ($raw_report as $value) {
+			$data_content .= '
+				<tr>
+					<td class="text_center">'.$value['quantity'].'</td>
+					<td class="">'.$value['product_description'].'</td>
+					<td class="text_center">'.$value['measure_value'].'</td>
+					<td class="text_center">'.number_format($value['price']/$value['quantity'],2).'</td>
+				</tr>
+			';
+			$total += $value['price'];
+		}
+		$content = '
+			<div>
+				<h4>Listado de Productos Comprados, Desde: '.date('d-m-Y',strtotime($from)).' Hasta: '.date('d-m-Y',strtotime($to)).'</h4>
+				<table class="table h_70">
+					<thead>
+						<tr class="bs_1">
+							<th>Cantidad</td>
+							<th>Descripción</td>
+							<th>Medida</td>
+							<th>Precio Regular</td>
+						</tr>
+					</thead>
+					<tbody>
+						'.$data_content.'
+					</tbody>
+					<tfoot>
+						<tr class="bs_1">
+							<td colspan="3"></td>
+							<th>Total: '.number_format($total,2).'</td>
+						</tr>
+					</tfoot>
+
+				</table>
+			</div>
+		';
+		$content_bottom = '';
+
+		$raw_page = [
+			'date' => date('d-m-Y'),
+			'title'=>'Compras por Producto',
+			'content'=>[$content],
+			'bottom'=>$content_bottom,
+			'title_page'=>"Compras por Producto"
+		];
+		$pdf = \App::make('dompdf.wrapper');
+		$pdf->loadHTML($this->full_page($raw_page));
+		return $pdf->stream();
+	}
+
 }

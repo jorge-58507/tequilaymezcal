@@ -96,10 +96,110 @@ class creditnoteController extends Controller
             $rs_commanddata = tm_commanddata::where('ai_commanddata_id',$selected['commanddata_id'])->first();
             $datacreditnoteController->save($creditnote_id,$selected['commanddata_id'],$selected['article_id'],$selected['quantity'],$selected['presentation_id']);
         }
+
+        // IMPRESION
+        $rs_creditnote = tm_creditnote::select('tm_creditnotes.tx_creditnote_number','tm_creditnotes.created_at','tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_creditnotes.tx_creditnote_nontaxable','tm_creditnotes.tx_creditnote_taxable','tm_creditnotes.tx_creditnote_tax','tm_creditnotes.tx_creditnote_retentionrate')
+        ->join('tm_requests','tm_requests.request_ai_charge_id','tm_creditnotes.creditnote_ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('ai_creditnote_id',$creditnote_id)->first();
+
+        $rs_datacreditnote = $datacreditnoteController->getIt($creditnote_id);
+        $subtotal = $rs_creditnote['tx_creditnote_nontaxable'] + $rs_creditnote['tx_creditnote_taxable'];
+        $total = $subtotal + $rs_creditnote['tx_creditnote_tax'];
+
+        $this->print_creditnote($rs_creditnote['tx_creditnote_number'], $rs_creditnote['created_at'], $rs_creditnote['tx_client_name'], $rs_creditnote['tx_client_cif'], $rs_datacreditnote, $subtotal, $rs_creditnote['tx_creditnote_retentionrate'],$rs_creditnote['tx_creditnote_tax'],$total);
+        
         // ANSWER
         $rs_creditnote = tm_creditnote::where('creditnote_ai_charge_id',$rs_charge['ai_charge_id'])->get();
+        
         return response()->json(['status'=>'success','message'=>'Nota de Cr&eacute;dito procesada.','data'=>['creditnote'=>$rs_creditnote]]);
     }
+
+    public function print_creditnote($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $retention, $tax, $total){
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $printer = new Printer($connector);
+
+        /* Information for the receipt */
+        
+        /* Start the printer */
+        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
+        // $printer = new Printer($connector);
+        
+        // PRINT TOP DATE
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> text(date('d-m-Y')."\n");
+
+        /* Print top logo */
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> bitImage($logo);
+        
+        /* Name of shop */
+        $printer -> text("Cancino Nuñez, S.A.\n");
+        $printer -> text("155732387-2-2023 DV 14.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> feed();
+        
+        /* Title of receipt */
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("RECIBO DE NOTA DE CRÉDITO #".$number."\n");
+        $printer -> setEmphasis(false);
+
+        /* Client Info */
+        $printer -> selectPrintMode();
+        $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
+        $printer -> text("Cliente: ".$client_name."\n");
+        $printer -> text("RUC: ".$client_ruc."\n");
+        $printer -> feed(2);
+        
+        /* Items */
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> setJustification(Printer::JUSTIFY_LEFT);
+        $printer -> text("Articulos Relacionados.\n");
+
+        $content_observation = '';
+        $last_observation = '';
+        $command_id = 0 ;
+        foreach ($raw_item as $item) {
+            $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
+            $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+        }
+
+        $printer -> feed(2);
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("Subtotal. B/ ".number_format($subtotal,2)."\n");
+        $printer -> setEmphasis(false);
+        
+        /* Tax and total */
+        $printer -> text("Retención. B/ ".number_format($retention,2)."\n");
+        $printer -> text("ITBMS. B/ ".number_format($tax,2)."\n");
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("TOTAL. B/ ".number_format($total,2)."\n");
+        $printer -> selectPrintMode();
+
+        /* Footer */
+        $printer -> feed(2);
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> text("Gracias por su compra en Jade Café\n");
+        $printer -> text("Lo esperamos pronto.\n");
+        $printer -> feed(2);
+        
+        /* Cut the receipt and open the cash drawer */
+        $printer -> cut();
+        $printer -> pulse();
+        
+        $printer -> close();
+    }
+
 
     /**
      * Display the specified resource.

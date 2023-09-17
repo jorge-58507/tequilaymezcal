@@ -31,6 +31,7 @@ class configurationController extends Controller
         $presentationController = new presentationController;
         $rs_presentation = $presentationController->getAll();
         $rs_paymentmethod = tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
+        $rs_role = role::get();
        $data = [
             'productcategory_list' => $rs_productcategoryList,
             'category_list' => $rs_categoryList,
@@ -39,7 +40,8 @@ class configurationController extends Controller
             'product_list' => $rs_product,
             'article_list' => $rs_article,
             'presentation_list' => $rs_presentation,
-            'paymentmethod_list' => $rs_paymentmethod
+            'paymentmethod_list' => $rs_paymentmethod,
+            'role_list' => $rs_role
         ];
 
         return view('configuration.index', compact('data'));

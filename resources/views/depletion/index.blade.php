@@ -5,6 +5,22 @@
 @endsection
 @section('content')
 
+  <!-- Modal -->
+  <div class="modal fade" id="commandModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="commandModal_title">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="commandModal_content" class="modal-body">
+        </div>
+        <div id="commandModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
 	<div id="container_depletion" class="row"></div>
 
 @endsection

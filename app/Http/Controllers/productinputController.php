@@ -56,11 +56,11 @@ class productinputController extends Controller
         $rs_notprocesed = tm_productinput::select('tm_productinputs.ai_productinput_id',
         'tm_productinputs.tx_productinput_number', 'tm_productinputs.tx_productinput_nontaxable', 'tm_productinputs.tx_productinput_taxable','tm_productinputs.tx_productinput_discount',
         'tm_productinputs.tx_productinput_tax', 'tm_productinputs.tx_productinput_total', 'tm_productinputs.tx_productinput_due', 'tm_productinputs.tx_productinput_due', 'tm_productinputs.tx_productinput_status',
-        'tm_productinputs.tx_productinput_slug', 'tm_productinputs.created_at', 'tm_providers.tx_provider_value')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->where('tx_productinput_status',0)->get();
+        'tm_productinputs.tx_productinput_slug', 'tm_productinputs.tx_productinput_date', 'tm_productinputs.created_at', 'tm_providers.tx_provider_value')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->where('tx_productinput_status',0)->get();
         $rs_procesed    = tm_productinput::select('tm_productinputs.ai_productinput_id',
         'tm_productinputs.tx_productinput_number', 'tm_productinputs.tx_productinput_nontaxable', 'tm_productinputs.tx_productinput_taxable','tm_productinputs.tx_productinput_discount',
         'tm_productinputs.tx_productinput_tax', 'tm_productinputs.tx_productinput_total', 'tm_productinputs.tx_productinput_due', 'tm_productinputs.tx_productinput_due', 'tm_productinputs.tx_productinput_status',
-        'tm_productinputs.tx_productinput_slug', 'tm_productinputs.created_at', 'tm_providers.tx_provider_value')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->where('tx_productinput_status',1)->get();
+        'tm_productinputs.tx_productinput_slug', 'tm_productinputs.tx_productinput_date', 'tm_productinputs.created_at', 'tm_providers.tx_provider_value')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->where('tx_productinput_status',1)->get();
 
         return ['notprocesed'=>$rs_notprocesed, 'procesed'=>$rs_procesed];
     }
@@ -415,6 +415,36 @@ class productinputController extends Controller
         return response()->json(['status'=>'success','message'=>'Eliminado correctamente.','data'=>['opened'=>['info'=>$rs_productinput['info'], 'dataproductinput'=>$rs_productinput['dataproductinput']]]]);
     }
 
+    public function upd_ticket(Request $request, $productinput_slug)
+    {
+        $qry = tm_productinput::where('tx_productinput_slug',$productinput_slug);
+        if ($qry->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'No existe.']);
+        }
+
+        $qry->update(['tx_productinput_ticket' => $request->input('a')]);
+
+        // ANSWER
+        $rs_productinput = $this->showit($productinput_slug);
+        return response()->json(['status'=>'success','message'=>'', 
+        'data'=>['info' => $rs_productinput['info'], 'dataproductinput'=>$rs_productinput['dataproductinput'] ] ]);
+
+    }
+    public function upd_date(Request $request, $productinput_slug)
+    {
+        $qry = tm_productinput::where('tx_productinput_slug',$productinput_slug);
+        if ($qry->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'No existe.']);
+        }
+
+        $qry->update(['tx_productinput_date' => date('Y-m-d', strtotime($request->input('a')))]);
+
+        // ANSWER
+        $rs_productinput = $this->showit($productinput_slug);
+        return response()->json(['status'=>'success','message'=>'', 
+        'data'=>['info' => $rs_productinput['info'], 'dataproductinput'=>$rs_productinput['dataproductinput'] ] ]);
+
+    }
 
     public function report($from, $to){
         $rs = tm_productinput::select('tm_productinputs.tx_productinput_number','tm_productinputs.tx_productinput_nontaxable','tm_productinputs.tx_productinput_taxable',
@@ -433,6 +463,24 @@ class productinputController extends Controller
                 ->where('tm_productinputs.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))
                 ->groupby('tm_productinputs.productinput_ai_provider_id')
                 ->get();
+
+        return [ 'list' => $rs ];
+    }
+    public function report_by_product($from, $to){
+        $c_from = date('Y-m-d H:i:s',strtotime($from." 00:00:01"));
+        $c_to = date('Y-m-d H:i:s',strtotime($to." 23:59:00"));
+        $rs = tm_dataproductinput::select('tm_dataproductinputs.created_at','tm_dataproductinputs.tx_dataproductinput_quantity','tm_dataproductinputs.tx_dataproductinput_price','tm_dataproductinputs.dataproductinput_ai_product_id','tm_dataproductinputs.tx_dataproductinput_description','tm_dataproductinputs.dataproductinput_ai_measurement_id','tm_measures.tx_measure_value')
+        ->join('tm_measures','tm_measures.ai_measure_id','tm_dataproductinputs.dataproductinput_ai_measurement_id')
+        ->where('tm_dataproductinputs.created_at','>=',$c_from)
+        ->where('tm_dataproductinputs.created_at','<=',$c_to)->get();
+
+        // $rs = DB::table('tm_productinputs')
+        //         ->select(DB::raw('SUM(tm_productinputs.tx_productinput_taxable) as total_taxable'),DB::raw('SUM(tm_productinputs.tx_productinput_tax) as total_tax'), DB::raw('SUM(tm_productinputs.tx_productinput_nontaxable) as total_nontaxable'),'tm_providers.tx_provider_value','tm_providers.tx_provider_ruc','tm_providers.tx_provider_dv','tm_providers.tx_provider_status')
+        //         ->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')
+        //         ->where('tm_productinputs.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))
+        //         ->where('tm_productinputs.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))
+        //         ->groupby('tm_productinputs.productinput_ai_provider_id')
+        //         ->get();
 
         return [ 'list' => $rs ];
     }

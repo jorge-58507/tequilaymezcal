@@ -68,7 +68,7 @@ class class_productinput
       content += `
         <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_productinput.show('${productinput.tx_productinput_slug}')">
           <div class="ms-2 me-auto">
-            <div class="fw-bold"><h5>${productinput.tx_productinput_number}</h5></div>
+            <div class="fw-bold"><h5>${productinput.tx_productinput_ticket} (${productinput.tx_productinput_number})</h5></div>
             <small>${cls_general.datetime_converter(productinput.created_at)}</small>
           </div>
           <span class="badge bg-primary rounded-pill">B/ ${cls_general.val_price(productinput.tx_productinput_total,2,1,1)}</span>
@@ -84,7 +84,7 @@ class class_productinput
       content += `
         <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_productinput.show('${productinput.tx_productinput_slug}')">
           <div class="ms-2 me-auto">
-            <div class="fw-bold"><h5>${productinput.tx_productinput_number}</h5></div>
+            <div class="fw-bold"><h5>${productinput.tx_productinput_ticket} (${productinput.tx_productinput_number})</h5></div>
             <small>${cls_general.datetime_converter(productinput.created_at)}</small>
           </div>
           <span class="badge bg-primary rounded-pill">B/ ${cls_general.val_price(productinput.tx_productinput_total, 2, 1, 1)}</span>
@@ -106,13 +106,11 @@ class class_productinput
           for (const a in needles) {
             if (date.length > 0) {
               if (cls_general.date_converter('dmy', 'ymd', haystack[i]['tx_productinput_date']) == date) {
-                if (haystack[i]['tx_productinput_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 ) { ocurrencys++ }
+                if (haystack[i]['tx_productinput_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_productinput_ticket'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
               }
             }else{
-              if (haystack[i]['tx_productinput_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+              if (haystack[i]['tx_productinput_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_productinput_ticket'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
             }
-
-            // if (haystack[i]['tx_productinput_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 ) { ocurrencys++ }
           }
           if (ocurrencys === needles.length) {
             raw_filtered.push(haystack[i]);
@@ -441,6 +439,18 @@ class class_provider
         var paidup_list = cls_productinput.generate_paidup(obj.data.productinput_paidup);
         var status = (obj.data.info.tx_provider_status === 1) ? 'checked' : '';
 
+        var total_unpaid = 0;
+        obj.data.productinput_unpaid.map((unpaid) => {
+          total_unpaid += unpaid.tx_productinput_total;
+        })
+
+        var total_paidup = 0;
+        obj.data.productinput_paidup.map((paidup) => {
+          total_paidup += paidup.tx_productinput_total;
+        })
+
+        var total_purchased = total_unpaid + total_paidup;
+
         var observation = (cls_general.is_empty_var(obj.data.info.tx_provider_observation) === 0) ? '' : obj.data.info.tx_provider_observation;
         document.getElementById('providerModal_title').innerHTML = `Modificar proveedor`;
         document.getElementById('providerModal_content').innerHTML = `
@@ -461,11 +471,11 @@ class class_provider
               <label for="providerTelephone" class="form-label">Tel&eacute;fono</label>
               <input type="text" id="providerTelephone" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'], '- ')" value="${obj.data.info.tx_provider_telephone}">
             </div>
-            <div class="col-sm-5">
+            <div class="col-sm-4">
               <label for="providerAddress" class="form-label">Direcci&oacute;n</label>
               <input type="text" id="providerAddress" class="form-control" onfocus="cls_general.validFranz(this.id, ['word', 'number', 'punctuation', 'mathematic'])" value="${obj.data.info.tx_provider_direction}">
             </div>
-            <div class="col-sm-5">
+            <div class="col-sm-4">
               <label for="providerObservation" class="form-label">Observaciones</label>
               <input type="text" id="providerObservation" class="form-control" onfocus="cls_general.validFranz(this.id, ['word', 'number', 'punctuation', 'mathematic'])" value="${observation}">
             </div>
@@ -475,7 +485,10 @@ class class_provider
                 <label class="form-check-label" for="providerStatus">Activo</label>
               </div>
             </div>
-
+            <div class="col-sm-2">
+              <label for="" class="form-label">Total Comprado</label>
+              <input type="text" id="" class="form-control" readonly value="${total_purchased}">
+            </div>
             <div class="col-sm-12 text-center pt-2 pb-2">
               <button id="btn_updateprovider" type="button" class="btn btn-lg btn-primary">Guardar</button>
               <button id="btn_deleteprovider" type="button" class="btn btn-lg btn-danger">Eliminar</button>
@@ -485,7 +498,7 @@ class class_provider
             <div class="col-sm-6">
               <div class="row">
                 <div class="col-sm-9 text-center">
-                  <h5>Facturas por Pagar</h5>
+                  <h5>Facturas por Pagar (B/${cls_general.val_price(total_unpaid,2,1,1)})</h5>
                   <div class="input-group my-3">
                     <input type="text" id="filter_unpaid" class="form-control" placeholder="Buscar por numero." onkeyup="cls_provider.filter_productinput_unpaid(this.value,cls_provider.productinput_unpaid)">
                     <button class="btn btn-outline-secondary" type="button" onclick="cls_provider.filter(document.getElementById('filter_unpaid').value,cls_provider.productinput_unpaid)">
@@ -506,7 +519,7 @@ class class_provider
             <div class="col-sm-6">
               <div class="row">
                 <div class="col-sm-9 text-center">
-                  <h5>Facturas Pagadas</h5>
+                  <h5>Facturas Pagadas (B/${cls_general.val_price(total_paidup, 2, 1, 1)})</h5>
                   <div class="input-group my-3">
                     <input type="text" id="filter_paidup" class="form-control" placeholder="Buscar por numero." onkeyup="cls_provider.filter_productinput_paidup(this.value,cls_provider.productinput_paidup)">
                     <button class="btn btn-outline-secondary" type="button" onclick="cls_provider.filter(document.getElementById('filter_paidup').value,cls_provider.productinput_paidup)">

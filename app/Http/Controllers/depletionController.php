@@ -26,8 +26,8 @@ class depletionController extends Controller
         return view('depletion.index', compact('data'));
     }
     public function getAll(){
-        $depletion = tm_depletion::select('tm_depletions.created_at','tm_depletions.ai_depletion_id','tm_products.tx_product_value','tm_depletions.tx_depletion_quantity','tm_depletions.tx_depletion_status')->join('tm_products','tm_products.ai_product_id','tm_depletions.depletion_ai_product_id')->get();
-        $depletion_order_status = tm_depletion::select('tm_depletions.created_at','tm_depletions.ai_depletion_id','tm_products.tx_product_value','tm_depletions.tx_depletion_quantity','tm_depletions.tx_depletion_status')->join('tm_products','tm_products.ai_product_id','tm_depletions.depletion_ai_product_id')->orderby('tx_depletion_status')->get();
+        $depletion = tm_depletion::select('tm_depletions.created_at','tm_depletions.ai_depletion_id','tm_products.tx_product_value','tm_depletions.tx_depletion_quantity','tm_depletions.tx_depletion_status')->join('tm_products','tm_products.ai_product_id','tm_depletions.depletion_ai_product_id')->orderby('tm_depletions.ai_depletion_id','DESC')->get();
+        $depletion_order_status = tm_depletion::select('tm_depletions.created_at','tm_depletions.ai_depletion_id','tm_products.tx_product_value','tm_depletions.tx_depletion_quantity','tm_depletions.tx_depletion_status')->join('tm_products','tm_products.ai_product_id','tm_depletions.depletion_ai_product_id')->orderby('tx_depletion_status')->orderby('tm_depletions.ai_depletion_id','DESC')->get();
 
         return ['all'=>$depletion,'order_status'=>$depletion_order_status];
     }
@@ -147,7 +147,7 @@ class depletionController extends Controller
         }
         $rs_article = $qry_article->first();
 
-        $rs_articleproduct = tm_articleproduct::join('tm_products','tm_products.ai_product_id','tm_articleproducts.articleproduct_ai_product_id')->where('articleproduct_ai_article_id',$rs_article['ai_article_id'])->get();
+        $rs_articleproduct = tm_articleproduct::where('articleproduct_ai_article_id',$rs_article['ai_article_id'])->get();
         foreach ($rs_articleproduct as $key => $articleproduct) {
             $rs_productmeasure = rel_measure_product::select('tx_measure_product_relation')->where('measure_product_ai_measure_id',$articleproduct['articleproduct_ai_measure_id'])->where('measure_product_ai_product_id',$articleproduct['articleproduct_ai_product_id'])->first();
             $quantity = $rs_productmeasure['tx_measure_product_relation']*$articleproduct['tx_articleproduct_quantity'];
@@ -211,6 +211,14 @@ class depletionController extends Controller
         return [ 'list' => $rs ];
     }
 
+    public function recipe (Request $request){
+        $raw_id = $request->input('a');
+        $rs_product = [];
+        foreach ($raw_id as $id) {
+            $rs_product[] = tm_product::where('ai_product_id',$id)->first();
+        }
 
+        return response()->json(['status'=>'success','message'=>'','data'=>['product_list'=>$rs_product]]);
+    }
 
 }

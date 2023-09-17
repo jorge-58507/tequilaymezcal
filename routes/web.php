@@ -27,7 +27,7 @@ Route::get('/report', function () {
     return view('report.index');
 })->middleware('auth');
 
-Route::get('test/{param_a}/{param_b}', 'userController@check_user');
+Route::get('test/{param_a}', 'datacreditnoteController@getIt');
 
 
 Route::get('configuration', 'configurationController@index')->middleware('auth');
@@ -48,7 +48,6 @@ Route::get('dataproductinput/{param}', 'productinputController@show_data')->midd
 Route::get('provider/{param}/requisition', 'requisitionController@get_requisitionByRequisition')->middleware('auth');
 Route::get('userlog/{param}', 'articleController@get_user');
 Route::get('kitchen/reload', 'kitchenController@reload');
-Route::get('/charge/{param_a}/{param_b}/{param_c}/{param_d}', 'chargeController@filter');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
 // Route::post('article/product', 'measureproductController@save')->middleware('auth');
@@ -65,6 +64,8 @@ Route::post('/request/{param}/open', 'requestController@reopen');
 Route::post('/checklogin_reprint/', 'chargeController@checklogin_reprint');
 Route::post('/checklogin_creditnote/', 'chargeController@checklogin_creditnote');
 Route::post('/checklogin_cancel/', 'commanddataController@checklogin_cancel');
+Route::post('/DepletionByArticle/', 'depletionController@recipe');
+Route::post('/charge/{param_a}/{param_b}/{param_c}', 'chargeController@filter');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
@@ -80,6 +81,8 @@ Route::put('command/{param}/setready', 'commandController@set_ready')->middlewar
 Route::put('requisition/{param}/provider', 'requisitionController@upd_provider')->middleware('auth');
 Route::put('dataproductinput/{param}', 'productinputController@update_data')->middleware('auth');
 Route::put('command/{param}/discount', 'commandController@discount')->middleware('auth');
+Route::put('purchase/{param}/ticket', 'productinputController@upd_ticket')->middleware('auth');
+Route::put('purchase/{param}/date', 'productinputController@upd_date')->middleware('auth');
 
 
 
@@ -115,6 +118,8 @@ Route::get('print_requisition/{param}', 'printController@print_requisition');
 Route::get('print_productoutput/{param}', 'printController@print_productoutput');
 Route::get('print_paymentprovider/{param}', 'printController@print_paymentprovider');
 Route::get('print_charge/{param}', 'printController@print_charge');
+Route::get('print_reportcommanddata/{param_a}/{param_b}/{param_c}', 'printController@print_reportcommanddata');
+Route::get('print_reportdataproductinput/{param_a}/{param_b}/{param_c}', 'printController@print_reportdataproductinput');
 
 
 

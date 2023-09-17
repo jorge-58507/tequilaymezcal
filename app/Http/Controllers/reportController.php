@@ -62,6 +62,11 @@ class reportController extends Controller
                 $rs_commanddata = $commanddataController->report($from,$to);
                 return response()->json([ 'status'=>'success','message'=>'','data'=>[ 'commanddata' => $rs_commanddata['list'] ] ]);
                 break;
+            case '9':
+                $productinputController = new productinputController;
+                $rs_productinput = $productinputController->report_by_product($from,$to);
+                return response()->json([ 'status'=>'success','message'=>'','data'=>[ 'dataproductinput' => $rs_productinput['list'] ] ]);
+                break;
             default:
 
                 break;

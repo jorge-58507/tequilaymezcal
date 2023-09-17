@@ -475,15 +475,16 @@ class class_charge{
         }
 
         if (cls_general.is_empty_var(str) === 0) {
-          cls_general.shot_toast_bs('Ingrese el codigo o título.', { bg: 'text-bg-warning' }); return false;
+          // cls_general.shot_toast_bs('Ingrese el codigo o título.', { bg: 'text-bg-warning' }); return false;
+          str = ' '
         }
         if (cls_general.is_empty_var(date_i) === 0 || cls_general.is_empty_var(date_f) === 0) {
           cls_general.shot_toast_bs('Ingrese las fechas.', { bg: 'text-bg-warning' }); return false;
         }
 
-        var url = '/charge/' + str + "/" + date_i + "/" + date_f + "/" + limit;
-        var method = 'GET';
-        var body = '';
+        var url = '/charge/' + date_i + "/" + date_f + "/" + limit;
+        var method = 'POST';
+        var body = JSON.stringify({ a: str });
         var funcion = function (obj) {
           if (obj.status === 'success') {
             var haystack = obj.data.canceled;
@@ -505,20 +506,6 @@ class class_charge{
           }
         }
         cls_general.async_laravel_request(url, method, funcion, body);
-
-        // var needles = str.split(' ');
-        // var raw_filtered = [];
-        // for (var i in haystack) {
-        //   if (i == limit) { break;  }
-        //   var ocurrencys = 0;
-        //   for (const a in needles) {
-        //     if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_charge_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
-        //   }
-        //   if (ocurrencys === needles.length) {
-        //     raw_filtered.push(haystack[i]);
-        //   }
-        // }
-        // resolve(raw_filtered)
       }, 500)
     });
   }

@@ -163,6 +163,8 @@
     var raw_paymentmethod = JSON.parse('<?php echo json_encode($data['paymentmethod_list']) ?>')    
     const cls_payment = new class_payment(raw_paymentmethod);
     const cls_user = new class_user();
+    var raw_role = JSON.parse('<?php echo json_encode($data['role_list']) ?>')    
+    const cls_role = new class_role(raw_role);
 
   </script>
     {{-- ##############    JQUERY   ############### --}}

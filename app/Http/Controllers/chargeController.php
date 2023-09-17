@@ -493,7 +493,8 @@ class chargeController extends Controller
         $rs = $this->showIt($slug);
         return response()->json(['status'=>'success','message'=>'','data'=>['charge'=>$rs['charge'], 'payment'=>$rs['payment'], 'article'=>$rs['article']]]);
     }
-    public function filter($str,$from,$to,$limit){
+    public function filter(Request $request, $from,$to,$limit){
+        $str = $request->input('a');
         $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at')
         ->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')
         ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')

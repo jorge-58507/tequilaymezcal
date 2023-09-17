@@ -156,7 +156,7 @@
 
 @section('javascript')
 	<script src="{{ asset('attached/js/purchase.js') }}"></script>
-	{{-- <script src="{{ asset('attached/js/sweetalert.js') }}"></script> --}}
+	<script src="{{ asset('attached/js/sweetalert.js') }}"></script>
 	<script src="{{ asset('attached/js/jquery-ui.min_edit.js') }}"></script>
 	
 	<script type="text/javascript">

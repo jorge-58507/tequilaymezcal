@@ -109,7 +109,6 @@ class articleController extends Controller
             $articleproduct = tm_articleproduct::where('articleproduct_ai_article_id',$rs['ai_article_id'])->where('articleproduct_ai_presentation_id',$rs_price[0]['ai_presentation_id'])->get();
         }
         return response()->json(['status'=>'success','data'=>['article'=>$rs, 'price' => $rs_price, 'articleproduct'=>$articleproduct]]);
-        // return response()->json(['status'=>'success','data'=>['article'=>$rs, 'price' => $rs_price]]);
     }
 
     /**
