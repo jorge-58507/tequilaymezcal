@@ -2402,7 +2402,6 @@ class class_user {
     var option_role = '';
     var role_list = cls_role.role_list
     role_list.map(x => option_role += `<option value="${x.id}">${x.description} </option>`)
-HACER ESTE CAMPO PARA CRAR USUARIOS
     var content = `
         <div class="row">
           <div class="col-xs-12">

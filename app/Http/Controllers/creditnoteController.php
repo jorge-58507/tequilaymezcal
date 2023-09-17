@@ -11,6 +11,14 @@ use App\tm_commanddata;
 use App\tm_datacreditnote;
 use App\tm_payment;
 
+require '../vendor/autoload.php';
+
+use Mike42\Escpos\Printer;
+use Mike42\Escpos\EscposImage;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
+
+
 class creditnoteController extends Controller
 {
     /**
