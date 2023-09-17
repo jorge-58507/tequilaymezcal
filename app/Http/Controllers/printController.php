@@ -37,40 +37,107 @@ class printController extends Controller
 			$content .= ($value != end($raw_page['content'])) ? $value.'<span style="page-break-after: always"></span>' : $value;
 		}
 		// @page { margin: 170px 25px 100px 25px;}
-		$output = '
-		<link type="text/css" rel="stylesheet" href="attached/css/print.css"  media="screen,projection"/>
-		<link type="text/css" rel="stylesheet" href="attached/css/bootstrap.css"  media="screen,projection">
-		<link type="text/css" rel="stylesheet" href="attached/js/bootstrap.css"  media="screen,projection">
-		<script src="attached/js/bootstrap.min.js"></script>
+		// $output = '
+		// 	<link type="text/css" rel="stylesheet" href="attached/css/print.css"  media="screen,projection"/>
+		// 	<link type="text/css" rel="stylesheet" href="attached/css/bootstrap.css"  media="screen,projection">
+		// 	<script src="attached/js/bootstrap.min.js"></script>
 
-		<title>'.$raw_page['title_page'].'</title>
-		<style>
-			.print_header { position: fixed; top: -30px; left: 0px; right: 0px; height: 50px; }
-			.print_page { position: fixed; top: 130px; left: 0px; right: 0px; height: 50px; }
-			.print_bottom { position: fixed; bottom: -50px; left: 0px; right: 0px; height: 50px; }
-		</style>
-		<div class="print_header">
-				<div class="text-center col-sm-3 col_25" style="height: 100px; float: left;">&nbsp;</div>
-				<div class="text-center col-sm-6 col_25" style="height: 100px; float: left;">
-					<img width="115px" height="115px" src="./attached/image/logo_print.png">
-					<p style="font-size: 10pt;">Cancino Nuñez, S.A.</p>
-				</div>
-				<div class="text-center col-sm-3 col_25" style="height: 100px; float: left; text-align: right;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
-		</div>
-		<div class="print_page">
-			<div class="top_content">
-				<div class="col_100 text-center h_30" >
-					<span class="content_title sanson_title fs_20">
-						'.$raw_page['title'].'
-					</span>
-				</div>
+		// 	<title>'.$raw_page['title_page'].'</title>
+		// 	<style>
+		// 		.print_header { position: fixed; top: -30px; left: 0px; right: 0px; height: 150px; }
+		// 		.print_page { position:  130px; left: 0px; right: 0px; height: 50px; }
+		// 		.print_bottom { position: fixed; bottom: -50px; left: 0px; right: 0px; height: 50px; }
+		// 	</style>
+		// 	<div class="print_header">
+		// 			<div class="text-center col-sm-3 col_25" style="height: 140px; float: left;">&nbsp;</div>
+		// 			<div class="text-center col-sm-6 col_25" style="height: 140px; float: left;">
+		// 				<img width="115px" height="115px" src="./attached/image/logo_print2.png">
+		// 				<p style="font-size: 10pt;">Cancino Nuñez, S.A.</p>
+		// 			</div>
+		// 			<div class="text-center col-sm-3 col_25" style="height: 140px; float: left; text-align: right;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
+		// 	</div>
+		// 	<div class="print_page">
+		// 		<div class="top_content">
+		// 			<div class="col_100 text-center h_30" >
+		// 				<span class="content_title sanson_title fs_20">
+		// 					'.$raw_page['title'].'
+		// 				</span>
+		// 			</div>
+		// 		</div>
+		// 		<div class="px_10">'.$content.'</div>
+		// 	</div>
+		// 	<div class="print_bottom">
+		// 		'.$raw_page['bottom'].'
+		// 	</div>
+		// ';
+		// $output = '
+		// 				Lorem ipsum dolor sit amet consectetur adipi<br/>sicing elit. Ex aspernatur cupiditate exercitationem, minima p<br/>erferendis dicta a incidunt et, voluptates quia odit distinct<br/>io magnam? Eveniet deleniti sit quod corporis vel cupiditate.
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Commodi id unde dolore ea totam repellendus expl<br/>icabo nesciunt ex magni quae, expedita ducimus sapiente quam <br/>minus cum voluptate nam soluta quod?
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Deserunt, sunt. In, ipsum illo. Molestias sapient<br/>e saepe necessitatibus harum similique ut vero nemo, dignissi<br/>mos, autem nam incidunt sed aut non quia.
+		// 	Lorem ipsum dolor sit amet, consectetur adi<br/>pisicing elit. Eligendi quibusdam suscipit est animi. Debitis, <br/>earum aliquam, tempore eos maxime, a delectus praesentium rep<br/>ellat ullam laboriosam nulla corporis rerum soluta! Velit.
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Corrupti nesciunt at ab fugit, dolore distinctio <br/>quibusdam consequuntur perspiciatis fuga vero ratione voluptat<br/>em neque eaque magnam corporis iure ut numquam quas?
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Maiores esse eaque soluta dignissimos optio, rem<br/> quis fuga alias culpa perspiciatis, minus aliquam, libero sun<br/>t! Cupiditate facilis cumque deserunt vitae ducimus!
+		// 	Lorem ipsum, dolor sit amet consectetur adi<br/>pisicing elit. Magnam rerum alias ea officiis quia eum, sed, in<br/> eius numquam natus ad beatae corporis maiores dolor cum dolo<br/>re blanditiis exercitationem eos!
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur at <br/>reprehenderit, laborum, cupiditate eum rerum cumque necessitatibus iste ab aliquam consequatur minus dolores q<br/>uibusdam? Culpa illum fugit exceptur<br/>i itaque hic?
+		// 	Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sequi, digni<br/>ssimos earum reprehenderit sint voluptates velit explicabo corrupti quidem aspernatur beatae saepe. Tenetur ha<br/>rum soluta quisquam natus, ea beatae <br/>aliquid assumenda?
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad, eveniet r<br/>atione. Expedita ratione ipsa sequi consectetur. Suscipit minima vel quia temporibus dolores voluptate dolor d<br/>oloremque, eius exercitationem perfe<br/>rendis nulla fugiat.
+		// 			Lorem ipsum dolor sit amet consectetur adipi<br/>sicing elit. Ex aspernatur cupiditate exercitationem, minima p<br/>erferendis dicta a incidunt et, voluptates quia odit distinct<br/>io magnam? Eveniet deleniti sit quod corporis vel cupiditate.
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Commodi id unde dolore ea totam repellendus expl<br/>icabo nesciunt ex magni quae, expedita ducimus sapiente quam <br/>minus cum voluptate nam soluta quod?
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Deserunt, sunt. In, ipsum illo. Molestias sapient<br/>e saepe necessitatibus harum similique ut vero nemo, dignissi<br/>mos, autem nam incidunt sed aut non quia.
+		// 	Lorem ipsum dolor sit amet, consectetur adi<br/>pisicing elit. Eligendi quibusdam suscipit est animi. Debitis, <br/>earum aliquam, tempore eos maxime, a delectus praesentium rep<br/>ellat ullam laboriosam nulla corporis rerum soluta! Velit.
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Corrupti nesciunt at ab fugit, dolore distinctio <br/>quibusdam consequuntur perspiciatis fuga vero ratione voluptat<br/>em neque eaque magnam corporis iure ut numquam quas?
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Maiores esse eaque soluta dignissimos optio, rem<br/> quis fuga alias culpa perspiciatis, minus aliquam, libero sun<br/>t! Cupiditate facilis cumque deserunt vitae ducimus!
+		// 	Lorem ipsum, dolor sit amet consectetur adi<br/>pisicing elit. Magnam rerum alias ea officiis quia eum, sed, in<br/> eius numquam natus ad beatae corporis maiores dolor cum dolo<br/>re blanditiis exercitationem eos!
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur at <br/>reprehenderit, laborum, cupiditate eum rerum cumque necessitatibus iste ab aliquam consequatur minus dolores q<br/>uibusdam? Culpa illum fugit exceptur<br/>i itaque hic?
+		// 	Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sequi, digni<br/>ssimos earum reprehenderit sint voluptates velit explicabo corrupti quidem aspernatur beatae saepe. Tenetur ha<br/>rum soluta quisquam natus, ea beatae <br/>aliquid assumenda?
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad, eveniet r<br/>atione. Expedita ratione ipsa sequi consectetur. Suscipit minima vel quia temporibus dolores voluptate dolor d<br/>oloremque, eius exercitationem perfe<br/>rendis nulla fugiat.
+		// 	Lorem ipsum dolor sit amet consectetur adipi<br/>sicing elit. Ex aspernatur cupiditate exercitationem, minima p<br/>erferendis dicta a incidunt et, voluptates quia odit distinct<br/>io magnam? Eveniet deleniti sit quod corporis vel cupiditate.
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Commodi id unde dolore ea totam repellendus expl<br/>icabo nesciunt ex magni quae, expedita ducimus sapiente quam <br/>minus cum voluptate nam soluta quod?
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Deserunt, sunt. In, ipsum illo. Molestias sapient<br/>e saepe necessitatibus harum similique ut vero nemo, dignissi<br/>mos, autem nam incidunt sed aut non quia.
+		// 	Lorem ipsum dolor sit amet, consectetur adi<br/>pisicing elit. Eligendi quibusdam suscipit est animi. Debitis, <br/>earum aliquam, tempore eos maxime, a delectus praesentium rep<br/>ellat ullam laboriosam nulla corporis rerum soluta! Velit.
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Corrupti nesciunt at ab fugit, dolore distinctio <br/>quibusdam consequuntur perspiciatis fuga vero ratione voluptat<br/>em neque eaque magnam corporis iure ut numquam quas?
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Maiores esse eaque soluta dignissimos optio, rem<br/> quis fuga alias culpa perspiciatis, minus aliquam, libero sun<br/>t! Cupiditate facilis cumque deserunt vitae ducimus!
+		// 	Lorem ipsum, dolor sit amet consectetur adi<br/>pisicing elit. Magnam rerum alias ea officiis quia eum, sed, in<br/> eius numquam natus ad beatae corporis maiores dolor cum dolo<br/>re blanditiis exercitationem eos!
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur at <br/>reprehenderit, laborum, cupiditate eum rerum cumque necessitatibus iste ab aliquam consequatur minus dolores q<br/>uibusdam? Culpa illum fugit exceptur<br/>i itaque hic?
+		// 	Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sequi, digni<br/>ssimos earum reprehenderit sint voluptates velit explicabo corrupti quidem aspernatur beatae saepe. Tenetur ha<br/>rum soluta quisquam natus, ea beatae <br/>aliquid assumenda?
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad, eveniet r<br/>atione. Expedita ratione ipsa sequi consectetur. Suscipit minima vel quia temporibus dolores voluptate dolor d<br/>oloremque, eius exercitationem perfe<br/>rendis nulla fugiat.
+
+		// ';
+
+		$output = '
+			<link type="text/css" rel="stylesheet" href="attached/css/print.css"  media="screen,projection"/>
+			<link type="text/css" rel="stylesheet" href="attached/css/bootstrap.css"  media="screen,projection">
+			<script src="attached/js/bootstrap.min.js"></script>
+
+			<title>'.$raw_page['title_page'].'</title>
+			<style>
+				.print_header { position: fixed; top: -30px; left: 0px; right: 0px; height: 160px; }
+				.print_page { top: 180px; left: 0px; right: 0px; height: 50px; }
+				.print_bottom { position: fixed; bottom: -50px; left: 0px; right: 0px; height: 50px; }
+			</style>
+			<div class="print_header">
+					<div class="text-center col-sm-3 col_25" style="height: 160px; float: left;">&nbsp;</div>
+					<div class="text-center col-sm-6 col_25" style="height: 160px; float: left;">
+						<img width="115px" height="115px" src="./attached/image/logo_print2.png">
+						<p style="font-size: 10pt;">Cancino Nuñez, S.A.</p>
+					</div>
+					<div class="text-center col-sm-3 col_25" style="height: 160px; float: left; text-align: right;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
 			</div>
-			<div class="px_10">'.$content.'</div>
-		</div>
-		<div class="print_bottom">
-			'.$raw_page['bottom'].'
-		</div>
-				';
+			<div class="print_page">				
+		 		<div class="">
+		 			<div class="col_100 text-center " >
+		 				<span class=" sanson_title fs_20">
+		 					'.$raw_page['title'].'
+		 				</span>
+		 			</div>
+		 		</div>
+		 		<div class="px_10">'.$content.'</div>
+			</div>
+			<div class="print_bottom">
+				'.$raw_page['bottom'].'
+			</div>
+		';
+
 		return $output;
 	}
 	function half_page ($raw_page) {
@@ -1123,6 +1190,7 @@ class printController extends Controller
 		}
 		$content = '
 			<div>
+			
 				<h4>Listado de Productos Comprados, Desde: '.date('d-m-Y',strtotime($from)).' Hasta: '.date('d-m-Y',strtotime($to)).'</h4>
 				<table class="table h_70">
 					<thead>
@@ -1146,6 +1214,41 @@ class printController extends Controller
 				</table>
 			</div>
 		';
+
+		// $content = '
+		// 		Lorem ipsum dolor sit amet consectetur adipi<br/>sicing elit. Ex aspernatur cupiditate exercitationem, minima p<br/>erferendis dicta a incidunt et, voluptates quia odit distinct<br/>io magnam? Eveniet deleniti sit quod corporis vel cupiditate.
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Commodi id unde dolore ea totam repellendus expl<br/>icabo nesciunt ex magni quae, expedita ducimus sapiente quam <br/>minus cum voluptate nam soluta quod?
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Deserunt, sunt. In, ipsum illo. Molestias sapient<br/>e saepe necessitatibus harum similique ut vero nemo, dignissi<br/>mos, autem nam incidunt sed aut non quia.
+		// 	Lorem ipsum dolor sit amet, consectetur adi<br/>pisicing elit. Eligendi quibusdam suscipit est animi. Debitis, <br/>earum aliquam, tempore eos maxime, a delectus praesentium rep<br/>ellat ullam laboriosam nulla corporis rerum soluta! Velit.
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Corrupti nesciunt at ab fugit, dolore distinctio <br/>quibusdam consequuntur perspiciatis fuga vero ratione voluptat<br/>em neque eaque magnam corporis iure ut numquam quas?
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Maiores esse eaque soluta dignissimos optio, rem<br/> quis fuga alias culpa perspiciatis, minus aliquam, libero sun<br/>t! Cupiditate facilis cumque deserunt vitae ducimus!
+		// 	Lorem ipsum, dolor sit amet consectetur adi<br/>pisicing elit. Magnam rerum alias ea officiis quia eum, sed, in<br/> eius numquam natus ad beatae corporis maiores dolor cum dolo<br/>re blanditiis exercitationem eos!
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur at <br/>reprehenderit, laborum, cupiditate eum rerum cumque necessitatibus iste ab aliquam consequatur minus dolores q<br/>uibusdam? Culpa illum fugit exceptur<br/>i itaque hic?
+		// 	Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sequi, digni<br/>ssimos earum reprehenderit sint voluptates velit explicabo corrupti quidem aspernatur beatae saepe. Tenetur ha<br/>rum soluta quisquam natus, ea beatae <br/>aliquid assumenda?
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad, eveniet r<br/>atione. Expedita ratione ipsa sequi consectetur. Suscipit minima vel quia temporibus dolores voluptate dolor d<br/>oloremque, eius exercitationem perfe<br/>rendis nulla fugiat.
+		// 			Lorem ipsum dolor sit amet consectetur adipi<br/>sicing elit. Ex aspernatur cupiditate exercitationem, minima p<br/>erferendis dicta a incidunt et, voluptates quia odit distinct<br/>io magnam? Eveniet deleniti sit quod corporis vel cupiditate.
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Commodi id unde dolore ea totam repellendus expl<br/>icabo nesciunt ex magni quae, expedita ducimus sapiente quam <br/>minus cum voluptate nam soluta quod?
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Deserunt, sunt. In, ipsum illo. Molestias sapient<br/>e saepe necessitatibus harum similique ut vero nemo, dignissi<br/>mos, autem nam incidunt sed aut non quia.
+		// 	Lorem ipsum dolor sit amet, consectetur adi<br/>pisicing elit. Eligendi quibusdam suscipit est animi. Debitis, <br/>earum aliquam, tempore eos maxime, a delectus praesentium rep<br/>ellat ullam laboriosam nulla corporis rerum soluta! Velit.
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Corrupti nesciunt at ab fugit, dolore distinctio <br/>quibusdam consequuntur perspiciatis fuga vero ratione voluptat<br/>em neque eaque magnam corporis iure ut numquam quas?
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Maiores esse eaque soluta dignissimos optio, rem<br/> quis fuga alias culpa perspiciatis, minus aliquam, libero sun<br/>t! Cupiditate facilis cumque deserunt vitae ducimus!
+		// 	Lorem ipsum, dolor sit amet consectetur adi<br/>pisicing elit. Magnam rerum alias ea officiis quia eum, sed, in<br/> eius numquam natus ad beatae corporis maiores dolor cum dolo<br/>re blanditiis exercitationem eos!
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur at <br/>reprehenderit, laborum, cupiditate eum rerum cumque necessitatibus iste ab aliquam consequatur minus dolores q<br/>uibusdam? Culpa illum fugit exceptur<br/>i itaque hic?
+		// 	Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sequi, digni<br/>ssimos earum reprehenderit sint voluptates velit explicabo corrupti quidem aspernatur beatae saepe. Tenetur ha<br/>rum soluta quisquam natus, ea beatae <br/>aliquid assumenda?
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad, eveniet r<br/>atione. Expedita ratione ipsa sequi consectetur. Suscipit minima vel quia temporibus dolores voluptate dolor d<br/>oloremque, eius exercitationem perfe<br/>rendis nulla fugiat.
+		// 	Lorem ipsum dolor sit amet consectetur adipi<br/>sicing elit. Ex aspernatur cupiditate exercitationem, minima p<br/>erferendis dicta a incidunt et, voluptates quia odit distinct<br/>io magnam? Eveniet deleniti sit quod corporis vel cupiditate.
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Commodi id unde dolore ea totam repellendus expl<br/>icabo nesciunt ex magni quae, expedita ducimus sapiente quam <br/>minus cum voluptate nam soluta quod?
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Deserunt, sunt. In, ipsum illo. Molestias sapient<br/>e saepe necessitatibus harum similique ut vero nemo, dignissi<br/>mos, autem nam incidunt sed aut non quia.
+		// 	Lorem ipsum dolor sit amet, consectetur adi<br/>pisicing elit. Eligendi quibusdam suscipit est animi. Debitis, <br/>earum aliquam, tempore eos maxime, a delectus praesentium rep<br/>ellat ullam laboriosam nulla corporis rerum soluta! Velit.
+		// 	Lorem ipsum dolor sit amet consectetur adip<br/>isicing elit. Corrupti nesciunt at ab fugit, dolore distinctio <br/>quibusdam consequuntur perspiciatis fuga vero ratione voluptat<br/>em neque eaque magnam corporis iure ut numquam quas?
+		// 	Lorem ipsum dolor sit, amet consectetur adi<br/>pisicing elit. Maiores esse eaque soluta dignissimos optio, rem<br/> quis fuga alias culpa perspiciatis, minus aliquam, libero sun<br/>t! Cupiditate facilis cumque deserunt vitae ducimus!
+		// 	Lorem ipsum, dolor sit amet consectetur adi<br/>pisicing elit. Magnam rerum alias ea officiis quia eum, sed, in<br/> eius numquam natus ad beatae corporis maiores dolor cum dolo<br/>re blanditiis exercitationem eos!
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur at <br/>reprehenderit, laborum, cupiditate eum rerum cumque necessitatibus iste ab aliquam consequatur minus dolores q<br/>uibusdam? Culpa illum fugit exceptur<br/>i itaque hic?
+		// 	Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sequi, digni<br/>ssimos earum reprehenderit sint voluptates velit explicabo corrupti quidem aspernatur beatae saepe. Tenetur ha<br/>rum soluta quisquam natus, ea beatae <br/>aliquid assumenda?
+		// 	Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad, eveniet r<br/>atione. Expedita ratione ipsa sequi consectetur. Suscipit minima vel quia temporibus dolores voluptate dolor d<br/>oloremque, eius exercitationem perfe<br/>rendis nulla fugiat.
+
+		
+		// ';
 		$content_bottom = '';
 
 		$raw_page = [
