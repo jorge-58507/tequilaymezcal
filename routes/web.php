@@ -16,7 +16,7 @@ Route::get('/', function () {
     $rs_user = User::select('users.name','users.email','roles.name as rol')
     ->join('role_users','users.id','=', 'role_users.user_id')
     ->join('roles','roles.id','=', 'role_users.role_id')
-    ->wherein('roles.name',['bartender','cashier']) ->get();
+    ->wherein('roles.name',['bartender','cashier'])->where('users.status',1)->get();
     $data = ['user_list'=>$rs_user];
     return view('welcome', compact('data'));
 })->name('welcome');
@@ -66,6 +66,8 @@ Route::post('/checklogin_creditnote/', 'chargeController@checklogin_creditnote')
 Route::post('/checklogin_cancel/', 'commanddataController@checklogin_cancel');
 Route::post('/DepletionByArticle/', 'depletionController@recipe');
 Route::post('/charge/{param_a}/{param_b}/{param_c}', 'chargeController@filter');
+Route::post('/user_role/{param_a}/add', 'userController@add_role');
+Route::post('/user_role/{param_a}/delete', 'userController@delete_role');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
@@ -83,6 +85,7 @@ Route::put('dataproductinput/{param}', 'productinputController@update_data')->mi
 Route::put('command/{param}/discount', 'commandController@discount')->middleware('auth');
 Route::put('purchase/{param}/ticket', 'productinputController@upd_ticket')->middleware('auth');
 Route::put('purchase/{param}/date', 'productinputController@upd_date')->middleware('auth');
+Route::put('user_password/{param}', 'userController@upd_password')->middleware('auth');
 
 
 
@@ -110,6 +113,7 @@ Route::resource('paymentprovider', 'paymentproviderController')->middleware('aut
 Route::resource('datapaymentprovider', 'datapaymentproviderController')->middleware('auth');
 Route::resource('productoutput', 'productoutputController')->middleware('auth');
 Route::resource('user', 'userController')->middleware('auth');
+Route::resource('role', 'roleController')->middleware('auth');
 
 // PRINT
 Route::get('print_cashregister/{param}', 'cashregisterController@print_rollpaper_cashregister');

@@ -1527,7 +1527,6 @@ class class_article {
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-
   price(article_slug,article_description){
     var url = '/price/' + article_slug + '/article'; var method = 'GET';
     var body = "";
@@ -1753,7 +1752,9 @@ class class_articleproduct{
     document.getElementById('container_recipe').innerHTML = content;
 
     const modal = bootstrap.Modal.getInstance('#articleproductModal');
-    modal.hide();
+    if (modal) {
+      modal.hide();
+    }
   }
   delete_selected(index){
     cls_articleproduct.articleproduct_selected.splice(index,1);
@@ -1794,7 +1795,7 @@ class class_articleproduct{
 
       if (check_presentation != articleproduct.articleproduct_ai_presentation_id) {
         tbody_price += `
-          <tr class="text-bg-secondary">  
+          <tr class="text-bg-secondary cursor_pointer" onclick="cls_articleproduct.edit('${articleproduct.tx_article_slug}',${articleproduct.articleproduct_ai_presentation_id})">
             <td colspan="2">${articleproduct.tx_presentation_value} (${date})</td>
           </tr>
         `;
@@ -1822,7 +1823,27 @@ class class_articleproduct{
     </table>`;
     return content;
   }
-  
+  edit(article_slug,presentation_id) {
+    var url = `/recipe/${presentation_id}/${article_slug}`;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_articleproduct.articleproduct_selected = [];
+        obj.data.recipe.map((rec) => {
+          var ingredient = JSON.parse(rec.tx_articleproduct_ingredient);
+          cls_articleproduct.articleproduct_selected.push(ingredient);
+        })
+        cls_articleproduct.render_articleproduct();
+        document.getElementById('recipePresentation').value = presentation_id;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+
+  }
 }
 class class_price{
   generate_tableprice(raw_price){
@@ -2353,13 +2374,173 @@ class class_payment {
 }
 class class_role{
   constructor(raw_role) {
-    this.role_list = raw_role;
+    this.role_list = raw_role.all;
+    this.role_active = raw_role.active;
+    this.role_inactive = raw_role.inactive;
   }
+  render (){
+    var content = `
+      <div class="row">
+        <div class="col-12">
+          <h5>Listado de Roles</h5>
+        </div>
+        <div id="container_list_rolemodal" class="col-12"></div>
+      </div>
+    `;
+    document.getElementById('roleModal_content').innerHTML = content;
+
+    document.getElementById('container_list_rolemodal').innerHTML = cls_role.generate_list(cls_role.role_list);
+    const modal = new bootstrap.Modal('#roleModal', {})
+    modal.show();
+  }
+  generate_list(raw_list) {
+    var list = '<div class="list-group">';
+    for (const a in raw_list) {
+      var bg = (raw_list[a]['status'] === 0) ? 'text-bg-secondary' : '';
+      list += `<a href = "#" class="list-group-item list-group-item-action ${bg}" onclick="event.preventDefault(); cls_role.show(${raw_list[a]['id']})" >${raw_list[a]['description']}</a>`;
+    }
+    list += '</div>';
+    return list;
+  }
+  create() {
+    var content = `
+      <div class="row">
+        <div class="col-12">
+          <label for="roleValue" class="form-label">Descripci&oacute;n</label>
+          <input type="text" class="form-control" id="roleValue" onfocus="cls_general.validFranz(this.id, ['word'])" onkeyup="cls_general.limitText(this, 20, toast = 0)" onblur="cls_general.limitText(this, 20, toast = 0)">
+        </div>
+        <div class="col-12 py-3 text-center">
+          <button type="button" class="btn btn-success" onclick="cls_general.disable_submit(this); cls_role.save()">Guardar</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('roleModal_content').innerHTML = content;
+    document.getElementById('roleModal_title').innerHTML = '<h4>Crear Rol</h4>';
+  }
+  save() {
+    var str = document.getElementById('roleValue').value;
+
+    if (cls_general.is_empty_var(str) === 0) {
+      cls_general.shot_toast_bs("Debe ingresar la información.", { bg: 'text-bg-warning' }); return false;
+    }
+    if (!/^[a-zA-Z]+$/.test(str)) {
+      cls_general.shot_toast_bs("Debe ingresar solo letras.", { bg: 'text-bg-warning' }); return false;
+    }
+    var url = '/role/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: str });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_role.role_list = obj.data.list.all;
+        cls_role.role_active = obj.data.list.active;
+        cls_role.role_inactive = obj.data.list.inactive;
+
+        var content = `
+          <div class="row">
+            <div class="col-12">
+              <h5>Listado de Roles</h5>
+            </div>
+            <div id="container_list_rolemodal" class="col-12"></div>
+          </div>
+        `;
+        document.getElementById('roleModal_content').innerHTML = content;
+        document.getElementById('container_list_rolemodal').innerHTML = cls_role.generate_list(cls_role.role_list);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  show(role_id) {
+    var url = '/role/' + role_id; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var content = `
+          <div class="row">
+            <div class="col-12">
+              <label for="roleValue" class="form-label">Descripci&oacute;n</label>
+              <input type="text" class="form-control" id="roleValue" onfocus="cls_general.validFranz(this.id, ['word'])" onkeyup="cls_general.limitText(this, 20, toast = 0)" onblur="cls_general.limitText(this, 20, toast = 0)" value="${obj.data.info.description}">
+            </div>
+            <div class="col-12 py-3 text-center">
+              <button type="button" class="btn btn-success" onclick="cls_general.disable_submit(this); cls_role.update(${role_id})">Guardar</button>
+              &nbsp;&nbsp;
+              <button type="button" class="btn btn-warning" onclick="cls_general.disable_submit(this); cls_role.delete(${role_id})">Eliminar</button>
+            </div>
+          </div>
+        `;
+        document.getElementById('roleModal_content').innerHTML = content;
+        document.getElementById('roleModal_title').innerHTML = '<h4>Modificar Rol</h4>';
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  update(role_id) {
+    var str = document.getElementById('roleValue').value;
+
+    if (cls_general.is_empty_var(str) === 0) {
+      cls_general.shot_toast_bs("Debe ingresar la información.", { bg: 'text-bg-warning' }); return false;
+    }
+    if (!/^[a-zA-Z]+$/.test(str)) {
+      cls_general.shot_toast_bs("Debe ingresar solo letras.", { bg: 'text-bg-warning' }); return false;
+    }
+    var url = '/role/' + role_id;
+    var method = 'PUT';
+    var body = JSON.stringify({ a: str });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_role.role_list = obj.data.list.all;
+        cls_role.role_active = obj.data.list.active;
+        cls_role.role_inactive = obj.data.list.inactive;
+
+        var content = `
+          <div class="row">
+            <div class="col-12">
+              <h5>Listado de Roles</h5>
+            </div>
+            <div id="container_list_rolemodal" class="col-12"></div>
+          </div>
+        `;
+        document.getElementById('roleModal_content').innerHTML = content;
+        document.getElementById('container_list_rolemodal').innerHTML = cls_role.generate_list(cls_role.role_list);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  delete(role_id) {
+    var url = '/role/' + role_id; var method = 'DELETE';
+    var body = "";
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_role.role_list = obj.data.list.all;
+        cls_role.role_active = obj.data.list.active;
+        cls_role.role_inactive = obj.data.list.inactive;
+
+        var content = `
+          <div class="row">
+            <div class="col-12">
+              <h5>Listado de Roles</h5>
+            </div>
+            <div id="container_list_rolemodal" class="col-12"></div>
+          </div>
+        `;
+        document.getElementById('roleModal_content').innerHTML = content;
+        document.getElementById('container_list_rolemodal').innerHTML = cls_role.generate_list(cls_role.role_list);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
 }
 class class_user {
   constructor (){
     this.info = [];
-    this.role_list = [];
   }
   render() {
     var url = '/user'; var method = 'GET';
@@ -2393,96 +2574,87 @@ class class_user {
   generate_list(raw_list) {
     var list = '<div class="list-group">';
     for (const a in raw_list) {
-      list += `<a href = "#" class="list-group-item list-group-item-action" onclick="event.preventDefault(); cls_user.show('${raw_list[a]['id']}')" >${raw_list[a]['name']}</a>`;
+      var bg = (raw_list[a]['status'] === 0) ? 'text-bg-secondary' : '';
+      list += `<a href = "#" class="list-group-item list-group-item-action ${bg}" onclick="event.preventDefault(); cls_user.show('${raw_list[a]['id']}')" >${raw_list[a]['name']}</a>`;
     }
     list += '</div>';
     return list;
   }
   create() {
     var option_role = '';
-    var role_list = cls_role.role_list
+    var role_list = cls_role.role_active
     role_list.map(x => option_role += `<option value="${x.id}">${x.description} </option>`)
     var content = `
         <div class="row">
-          <div class="col-xs-12">
-            <label for="productValue" class="form-label">Descripci&oacute;n</label>
-            <input type="text" class="form-control" id="productValue" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 100, toast = 0)" onblur="cls_general.limitText(this, 100, toast = 0)">
-            <label for="productReference" class="form-label">Referencia</label>
-            <input type="text" class="form-control" id="productReference" value="" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 150, toast = 0)" onkeyup="cls_general.limitText(this, 150, toast = 0)">
+          <div class="col-6 col-sm-6">
+            <label for="userName" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="userName" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 100, toast = 0)" onblur="cls_general.limitText(this, 100, toast = 0)">
           </div>
-          <div class="row">
-            <div class="col-lg-6 col-md-12">
-              <label for="productCode" class="form-label">C&oacute;digo</label>
-              <input type="text" class="form-control" id="productCode" value="" onfocus="cls_general.validFranz(this.id, ['number'],'abcdefghijklmnñopqrstuvwxyzáéíóúABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ')" onkeyup="cls_general.limitText(this, 15, toast = 0)" onkeyup="cls_general.limitText(this, 15, toast = 0)" placeholder="00000000" >
-            </div>
-            <div class="col-lg-3 col-md-12">
-              <label for="productTaxrate" class="form-label">% Imp</label>
-              <input type="text" class="form-control" id="productTaxrate" value="${cls_option.option.TAX}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)">
-            </div>
-            <div class="col-lg-3 col-md-12">
-              <label for="productDiscountrate" class="form-label">% Desc</label>
-              <input type="text" class="form-control" id="productDiscountrate" value="0" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 3, toast = 0)" onkeyup="cls_general.limitText(this, 3, toast = 0)">
-            </div>
+          <div class="col-12 col-sm-6">
+            <label for="userEmail" class="form-label">E-Mail</label>
+            <input type="text" class="form-control" id="userEmail" value="" onfocus="cls_general.validFranz(this.id, ['number','symbol','punctuation'],'abcdefghijklmnñopqrstuvwxyzáéíóúABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ')" onkeyup="cls_general.limitText(this, 100, toast = 0)" onkeyup="cls_general.limitText(this, 100, toast = 0)" placeholder="ejemplo@mail.com" onblur="cls_general.checkEmail(this);" >
           </div>
-          <div class="row">
-            <div class="col-lg-6 col-md-12">
-              <label for="productMinimun" class="form-label">M&iacute;nimo</label>
-              <input type="text" class="form-control" id="productMinimum" value="" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 9, toast = 0)" onkeyup="cls_general.limitText(this, 9, toast = 0)">
-            </div>
-            <div class="col-lg-6 col-md-12">
-              <label for="productMaximun" class="form-label">M&aacute;ximo</label>
-              <input type="text" class="form-control" id="productMaximum" value="" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 9, toast = 0)" onkeyup="cls_general.limitText(this, 9, toast = 0)">
-            </div>
+          <div class="col-12  col-sm-6">
+            <label for="userPassword1" class="form-label">Contrase&ntilde;a</label>
+            <input type="password" class="form-control" id="userPassword1" value="">
           </div>
-          <div class="row">
-            <div class="col-lg-6">
-              <label for="productMeasure" class="form-label">Medida M&iacute;nima = 1</label>
-              <select id="productMeasure" class="form-select"><option value="" disabled selected>Seleccione</option> ${option_productmeasure}</select>
-            </div>
-            <div class="col-lg-6">
-              <label for="productCategory" class="form-label">Categor&iacute;a</label>
-              <select id="productCategory" class="form-select"><option value="" disabled selected>Seleccione</option> ${option_productcategory}</select>
-            </div>
+          <div class="col-12  col-sm-6">
+            <label for="userPassword2" class="form-label">Repetir Contrase&ntilde;a</label>
+            <input type="password" class="form-control" id="userPassword2" value="">
           </div>
-          <div class="row">
-            <div class="col-lg-4">
-              <div class="form-check form-switch py-3">
-                <input class="form-check-input" type="checkbox" role="switch" id="productStatus" checked>
-                <label class="form-check-label" for="productStatus">Activo</label>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="form-check form-switch py-3">
-                <input class="form-check-input" type="checkbox" role="switch" id="productAlarm" checked>
-                <label class="form-check-label" for="productAlarm">Alarma</label>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="form-check form-switch py-3">
-                <input class="form-check-input" type="checkbox" role="switch" id="productDiscountable" checked>
-                <label class="form-check-label" for="productDiscountable">Descontable</label>
-              </div>
-            </div>
+          <div class="col-12  col-sm-6">
+            <label for="userRole" class="form-label">Rol</label>
+            <select id="userRole" class="form-select">
+              ${option_role}
+            </select>
           </div>
-
         </div>
       `;
     var content_bottom = `          
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-      <button type="button" class="btn btn-success" id="btn_productModal" onclick="cls_product.save()">Crear Producto</button>
+      <button type="button" class="btn btn-success" id="btn_userModal" onclick="cls_user.save()">Crear Usuario</button>
     `;
 
-    document.getElementById('productModal_content').innerHTML = content;
-    document.getElementById('productModal_footer').innerHTML = content_bottom;
-    document.getElementById('productModal_title').innerHTML = '<h4>Crear Producto</h4>';
+    document.getElementById('userModal_content').innerHTML = content;
+    document.getElementById('userModal_footer').innerHTML = content_bottom;
+    document.getElementById('userModal_title').innerHTML = '<h4>Crear Usuario</h4>';
 
-    const modalUbication = new bootstrap.Modal('#productModal', {})
-    modalUbication.show();
+    const modalUser = new bootstrap.Modal('#userModal', {})
+    modalUser.show();
 
   }
+  save() {
 
+    var name = document.getElementById('userName').value;
+    var email = document.getElementById('userEmail').value;
+    var pass1 = document.getElementById('userPassword1').value;
+    var pass2 = document.getElementById('userPassword2').value;
+    var role = document.getElementById('userRole').value;
 
+    if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(email) === 0 || cls_general.is_empty_var(pass1) === 0 || cls_general.is_empty_var(pass2) === 0 || cls_general.is_empty_var(role) === 0) {
+      cls_general.shot_toast_bs("Debe ingresar todos los campos.", { bg: 'text-bg-warning' }); return false;
+    }
+    if (!cls_general.isEmail(email)) {
+      cls_general.shot_toast_bs("Debe ingresar un correo valido.", { bg: 'text-bg-warning' }); return false;
+    }
+    if (pass1 != pass2) {
+      cls_general.shot_toast_bs("Debe repetir la contrase&ntilde;a.", { bg: 'text-bg-warning' }); return false;
+    }
 
+    var url = '/user/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: name, b: email, c: pass1, d: role  });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_user.render();
+        const modal_win = bootstrap.Modal.getInstance('#userModal');
+        modal_win.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
   show(user_id) {
     var url = '/user/' + user_id; var method = 'GET';
     var body = "";
@@ -2502,17 +2674,30 @@ class class_user {
   generate_rolelist(raw_role) {
     var content_role = '<ul class="list-group">';
     raw_role.map((role) => {
-      content_role += `  <li class="list-group-item">${role.description}</li>`;
+      content_role += `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          ${role.description}
+          <button class="btn btn-sm btn-danger" onclick="cls_user.delete_role(this, ${role.user_id},${role.role_id})">X</button>
+        </li>
+
+      
+`;
     })
     return content_role += '</ul>';
   }
   render_modal() {
     var user_info = cls_user.info;
     var option_role = '';
-    cls_user.role_list.map((role) => {
+    cls_role.role_list.map((role) => {
       option_role += `<option value="${role.id}">${role.description}</option>`;
     })
+    var checked = (user_info.data.status === 1) ? 'checked' : '';
     var content_role = cls_user.generate_rolelist(user_info.role);
+
+    var option_role = '';
+    var role_list = cls_role.role_active
+    role_list.map(x => option_role += `<option value="${x.id}">${x.description} </option>`)
+
     var content = `
       <div class="row">
         <div class="col-sm-12">
@@ -2525,6 +2710,14 @@ class class_user {
               <label for="userEmail" class="form-label">Correo E.</label>
               <input type="text" class="form-control" id="userEmail" value="${user_info.data.email}" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 150, toast = 0)" onkeyup="cls_general.limitText(this, 150, toast = 0)">
             </div>
+            <div class="col-sm-6">
+              <div class="form-check form-switch py-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="userStatus" ${checked}>
+                <label class="form-check-label" for="userStatus">Activo</label>
+              </div>
+            </div>
+          </div>
+          <div class="row">
             <div class="col-sm-4">
               <label for="userPasswordF" class="form-label">Contrase&ntilde;a</label>
               <input type="text" class="form-control" id="userPasswordF" value="">
@@ -2540,9 +2733,18 @@ class class_user {
         </div>
         <hr/>
         <div class="col-sm-12">
+          <div class="input-group">
+            <select class="form-select" id="roleUser">
+              ${option_role}
+            </select>
+            <button class="btn btn-outline-success" type="button" onclick="cls_user.add_role(this,${user_info.data.id})">Agregar</button>
+          </div>
+        </div>
+
+        <div class="col-sm-12">
           <span>Listado de Roles</span>
           <div class="row">
-            <div class="col-sm-12">
+            <div id="container_userRoleList" class="col-sm-12">
               ${content_role}
             </div>
           </div>
@@ -2562,80 +2764,108 @@ class class_user {
     document.getElementById('userModal_title').innerHTML = 'Informaci&oacute;n de ' + user_info.data.name;
     document.getElementById('userModal_content').innerHTML = content;
     document.getElementById('userModal_footer').innerHTML = content_bottom;
+
+    document.getElementById('upd_password').addEventListener('click', () => { cls_user.update_password(document.getElementById('upd_password'), user_info.data.id);  });
   }
+  update(btn, user_id) {
+    cls_general.disable_submit(btn);
+
+    var name = document.getElementById('userName').value;
+    var email = document.getElementById('userEmail').value;
+    var status = (document.getElementById('userStatus').checked === true) ? 1 : 0;
 
 
-  // update(btn, productSlug) {
-  //   cls_general.disable_submit(btn);
-  //   var category = document.getElementById('productCategory').value;
-  //   var value = document.getElementById('productValue').value;
-  //   var reference = document.getElementById('productReference').value;
-  //   var code = document.getElementById('productCode').value;
-  //   var taxrate = document.getElementById('productTaxrate').value;
-  //   var minimum = document.getElementById('productMinimum').value;
-  //   var maximum = document.getElementById('productMaximum').value;
-  //   var discountRate = document.getElementById('productDiscountrate').value;
-  //   var status = (document.getElementById('productStatus').checked) ? 1 : 0;
-  //   var alarm = (document.getElementById('productAlarm').checked) ? 1 : 0;
-  //   var discountable = (document.getElementById('productDiscountable').checked) ? 1 : 0;
+    if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(email) === 0) {
+      cls_general.shot_toast_bs("Debe ingresar todos los campos.", { bg: 'text-bg-warning' }); return false;
+    }
+    if (!cls_general.isEmail(email)) {
+      cls_general.shot_toast_bs("Debe ingresar un correo valido.", { bg: 'text-bg-warning' }); return false;
+    }
+
+    var url = '/user/' + user_id; var method = 'PUT';
+    var body = JSON.stringify({ a: name, b: email, c: status });
+    var funcion = function (obj) {
+      if (obj.status != 'failed') {
+        cls_user.render();
+        const modal_win = bootstrap.Modal.getInstance('#userModal');
+        modal_win.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-secondary' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  update_password(btn, user_id) {
+    cls_general.disable_submit(btn);
+
+    var pass1 = document.getElementById('userPasswordF').value;
+    var pass2 = document.getElementById('userPasswordS').value;
+
+    if (cls_general.is_empty_var(pass1) === 0 || cls_general.is_empty_var(pass2) === 0) {
+      cls_general.shot_toast_bs("Debe ingresar la contrase&ntilde;a dos veces.", { bg: 'text-bg-warning' }); return false;
+    }
+    if (pass1 != pass2) {
+      cls_general.shot_toast_bs("Debe repetir la contrase&ntilde;a.", { bg: 'text-bg-warning' }); return false;
+    }
 
 
-  //   if (cls_general.is_empty_var(category) === 0 || cls_general.is_empty_var(value) === 0 || cls_general.is_empty_var(code) === 0 || cls_general.is_empty_var(taxrate) === 0 || cls_general.is_empty_var(minimum) === 0 || cls_general.is_empty_var(maximum) === 0 || cls_general.is_empty_var(discountRate) === 0) {
-  //     cls_general.shot_toast_bs('Falta informaci&oacute;n', { bg: 'text-bg-secondary' });
-  //     return false;
-  //   }
-  //   var url = '/product/' + productSlug; var method = 'PUT';
-  //   var body = JSON.stringify({ a: category, b: value, c: reference, d: code, e: taxrate, f: minimum, g: maximum, h: discountRate, i: status, j: alarm, k: discountable });
-  //   var funcion = function (obj) {
-  //     if (obj.status != 'failed') {
-  //       var raw_list = obj['data']['all'];
+    var url = '/user_password/' + user_id; var method = 'PUT';
+    var body = JSON.stringify({ a: pass1 });
+    var funcion = function (obj) {
+      if (obj.status != 'failed') {
+        cls_general.shot_toast_bs(obj.message);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  delete(btn, user_id) {
+    cls_general.disable_submit(btn);
 
-  //       var list = cls_product.generate_list(raw_list)
-  //       var content = `
-  //         <div class="row">
-  //           <div class="col-xs-12 py-2 text-center">
-  //             <button type="button" class="btn btn-lg btn-primary" onclick="cls_product.create()">Crear producto</button>
-  //             &nbsp;
-  //           </div>
-  //           <div class="col-xs-12">
-  //             <h5>Listado de Productos</h5>
-  //           </div>
-  //           <div id="container_productList" class="col-xs-12 border-top">
-  //             ${list}
-  //           </div>
-  //         </div>
-  //       `;
-  //       document.getElementById('container').innerHTML = content;
+    var url = '/user/' + user_id; var method = 'DELETE';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status != 'failed') {
+        cls_user.render();
+        const modal_win = bootstrap.Modal.getInstance('#userModal');
+        modal_win.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-secondary' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  add_role(btn, user_id){
+    cls_general.disable_submit(btn);
+    var role_id = document.getElementById('roleUser').value;
 
-  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-  //       const productModal = bootstrap.Modal.getInstance('#productModal');
-  //       productModal.hide();
-  //     } else {
-  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-secondary' });
-  //     }
-  //   }
-  //   cls_general.async_laravel_request(url, method, funcion, body);
-  // }
-  // delete(btn, product_slug) {
-  //   cls_general.disable_submit(btn);
-
-  //   var url = '/product/' + product_slug; var method = 'DELETE';
-  //   var body = '';
-  //   var funcion = function (obj) {
-  //     if (obj.status != 'failed') {
-  //       var raw_list = obj['data']['all'];
-  //       var list = cls_product.generate_list(raw_list)
-  //       document.getElementById('container_productList').innerHTML = list;
-
-  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-  //       const productModal = bootstrap.Modal.getInstance('#productModal');
-  //       productModal.hide();
-  //     } else {
-  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-secondary' });
-  //     }
-  //   }
-  //   cls_general.async_laravel_request(url, method, funcion, body);
-  // }
+    var url = '/user_role/' + user_id + '/add'; var method = 'POST';
+    var body = JSON.stringify({ a: role_id });
+    var funcion = function (obj) {
+      if (obj.status != 'failed') {
+        cls_user.info = obj['data']['info'];
+        document.getElementById('container_userRoleList').innerHTML = cls_user.generate_rolelist(cls_user.info.role);;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-secondary' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  delete_role(btn, user_id, role_id) {
+    cls_general.disable_submit(btn);
+    var url = '/user_role/' + user_id + '/delete'; var method = 'POST';
+    var body = JSON.stringify({ a: role_id });
+    var funcion = function (obj) {
+      if (obj.status != 'failed') {
+        cls_user.info = obj['data']['info'];
+        document.getElementById('container_userRoleList').innerHTML = cls_user.generate_rolelist(cls_user.info.role);;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-secondary' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
 
 }
 

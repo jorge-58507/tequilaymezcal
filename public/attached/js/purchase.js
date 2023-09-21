@@ -48,6 +48,8 @@ class class_purchase{
         <div class="row">
           <div class="col text-center">
             <button type="button" class="btn btn-lg btn-secondary" onclick="cls_requisition.render();">Orden de Compra <span class="badge text-bg-warning">${low_inventory}</span></button>
+            &nbsp;
+            <button type="button" class="btn btn-lg btn-primary" onclick="cls_productinput.directPurchase_init();">Compra Directa</button>
           </div>
         </div>
       </div>
@@ -603,6 +605,99 @@ class class_productinput{
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+
+  // INGRESO DE COMPRAS DIRECTAS
+  directPurchase_init(){
+    // var data_Directpurchase = cls_productinput.generate_productlist(opened.dataproductinput, 1);
+    var content = `
+      <div class="col-md-12">
+        <div class="row">
+          <div class="col-12 col-lg-3">
+            <label for="providerDirectpurchase" class="form-label">Proveedor</label>
+            <input type="text" id="providerDirectpurchase" class="form-control" disabled onclick="cls_productinput.change_provider()" value="">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label for="dateDirectpurchase" class="form-label">Fecha</label>
+            <input type="text" id="dateDirectpurchase" name="dateDirectpurchase"class="form-control" readonly value="" onkeyup="this.value = ''">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label for="ticketDirectpurchase" class="form-label">Ticket Fiscal</label>
+            <input type="text" id="ticketDirectpurchase" class="form-control" readonly value="">
+          </div>
+
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 col-lg-4">
+            <label for="nontaxableDirectpurchase" class="form-label">No imponible</label>
+            <span id="nontaxableDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <label for="taxableDirectpurchase" class="form-label">Imponible</label>
+            <span id="taxableDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <label for="discounttotalDirectpurchase" class="form-label">T. Descuento</label>
+            <span id="discounttotalDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <label for="taxtotalDirectpurchase" class="form-label">T. Impuesto</label>
+            <span id="taxtotalDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <label for="totalDirectpurchase" class="form-label">Total</label>
+            <span id="totalDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
+          </div>
+        </div>
+        <div class="row">
+          <div id="product_selected" class="col-sm-12 v_scrollable pt-3" style="height: 40vh">
+            
+
+            <table id="tbl_productselected" class="table table-striped table-bordered">
+              <thead>
+                <tr class="text-center bg-secondary">
+                  <th scope="col-sm-4">Descripci&oacute;n</th>
+                  <th scope="col-sm-2">Cantidad</th>
+                  <th scope="col-sm-2">Precio</th>
+                  <th scope="col-sm-1">Desc%</th>
+                  <th scope="col-sm-1">Imp%</th>
+                  <th scope="col-sm-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="text-center bg-secondary">
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+            
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12 text-center pt-2">
+            <button id="deleteDirectpurchase" type="button" class="btn btn-danger">Eliminar</button>
+            &nbsp;
+            <button type="button" class="btn btn-warning" onclick="window.location.href = '/purchase';">Volver</button>
+            &nbsp;
+            <button id="processDirectpurchase" type="button" class="btn btn-primary">Procesar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('container_purchase').innerHTML = content;
+    document.getElementById('processDirectpurchase').addEventListener('click', () => { cls_general.disable_submit(document.getElementById('processDirectpurchase')); cls_productinput.process() });
+    document.getElementById('deleteDirectpurchase').addEventListener('click', () => { cls_productinput.delete() });
+
+    $(function () {
+      $("#dateDirectpurchase").datepicker({});
+    });
   }
 }
 

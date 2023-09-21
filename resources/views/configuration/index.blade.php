@@ -101,6 +101,34 @@
     </div>
   </div>
 
+  <!-- Modal ROLE -->
+  <div class="modal fade" id="roleModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="roleModal_title">Roles</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="roleModal_content" class="modal-body">
+          <div class="row">
+            <div class="col-12">
+              <h5>Listado de Roles</h5>
+            </div>
+            <div id="container_list_rolemodal" class="col-12"></div>
+          </div>
+        </div>
+        <div id="roleModal_footer" class="modal-footer">
+          <div class="row">
+            <div class="col-12">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-info btn-lg" id="btn_productModal" onclick="cls_role.create()">Crear Rol</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row">
     <div class="col-xs-12 col-md-3">
       <div class="row">

@@ -9,31 +9,6 @@ use App\tm_price;
 
 class articleproductController extends Controller
 {
-    // public function save(Request $request){
-    //     $product_id = $request->input('a');
-    //     $article_id = $request->input('b');
-    //     $quantity = $request->input('c');
-    //     $measure_id = $request->input('d');
-
-    //     $check_duplicate = tm_articleproduct::where('articleproduct_ai_article_id',$article_id)->where('articleproduct_ai_product_id',$product_id)->count();
-    //     if ($check_duplicate > 0) {
-    //         return ['status' => 'failed', 'message' => 'Ese producto ya fu&eacute; agregado.'];
-    //     }
-
-    //     $user = Auth()->user();
-    //     $tm_articleproduct = new tm_articleproduct;
-    //     $tm_articleproduct->articleproduct_ai_user_id       = $user['id'];
-    //     $tm_articleproduct->articleproduct_ai_product_id    = $product_id;
-    //     $tm_articleproduct->articleproduct_ai_article_id    = $article_id;
-    //     $tm_articleproduct->tx_articleproduct_quantity      = $quantity;
-    //     $tm_articleproduct->articleproduct_ai_measure_id    = $measure_id;
-    //     $tm_articleproduct->save();
-
-    //     // Answer
-    //     $rs_articleproduct = tm_articleproduct::select('tm_articleproducts.articleproduct_ai_product_id','tm_articleproducts.articleproduct_ai_article_id','tm_articleproducts.tx_articleproduct_quantity','tm_articleproducts.articleproduct_ai_measure_id','tm_products.tx_product_value','tm_measures.tx_measure_value')->join('tm_products','tm_products.ai_product_id','tm_articleproducts.articleproduct_ai_product_id')->join('tm_measures','tm_measures.ai_measure_id','tm_articleproducts.articleproduct_ai_measure_id')->where('articleproduct_ai_article_id',$article_id)->get();
-
-    //     return ['status' => 'success', 'message' => 'Producto Agregado.', 'data' => ['articleproduct'=>$rs_articleproduct]];
-    // }
     public function store(Request $request){
         $raw_recipe = $request->input('a');
         $presentation_id = $request->input('c');
@@ -47,8 +22,9 @@ class articleproductController extends Controller
         }
 
         // Answer
-        $rs = tm_articleproduct::select('tm_presentations.tx_presentation_value','tm_articleproducts.created_at','tm_articleproducts.articleproduct_ai_presentation_id','tm_articleproducts.tx_articleproduct_ingredient')
+        $rs = tm_articleproduct::select('tm_presentations.tx_presentation_value','tm_articleproducts.created_at','tm_articleproducts.articleproduct_ai_presentation_id','tm_articleproducts.articleproduct_ai_article_id','tm_articleproducts.tx_articleproduct_ingredient','tm_articles.tx_article_slug')
         ->join('tm_presentations','tm_presentations.ai_presentation_id','=','tm_articleproducts.articleproduct_ai_presentation_id')
+        ->join('tm_articles','tm_articles.ai_article_id','tm_articleproducts.articleproduct_ai_article_id')
         ->where('articleproduct_ai_article_id',$rs_article['ai_article_id'])
         ->orderby('articleproduct_ai_presentation_id','DESC')->get();
 
@@ -85,8 +61,9 @@ class articleproductController extends Controller
 
     public function showByArticle ($article_slug){
         $rs_article = tm_article::where('tx_article_slug',$article_slug)->first();
-        $rs = tm_articleproduct::select('tm_presentations.tx_presentation_value','tm_articleproducts.created_at','tm_articleproducts.articleproduct_ai_presentation_id','tm_articleproducts.tx_articleproduct_ingredient')
+        $rs = tm_articleproduct::select('tm_presentations.tx_presentation_value','tm_articleproducts.created_at','tm_articleproducts.articleproduct_ai_presentation_id','tm_articleproducts.articleproduct_ai_article_id','tm_articleproducts.tx_articleproduct_ingredient','tm_articles.tx_article_slug')
         ->join('tm_presentations','tm_presentations.ai_presentation_id','=','tm_articleproducts.articleproduct_ai_presentation_id')
+        ->join('tm_articles','tm_articles.ai_article_id','tm_articleproducts.articleproduct_ai_article_id')
         ->where('articleproduct_ai_article_id',$rs_article['ai_article_id'])
         ->orderby('articleproduct_ai_presentation_id','DESC')->get();
 		
@@ -110,5 +87,4 @@ class articleproductController extends Controller
 
         return response()->json(['status'=>'success','data'=>['recipe'=>$rs]]);
     }
-
 }

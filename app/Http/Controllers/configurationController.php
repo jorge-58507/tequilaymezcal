@@ -8,6 +8,7 @@ use App\tm_option;
 use App\tm_measure;
 use App\tm_category;
 use App\tm_paymentmethod;
+use App\role;
 
 class configurationController extends Controller
 {
@@ -31,8 +32,9 @@ class configurationController extends Controller
         $presentationController = new presentationController;
         $rs_presentation = $presentationController->getAll();
         $rs_paymentmethod = tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
-        $rs_role = role::get();
-       $data = [
+        $roleController = new roleController;
+        $rs_role = $roleController->getAll();
+        $data = [
             'productcategory_list' => $rs_productcategoryList,
             'category_list' => $rs_categoryList,
             'raw_option' => $raw_option,

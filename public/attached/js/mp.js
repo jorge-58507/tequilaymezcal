@@ -4,7 +4,7 @@
 // _____****_________****_____
 // ____******_______******____
 // __***********_***********__
-// __***********************__ 
+// __***********************__
 // __*****_____________*****__
 // ___****_____________****___
 // ___***____*******____***___
@@ -21,6 +21,14 @@
 // $('#requestFilter').bind('accepted', function (e, keyboard, el) {
 //   document.getElementById('submit_login').click();
 // });
+
+// <input type="text" class="form-control" id="roleValue" onfocus="cls_general.validFranz(this.id, ['word'])" onkeyup="cls_general.limitText(this, 20, toast = 0)" onblur="cls_general.limitText(this, 20, toast = 0)">
+
+// const modal_win = bootstrap.Modal.getInstance('#inspectModal');
+// modal_win.hide();
+
+// const modal_win = new bootstrap.Modal('#inspectModal', {})
+// modal_win.show();
 
 // var url = '/client/';
 // var method = 'PUT';
@@ -64,25 +72,22 @@
 </div> */}
 
 class general_funct {
-  test(){
-    alert('lalalasldkaskldn');
-  }
   set_invalid(array_selector) {
     for (const a in array_selector) {
-      array_selector[a].classList.remove("input_valid");
-      array_selector[a].className += " input_invalid";
+      // array_selector[a].classList.remove("");
+      array_selector[a].className += " is-invalid was-validated form-control:invalid";
     }
   }
   set_valid(array_selector) {
     for (const a in array_selector) {
-      array_selector[a].classList.remove("input_invalid");
-      array_selector[a].className += " input_valid";
+      array_selector[a].classList.remove("is-invalid", "was-validated", "form-control:invalid");
+      // array_selector[a].className += "";
     }
   }
   set_neutral(array_selector) {
     for (const a in array_selector) {
-      array_selector[a].classList.remove("input_valid");
-      array_selector[a].classList.remove("input_invalid");
+      array_selector[a].classList.remove("is-invalid", "was-validated", "form-control:invalid");
+      // array_selector[a].classList.remove("");
     }
   }
   toggle_class(selector,classes){ //classes es un array
@@ -381,6 +386,15 @@ class general_funct {
   isEmail(email) {
     var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
     return regex.test(email);
+  }
+  checkEmail(input) {
+    if (!cls_general.isEmail(input.value)) {
+      cls_general.set_invalid([input]);
+      cls_general.shot_toast_bs('Email incorrecto');
+      return false;
+    }else{
+      cls_general.set_valid([input]);
+    }
   }
   disable_submit(button,enable=1){
     button.disabled = true;
