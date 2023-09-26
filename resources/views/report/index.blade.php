@@ -34,6 +34,7 @@
             <option value="7">Comanda Anulada</option>
             <option value="8">Ventas por Art&iacute;culos</option>
             <option value="9">Compras por Producto</option>
+            <option value="10">Ventas por Productos</option>
           </optgroup>
         </select>
       </div>

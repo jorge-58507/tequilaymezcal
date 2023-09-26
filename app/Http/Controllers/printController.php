@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\tm_cashregister;
 use App\tm_commanddata;
 use App\tm_dataproductinput;
+use App\tm_measure;
+use App\tm_product;
 
 
 class printController extends Controller
@@ -1390,6 +1392,121 @@ class printController extends Controller
 			'content'=>[$content],
 			'bottom'=>$content_bottom,
 			'title_page'=>"Compras por Producto"
+		];
+		$pdf = \App::make('dompdf.wrapper');
+		$pdf->loadHTML($this->full_page($raw_page));
+		return $pdf->stream();
+	}
+
+	public function print_reportcommanddataproduct ($from,$to,$str){
+		$c_from = date('Y-m-d H:i:s',strtotime($from." 00:00:01"));
+		$c_to = date('Y-m-d H:i:s',strtotime($to." 23:59:00"));
+		$str = ($str === 'empty') ? '' : $str;
+
+		$rs = tm_commanddata::select('tx_commanddata_recipe')
+		->where('tm_commanddatas.created_at','>=',$c_from)
+		->where('tm_commanddatas.created_at','<=',$c_to)
+		->where('tx_commanddata_recipe','like','%'.$str.'%')
+		->orderby('tx_commanddata_description')
+		->get();
+
+		$raw_product = [];
+		foreach ($rs as $commanddata) {
+			$raw_recipe = json_decode($commanddata['tx_commanddata_recipe'],true);
+			foreach ($raw_recipe as $key => $recipe) {
+				foreach ($recipe as $ingredient) {
+					$split = explode(",",$ingredient);
+					$rs_measure = tm_measure::select('tx_measure_value')->where('ai_measure_id',$split[1])->first();
+					$rs_product = tm_product::select('tx_product_value')->where('ai_product_id',$split[2])->first();
+					if (empty($str)) {
+						array_push($raw_product, [
+							'quantity' => $split[0],
+							'measure_id' => $split[1],
+							'measure_value' => $rs_measure['tx_measure_value'],
+							'product_id' => $split[2],
+							'product_description' => $rs_product['tx_product_value']
+						]);
+					}else{
+						if (substr_count(strtolower($rs_product['tx_product_value']),strtolower($str)) > 0) {
+							array_push($raw_product, [
+								'quantity' => $split[0],
+								'measure_id' => $split[1],
+								'measure_value' => $rs_measure['tx_measure_value'],
+								'product_id' => $split[2],
+								'product_description' => $rs_product['tx_product_value']
+							]);
+						}
+					}
+				}
+			}
+		}
+
+
+
+		$raw_report = [];
+		foreach ($raw_product as $key => $commanddata) {
+			$i = -1;
+			foreach ($raw_report as $key => $report) {
+				if($report['product_id'] === $commanddata['product_id'] && $report['measure_id'] === $commanddata['measure_id']){
+					$i = $key;
+					break;
+				}
+			}
+
+			if ($i != -1) {
+				$raw_report[$i]['quantity'] += floatval($commanddata['quantity']);
+			}else{
+				array_push($raw_report,[
+          'product_id' 	=> $commanddata['product_id'],
+          'quantity'		=> floatval($commanddata['quantity']), 
+          'product_description'	=> $commanddata['product_description'],
+          'measure_value'	=> $commanddata['measure_value'], 
+          'measure_id'			=> $commanddata['measure_id'] 
+				]);
+			}
+		}
+
+		$data_content = '';
+		$total = 0;
+		foreach ($raw_report as $value) {
+			$data_content .= '
+				<tr>
+					<td class="text_center">'.$value['quantity'].'</td>
+					<td class="text_center">'.$value['measure_value'].'</td>
+					<td class="">'.$value['product_description'].'</td>
+				</tr>
+			';
+		}
+		$content = '
+			<div>
+				<h4>Listado de Productos incluidos, Desde: '.date('d-m-Y',strtotime($from)).' Hasta: '.date('d-m-Y',strtotime($to)).'</h4>
+				<table class="table h_70">
+					<thead>
+						<tr class="bs_1">
+							<th>Cantidad</td>
+							<th>Medida</td>
+							<th>Descripción</td>
+						</tr>
+					</thead>
+					<tbody>
+						'.$data_content.'
+					</tbody>
+					<tfoot>
+						<tr class="bs_1">
+							<td colspan="4">&nbsp;</td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		';
+		$content_bottom = '';
+
+		$raw_page = [
+			'date' => date('d-m-Y'),
+			'title'=>'Ventas por Productos' ,
+			'content'=>[$content],
+			'bottom'=>$content_bottom,
+			'title_page'=>"Ventas por Productos"
 		];
 		$pdf = \App::make('dompdf.wrapper');
 		$pdf->loadHTML($this->full_page($raw_page));

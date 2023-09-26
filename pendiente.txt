@@ -1,15 +1,8 @@
+
 ingreso de mercancia a traves de lector de codigo de barras
 Productos con varios codigos de barra
 EDITAR LAS RECETAS DE LOS ARTICULOS para no tener que recomenzar cada vez
-
 INGRESO DIRECTO DE MERCANCIA 
-Si al selecionar el codigo no lo encuentra preguntar si desea crear el producto o asociarlo a alguno existente
-para asociarlo, debebuscar el producto, ingresar el codigo, seleccionar la medida y la cantidad
-para crearlo, debe crear el producto y proceder a asociarlo
-Sera una tabla para los ingresos directos
-y una interfaz para asociar los ingresos directos con las OC
-
-
 agregar roles eliminar roles y funciones de actualizar la informacion
 en la comanda impresa incrementar el tamaño a las cantidades
 Imprimir nc <- PROBAR

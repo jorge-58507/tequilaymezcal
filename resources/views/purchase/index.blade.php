@@ -148,6 +148,24 @@
     </div>
   </div>
 
+  <!-- Modal -->
+  <div class="modal fade" id="directpurchaseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="directpurchaseModal_title"></h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="directpurchaseModal_content" class="modal-body">
+        </div>
+        <div id="directpurchaseModal_footer" class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button id="btn_saveRequisition" type="button" class="btn btn-primary">Procesar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <div id="container_purchase" class="row">
   </div>
@@ -166,6 +184,7 @@
 
     const cls_productinput = new class_productinput(notprocesed,procesed);
     const cls_purchase = new class_purchase;
+    const cls_productcode = new class_productcode;
 
     var providerlist = JSON.parse('<?php echo json_encode($data['providerlist']) ?>');
     const cls_provider = new class_provider(providerlist);
@@ -177,6 +196,9 @@
     var productlist = JSON.parse('<?php echo json_encode($data['productlist']) ?>');
     var productcategory = JSON.parse('<?php echo json_encode($data['productcategory']) ?>');
     const cls_product = new class_product(productlist,productcategory);
+    
+    var directpurchaselist = JSON.parse('<?php echo json_encode($data['directpurchase']) ?>');
+    const cls_directpurchase = new class_directpurchase(directpurchaselist);
 
     
     
@@ -190,10 +212,6 @@
     document.getElementById('saveproviderRequisition').addEventListener('click', function() {
       cls_general.disable_submit(this,1)
       cls_provider.save();
-    });
-    document.getElementById('btn_saveRequisition').addEventListener('click', function() {
-      cls_general.disable_submit(this,1)
-      cls_requisition.process();
     });
     
 	</script>

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\tm_commanddata;
+use App\tm_measure;
+use App\tm_product;
 
 class commanddataController extends Controller
 {
@@ -72,6 +74,34 @@ class commanddataController extends Controller
 
         return [ 'list' => $rs ];
     }
+    public function report_product($from, $to){
+        $c_from = date('Y-m-d H:i:s',strtotime($from." 00:00:01"));
+        $c_to = date('Y-m-d H:i:s',strtotime($to." 23:59:00"));
+        $rs = tm_commanddata::select('tm_commanddatas.tx_commanddata_recipe')
+        ->where('tm_commanddatas.created_at','>=',$c_from)
+        ->where('tm_commanddatas.created_at','<=',$c_to)->get();
+
+        $raw_product = [];
+        foreach ($rs as $commanddata) {
+            $raw_recipe = json_decode($commanddata['tx_commanddata_recipe'],true);
+            foreach ($raw_recipe as $key => $recipe) {
+                foreach ($recipe as $ingredient) {
+                    $split = explode(",",$ingredient);
+                    $rs_measure = tm_measure::select('tx_measure_value')->where('ai_measure_id',$split[1])->first();
+                    $rs_product = tm_product::select('tx_product_value')->where('ai_product_id',$split[2])->first();
+                    array_push($raw_product, [
+                        'quantity' => $split[0],
+                        'measure_id' => $split[1],
+                        'measure_value' => $rs_measure['tx_measure_value'],
+                        'product_id' => $split[2],
+                        'product_value' => $rs_product['tx_product_value']
+                    ]);
+                }
+            }
+        }
+        return [ 'product_list' => $raw_product ];
+    }
+
     public function checklogin_cancel(Request $request){
         $userController = new userController;
         $login = $userController->check_user($request->input('a'),$request->input('b'), ['admin','super']);

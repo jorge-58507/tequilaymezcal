@@ -81,6 +81,9 @@ class class_report
           case '9':
             cls_report.render_productinput_product(from, to, obj.data.dataproductinput);
             break;
+          case '10':
+            cls_report.render_product_commanddata(from, to, obj.data.product_commanddata);
+            break;
           default:
             cls_general.shot_toast_bs('Opción incorrecta.',{bg: 'text-bg-danger'});
             break;
@@ -619,6 +622,54 @@ class class_report
     list += `<div class="col-12 py-2" id="container_filtered">${cls_dataproductinput.generate_list(raw_report)}</div></div>`;
     document.getElementById('container_report').innerHTML = list;
   }
+  render_product_commanddata(from, to, raw_commanddata) {
+    var raw_report = [];
+    raw_commanddata.map((commanddata) => {
+      var index = raw_report.findIndex((report) => { return report.product_id === commanddata.product_id && report.measure_id === commanddata.measure_id })
+      if (index != -1) {
+        raw_report[index].quantity += parseFloat(commanddata.quantity);
+      } else {
+        raw_report.push({
+          quantity: parseFloat(commanddata.quantity),
+          product_id: commanddata.product_id,
+          product_description: commanddata.product_value,
+          measure_id: commanddata.measure_id,
+          measure_value: commanddata.measure_value,
+        })
+      }
+    })
+    var list = `<h5>Listado de Productos incluidos, Desde: ${from} Hasta: ${to}</h5>
+    <div class="row">
+      <div class="col-10 py-2">
+        <input type="text" id="filterCommanddata" class="form-control" onkeyup="cls_commanddata.filter_product(this.value)" placeholder="Buscar por nombre.">
+      </div>
+      <div class="col-2 py-2">
+        <button class="badge btn btn-info" onclick="cls_commanddata.print_product()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+            <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+            <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+    raw_report.sort((a, b) => {
+      const nameA = a.product_description.toUpperCase(); // ignore upper and lowercase
+      const nameB = b.product_description.toUpperCase(); // ignore upper and lowercase
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+
+      // names must be equal
+      return 0;
+    });
+
+    cls_commanddata.filtered = raw_report;
+    list += `<div class="col-12 py-2" id="container_filtered">${cls_commanddata.generate_productlist(raw_report)}</div></div>`;
+    document.getElementById('container_report').innerHTML = list;
+  }
 
 }
 
@@ -691,13 +742,74 @@ class class_commanddata
       }, 500)
     });
   }
-  
   print(){
     var str = (cls_general.is_empty_var(document.getElementById('filterCommanddata').value) === 0) ? 'empty' : document.getElementById('filterCommanddata').value;
     var from = document.getElementById('reportFromDatefilter').value;
     var to = document.getElementById('reportToDatefilter').value;
     cls_general.print_html(`/print_reportcommanddata/${from}/${to}/${str}`);
   }
+
+  async filter_product(str) {
+    document.getElementById('container_filtered').innerHTML = cls_commanddata.generate_productlist(await cls_commanddata.look_for(str));
+  }
+  generate_productlist(raw_report) {
+    cls_commanddata.result = raw_report;
+    var list = `<div class="list-group">`;
+    raw_report.map((line) => {
+      list += `
+        <a href="#" class="list-group-item  cursor_pointer text-truncate">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">${line.quantity} (${line.measure_value}) - ${line.product_description}</h5>
+          </div>
+        </a>
+      `;
+    })
+    return list;
+  }
+  look_for(str) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_commanddata.filtered;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          var ocurrencys = 0;
+          for (const a in needles) {
+            if (haystack[i]['product_description'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+
+
+        raw_filtered.sort((a, b) => a.product_description - b.product_description);
+        raw_filtered.sort((a, b) => {
+          const nameA = a.product_description.toUpperCase(); // ignore upper and lowercase
+          const nameB = b.product_description.toUpperCase(); // ignore upper and lowercase
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          // names must be equal
+          return 0;
+        });
+
+        resolve(raw_filtered)
+      }, 500)
+    });
+  }
+  print_product() {
+    var str = (cls_general.is_empty_var(document.getElementById('filterCommanddata').value) === 0) ? 'empty' : document.getElementById('filterCommanddata').value;
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportcommanddataproduct/${from}/${to}/${str}`);
+  }
+
 }
 
 class class_dataproductinput {

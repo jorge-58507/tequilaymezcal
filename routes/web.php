@@ -48,6 +48,7 @@ Route::get('dataproductinput/{param}', 'productinputController@show_data')->midd
 Route::get('provider/{param}/requisition', 'requisitionController@get_requisitionByRequisition')->middleware('auth');
 Route::get('userlog/{param}', 'articleController@get_user');
 Route::get('kitchen/reload', 'kitchenController@reload');
+Route::get('productcode/{param_a}/show/{param_b}', 'productcodeController@show_code');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
 // Route::post('article/product', 'measureproductController@save')->middleware('auth');
@@ -68,6 +69,7 @@ Route::post('/DepletionByArticle/', 'depletionController@recipe');
 Route::post('/charge/{param_a}/{param_b}/{param_c}', 'chargeController@filter');
 Route::post('/user_role/{param_a}/add', 'userController@add_role');
 Route::post('/user_role/{param_a}/delete', 'userController@delete_role');
+Route::post('/purchase/convert', 'productinputController@convert_directpurchase');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
@@ -114,6 +116,8 @@ Route::resource('datapaymentprovider', 'datapaymentproviderController')->middlew
 Route::resource('productoutput', 'productoutputController')->middleware('auth');
 Route::resource('user', 'userController')->middleware('auth');
 Route::resource('role', 'roleController')->middleware('auth');
+Route::resource('productcode', 'productcodeController')->middleware('auth');
+Route::resource('directpurchase', 'directpurchaseController')->middleware('auth');
 
 // PRINT
 Route::get('print_cashregister/{param}', 'cashregisterController@print_rollpaper_cashregister');
@@ -124,6 +128,7 @@ Route::get('print_paymentprovider/{param}', 'printController@print_paymentprovid
 Route::get('print_charge/{param}', 'printController@print_charge');
 Route::get('print_reportcommanddata/{param_a}/{param_b}/{param_c}', 'printController@print_reportcommanddata');
 Route::get('print_reportdataproductinput/{param_a}/{param_b}/{param_c}', 'printController@print_reportdataproductinput');
+Route::get('print_reportcommanddataproduct/{param_a}/{param_b}/{param_c}', 'printController@print_reportcommanddataproduct');
 
 
 

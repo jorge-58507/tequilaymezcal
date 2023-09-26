@@ -49,7 +49,7 @@ class class_purchase{
           <div class="col text-center">
             <button type="button" class="btn btn-lg btn-secondary" onclick="cls_requisition.render();">Orden de Compra <span class="badge text-bg-warning">${low_inventory}</span></button>
             &nbsp;
-            <button type="button" class="btn btn-lg btn-primary" onclick="cls_productinput.directPurchase_init();">Compra Directa</button>
+            <button type="button" class="btn btn-lg btn-primary" onclick="cls_directpurchase.directPurchase_init();">Compra Directa</button>
           </div>
         </div>
       </div>
@@ -149,7 +149,7 @@ class class_productinput{
         <div class="row">
           <div class="col-12 col-lg-3">
             <label for="providerProductinput" class="form-label">Proveedor</label>
-            <input type="text" id="providerProductinput" class="form-control" disabled onclick="cls_productinput.change_provider()" value="${opened.info.tx_provider_value}">
+            <input type="text" id="providerProductinput" class="form-control" readonly onclick="cls_productinput.edit_provider()" value="${opened.info.tx_provider_value}">
           </div>
           <div class="col-12 col-lg-3">
             <label for="dateProductinput" class="form-label">Fecha</label>
@@ -436,7 +436,7 @@ class class_productinput{
                 <div class="row">
                   <div class="col-md-12 col-lg-6">
                     <label for="providerProductinput" class="form-label">Proveedor</label>
-                    <input type="text" id="providerProductinput" class="form-control" disabled onclick="cls_productinput.change_provider()" value="${opened.info.tx_provider_value}">
+                    <input type="text" id="providerProductinput" class="form-control" readonly onclick="cls_productinput.edit_provider()" value="${opened.info.tx_provider_value}">
                   </div>
                   <div class="col-md-12 col-lg-6">
                     <label for="numberProductinput" class="form-label">Numero</label>
@@ -547,7 +547,7 @@ class class_productinput{
       document.getElementById(field_str).innerHTML = cls_productinput.generate_processed(filtered);
     }
   }
-
+  
   process(productinput_slug){
     var url = '/purchase/' + productinput_slug;
     var method = 'PUT';
@@ -556,6 +556,7 @@ class class_productinput{
       if (obj.status === 'success') {
         cls_productinput.notprocesed = obj.data.productinput.notprocesed;
         cls_productinput.procesed = obj.data.productinput.procesed;
+        cls_directpurchase.saved_list = obj.data.directpurchase.list;
         cls_productinput.opened = [];
         cls_purchase.index();
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
@@ -605,99 +606,6 @@ class class_productinput{
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-  }
-
-
-  // INGRESO DE COMPRAS DIRECTAS
-  directPurchase_init(){
-    // var data_Directpurchase = cls_productinput.generate_productlist(opened.dataproductinput, 1);
-    var content = `
-      <div class="col-md-12">
-        <div class="row">
-          <div class="col-12 col-lg-3">
-            <label for="providerDirectpurchase" class="form-label">Proveedor</label>
-            <input type="text" id="providerDirectpurchase" class="form-control" disabled onclick="cls_productinput.change_provider()" value="">
-          </div>
-          <div class="col-12 col-lg-3">
-            <label for="dateDirectpurchase" class="form-label">Fecha</label>
-            <input type="text" id="dateDirectpurchase" name="dateDirectpurchase"class="form-control" readonly value="" onkeyup="this.value = ''">
-          </div>
-          <div class="col-12 col-lg-3">
-            <label for="ticketDirectpurchase" class="form-label">Ticket Fiscal</label>
-            <input type="text" id="ticketDirectpurchase" class="form-control" readonly value="">
-          </div>
-
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 col-lg-4">
-            <label for="nontaxableDirectpurchase" class="form-label">No imponible</label>
-            <span id="nontaxableDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <label for="taxableDirectpurchase" class="form-label">Imponible</label>
-            <span id="taxableDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <label for="discounttotalDirectpurchase" class="form-label">T. Descuento</label>
-            <span id="discounttotalDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <label for="taxtotalDirectpurchase" class="form-label">T. Impuesto</label>
-            <span id="taxtotalDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <label for="totalDirectpurchase" class="form-label">Total</label>
-            <span id="totalDirectpurchase" class="form-control">B/ ${cls_general.val_price(0.00, 2, 1, 1)}</span>
-          </div>
-        </div>
-        <div class="row">
-          <div id="product_selected" class="col-sm-12 v_scrollable pt-3" style="height: 40vh">
-            
-
-            <table id="tbl_productselected" class="table table-striped table-bordered">
-              <thead>
-                <tr class="text-center bg-secondary">
-                  <th scope="col-sm-4">Descripci&oacute;n</th>
-                  <th scope="col-sm-2">Cantidad</th>
-                  <th scope="col-sm-2">Precio</th>
-                  <th scope="col-sm-1">Desc%</th>
-                  <th scope="col-sm-1">Imp%</th>
-                  <th scope="col-sm-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="text-center bg-secondary">
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </table>
-            
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-12 text-center pt-2">
-            <button id="deleteDirectpurchase" type="button" class="btn btn-danger">Eliminar</button>
-            &nbsp;
-            <button type="button" class="btn btn-warning" onclick="window.location.href = '/purchase';">Volver</button>
-            &nbsp;
-            <button id="processDirectpurchase" type="button" class="btn btn-primary">Procesar</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById('container_purchase').innerHTML = content;
-    document.getElementById('processDirectpurchase').addEventListener('click', () => { cls_general.disable_submit(document.getElementById('processDirectpurchase')); cls_productinput.process() });
-    document.getElementById('deleteDirectpurchase').addEventListener('click', () => { cls_productinput.delete() });
-
-    $(function () {
-      $("#dateDirectpurchase").datepicker({});
-    });
   }
 }
 
@@ -819,6 +727,37 @@ class class_requisition{
       cls_general.shot_toast_bs('Debe agregar los productos.'); return false;
     }
     cls_general.disable_submit(document.getElementById('btn_requisitionprocess'),1)
+
+    document.getElementById('requisitionModal_title').innerHTML = `Seleccione el proveedor`;
+    document.getElementById('requisitionModal_content').innerHTML = `          
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <button class="btn btn-primary" data-bs-target="#createproviderrequisitionModal" data-bs-toggle="modal">Crear Proveedor</button>
+        </div>
+        <div class="col-sm-12 pb-1">
+          <label for="providerSelected" class="form-label">Proveedor Elegido</label>
+          <input type="text" id="providerSelected" class="form-control" disabled>
+        </div>
+        <div class="col-md-12 col-lg-6 pb-1">
+          <label for="providerFilter" class="form-label">Buscar Proveedor</label>
+          <input type="text" id="providerFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['word', 'number', 'punctuation', 'mathematic'])" onkeyup="cls_provider.filter(this.value,'container_providerfiltered')">
+        </div>
+        <div id="container_providerfiltered" class="col-sm-12 h_300 v_scrollable"></div>
+      </div>
+    `;
+    document.getElementById('requisitionModal_footer').innerHTML = `
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      <button id="btn_saveRequisition" type="button" class="btn btn-primary">Procesar</button>
+    `;
+    cls_provider.filter('', 'container_providerfiltered_requisition')
+
+    document.getElementById('btn_saveRequisition').addEventListener('click', function () {
+      cls_general.disable_submit(this, 1)
+      cls_requisition.process();
+    });
+
+
+
     document.getElementById('container_providerfiltered').innerHTML = cls_provider.generate_providerlist(cls_provider.providerlist);
 
     document.getElementById('providerFilter').value = '';
@@ -965,6 +904,11 @@ class class_requisition{
     `;
     document.getElementById('requisitionModal_footer').innerHTML = ``;
     cls_provider.filter('', 'container_providerfiltered_requisition')
+
+    document.getElementById('btn_saveRequisition').addEventListener('click', function () {
+      cls_general.disable_submit(this, 1)
+      cls_requisition.process();
+    });
   }
   update_provider(provider_slug, requisition_slug){
     var url = '/requisition/'+requisition_slug+'/provider';
@@ -1148,6 +1092,14 @@ class class_provider{
     content += '</ul>';
     return content;
   }
+  generate_providerlist_directpurchase(raw_provider) {
+    var content = '<ul class="list-group">';
+    raw_provider.map((provider) => {
+      content += `<li class="list-group-item cursor_pointer" onclick="cls_productcode.set_provider('${provider.tx_provider_slug}', '${provider.tx_provider_value }')">${provider.tx_provider_value}</li>`;
+    })
+    content += '</ul>';
+    return content;
+  }
   async save(){
     var description = document.getElementById('providerValue').value;
     var ruc = document.getElementById('providerRUC').value;
@@ -1203,11 +1155,24 @@ class class_provider{
   }
   async filter(str,field_str) {
     var filtered = await cls_provider.look_for(str);
-    if (field_str === 'container_providerfiltered_requisition') {
-      document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist_updrequisition(filtered);
-    }else{
-      document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist(filtered);
+    switch (field_str) {
+      case 'container_providerfiltered_requisition':
+        document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist_updrequisition(filtered);        
+        break;
+
+      case 'container_providerfiltered_directpurchase':
+        document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist_directpurchase(filtered);
+        break;
+
+      default:
+        document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist(filtered);
+        break;
     }
+    // if (field_str === 'container_providerfiltered_requisition') {
+    //   document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist_updrequisition(filtered);
+    // }else{
+    //   document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist(filtered);
+    // }
   }
   create(requisition_slug){
     document.getElementById('requisitionModal_title').innerHTML = `Crear proveedor`;
@@ -1483,4 +1448,533 @@ class class_product{
 
     return content;
   }
+
+  // DIRECT PURCHASE
+  generate_productlist_directpurchase(raw_product){
+    var content = '<div class=""><span>Listado de productos</span></div><div class="h_400 v_scrollable"><ul class="list-group">';
+    raw_product.map((product) => {
+      let bg = (product.tx_product_status === 1) ? '' : 'text-bg-secondary';
+      content += `<li class="list-group-item cursor_pointer fs_20 text-truncate ${bg}" onclick="cls_product.show_directpurchase('${product.tx_product_slug}')" title="${product.tx_product_value}">${product.tx_product_value}</li>`;
+    })
+    return content += '</ul></div>';
+  }
+  async filter_productlist_directpurchase(str) {
+    var filtered = await cls_product.look_for(str, 'filter');
+    document.getElementById('container_productlist').innerHTML = cls_product.generate_productlist_directpurchase(filtered);
+  }
+  show_directpurchase(product_slug) {
+    var url = '/product/' + product_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var opt_productMeasure = '';
+        obj.data.measure_list.map((measure) => {
+          opt_productMeasure += `<option value="${measure.ai_measure_id}">${measure.tx_measure_value} (${measure.tx_measure_product_relation})</option>`;
+        })
+
+        var content = `
+          <div class="row">
+            <div class="col-sm-12 text-center text-truncate">
+              <h5>Cod. ${obj.data.product.tx_product_code} - ${obj.data.product.tx_product_value}</h5>
+              <input type="hidden" name="" id="productId_directpurchase" class="form-control" value="${obj.data.product.ai_product_id}">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12 col-lg-4">
+              <label for="productMeasure_directpurchase">Medida</label>
+              <select name="" id="productMeasure_directpurchase" class="form-select">
+                ${opt_productMeasure}
+              </select>
+            </div>
+            <div class="col-12 col-lg-4">
+              <label for="productQuantity_directpurchase">Multiplo</label>
+              <input type="text" name="" id="productQuantity_directpurchase" class="form-control">
+            </div>
+            <div class="col-12 col-lg-4">
+              <label for="code_directpurchase">C&oacute;digo</label>
+              <input type="text" name="" id="code_directpurchase" class="form-control" value="${document.getElementById('filterproductDirectpurchase').value}">
+            </div>
+          </div>
+        `;
+        document.getElementById('directpurchaseModal_content').innerHTML = content;
+        document.getElementById('directpurchaseModal_footer').innerHTML = `
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          &nbsp;
+          <button id="btn_saveproductcode" type="button" class="btn btn-primary">Procesar</button>
+        `;
+        setTimeout(() => {
+          document.getElementById('productQuantity_directpurchase').focus();
+        }, 500);
+        document.getElementById('btn_saveproductcode').addEventListener('click', () => {  cls_productcode.save_productcode()  });
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+}
+
+class class_productcode 
+{
+  constructor (){
+    this.directpurchase_list = [];
+    this.saved = [];
+  }
+
+  edit_provider() {
+    document.getElementById('providerrequisitionModal_title').innerHTML = `Seleccione el proveedor`;
+    document.getElementById('providerrequisitionModal_content').innerHTML = `          
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <button class="btn btn-primary" data-bs-target="#createproviderrequisitionModal" data-bs-toggle="modal">Crear Proveedor</button>
+        </div>
+        <div class="col-sm-12 pb-1">
+          <label for="providerSelected" class="form-label">Proveedor Elegido</label>
+          <input type="text" id="providerSelected" class="form-control" disabled>
+        </div>
+        <div class="col-md-12 col-lg-6 pb-1">
+          <label for="providerFilter" class="form-label">Buscar Proveedor</label>
+          <input type="text" id="providerFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['word', 'number', 'punctuation', 'mathematic'])" onkeyup="cls_provider.filter(this.value,'container_providerfiltered_directpurchase')">
+        </div>
+        <div id="container_providerfiltered_directpurchase" class="col-sm-12 h_300 v_scrollable"></div>
+      </div>
+    `;
+    document.getElementById('providerrequisitionModal_footer').innerHTML = ``;
+
+    cls_provider.filter('', 'container_providerfiltered_directpurchase')
+
+    const modal = new bootstrap.Modal('#providerrequisitionModal', {})
+    modal.show();
+  }
+  set_provider(provider_slug, provider_value) {
+    document.getElementById('providerDirectpurchase').name = provider_slug;
+    document.getElementById('providerDirectpurchase').value = provider_value;
+
+    const Modal = bootstrap.Modal.getInstance('#providerrequisitionModal');
+    if (Modal != null) {
+      Modal.hide();
+    }
+
+    document.getElementById('filterproductDirectpurchase').focus();
+  }
+  get_productcode(str, provider_slug) {
+    if (cls_general.is_empty_var(str) === 0) {
+      return false;
+    }
+    var url = '/productcode/' + str + '/show/' + provider_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var info = obj.data.productcode;
+        cls_productcode.add_directpurchase(info)
+        var data_directpurchase = cls_productcode.generate_directpurchase_list(cls_productcode.directpurchase_list)
+        var content = `
+          <table id="tbl_productselected" class="table table-striped table-bordered">
+            <thead>
+              <tr class="text-center bg-secondary">
+                <th scope="col-sm-2">C&oacute;digo</th>
+                <th scope="col-sm-4">Descripci&oacute;n</th>
+                <th scope="col-sm-2">Cantidad</th>
+                <th scope="col-sm-2">Medida</th>
+                <th scope="col-sm-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data_directpurchase}
+            </tbody>
+          </table>
+        `;
+        document.getElementById('product_selected').innerHTML = content;
+      } else {
+        var content = `
+          <div class="row">
+            <div class="col-12">
+              <input type="text" class="form-control" id="filter_product" placeholder="Buscar producto">
+            </div>
+            <div id="container_productlist" class="col-12">
+            </div>
+          </div>
+        `;
+        document.getElementById('directpurchaseModal_content').innerHTML = content;
+        document.getElementById('container_productlist').innerHTML = cls_product.generate_productlist_directpurchase(cls_product.productlist);
+        const modal = new bootstrap.Modal('#directpurchaseModal', {})
+        modal.show();
+
+        document.getElementById('filter_product').addEventListener('keyup', () => {
+          cls_product.filter_productlist_directpurchase(document.getElementById('filter_product').value);
+        });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  save_productcode(){
+    var productid = document.getElementById('productId_directpurchase').value;
+    var measure = document.getElementById('productMeasure_directpurchase').value;
+    var code = document.getElementById('code_directpurchase').value;
+    var quantity = document.getElementById('productQuantity_directpurchase').value;
+
+    if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(measure) === 0 || cls_general.is_empty_var(code) === 0 || cls_general.is_empty_var(productid) === 0) {
+      cls_general.shot_toast_bs('Faltan datos',{bg: 'text-bg-warning'}); return false;
+    }
+    if (isNaN(quantity)) {
+      cls_general.shot_toast_bs('Debe ingresar una cantidad valida.', { bg: 'text-bg-warning' }); return false;
+    }
+    var url = '/productcode/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: productid, b: measure, c: code, d: cls_general.val_dec(quantity,2,1,1) });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var info = obj.data.productcode;
+        cls_productcode.add_directpurchase(info)
+        var data_directpurchase = cls_productcode.generate_directpurchase_list(cls_productcode.directpurchase_list)
+        var content = `
+          <table id="tbl_productselected" class="table table-striped table-bordered">
+            <thead>
+              <tr class="text-center bg-secondary">
+                <th scope="col-sm-2">C&oacute;digo</th>
+                <th scope="col-sm-4">Descripci&oacute;n</th>
+                <th scope="col-sm-2">Cantidad</th>
+                <th scope="col-sm-2">Medida</th>
+                <th scope="col-sm-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data_directpurchase}
+            </tbody>
+          </table>
+        `;
+        document.getElementById('product_selected').innerHTML = content;
+
+        const modal_win = bootstrap.Modal.getInstance('#directpurchaseModal');
+        modal_win.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+
+  // DIRECTPURCHASE
+  create_directpurchase() {
+    var content = `
+      <div class="col-md-12">
+        <div class="row">
+          <div class="col-12 col-lg-6">
+            <label for="providerDirectpurchase" class="form-label">Proveedor</label>
+            <input type="text" id="providerDirectpurchase" class="form-control" readonly onclick="cls_productcode.edit_provider()" value="">
+          </div>
+        </div>
+        <div class="row">
+          <div id="" class="col-sm-12 pt-4">
+            <input type="text" id="filterproductDirectpurchase" class="form-control" value="" placeholder="Buscar por C&oacute;digo">
+          </div>
+          <div id="product_selected" class="col-sm-12 v_scrollable pt-3" style="height: 40vh">
+            <table id="tbl_productselected" class="table table-striped table-bordered">
+              <thead>
+                <tr class="text-center bg-secondary">
+                  <th scope="col-sm-4">Descripci&oacute;n</th>
+                  <th scope="col-sm-2">Cantidad</th>
+                  <th scope="col-sm-2">Precio</th>
+                  <th scope="col-sm-1">Desc%</th>
+                  <th scope="col-sm-1">Imp%</th>
+                  <th scope="col-sm-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="text-center bg-secondary">
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12 text-center pt-2">
+            <button type="button" class="btn btn-warning" onclick="window.location.href = '/purchase';">Volver</button>
+            &nbsp;
+            <button id="processDirectpurchase" type="button" class="btn btn-primary">Procesar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('container_purchase').innerHTML = content;
+    document.getElementById('processDirectpurchase').addEventListener('click', () => { cls_general.disable_submit(document.getElementById('processDirectpurchase')); cls_productcode.process_directpurchase() });
+    document.getElementById('filterproductDirectpurchase').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        if (cls_general.is_empty_var(document.getElementById('providerDirectpurchase').name) === 0) {
+          cls_general.shot_toast_bs('Debe seleccionar un proveedor.', { bg: 'text-bg-warning' }); return false;
+        }
+        cls_productcode.get_productcode(document.getElementById('filterproductDirectpurchase').value, document.getElementById('providerDirectpurchase').name)
+      }
+    });
+
+    $(function () {
+      $("#dateDirectpurchase").datepicker({});
+    });
+    cls_productcode.edit_provider();
+  }
+  generate_directpurchase_list(raw_product) {
+    var content = '';
+    raw_product.map((product,index) => {
+      content += `
+        <tr class="text-center">
+          <td class="truncate-text">${product.code}</td>
+          <td class="truncate-text">${product.description}</td>
+          <td class="truncate-text">${product.quantity}</td>
+          <td class="truncate-text">${product.measure_value}</td>
+          <td>
+            <button type="button" onclick="cls_productcode.delete_directpurchase(${index})" class="btn btn-danger">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
+              </svg>
+            </button>
+          </td>
+      </tr>`;
+    })
+    return content;
+  }
+  add_directpurchase(info){
+    var index = cls_productcode.directpurchase_list.findIndex((list) => { return list.code === info.code })
+    if (index === -1) { //VERIFICA QUE EL METODO INGRESADO EXISTA
+      cls_productcode.directpurchase_list.push({
+        code: info.code,
+        product_id: info.product_id,
+        description: info.description,
+        measure_id: info.measure_id,
+        measure_value: info.measure_value,
+        quantity: parseFloat(info.quantity),
+        productcode_id: info.productcode_id
+      })
+    }else{
+      cls_productcode.directpurchase_list[index].quantity += info.quantity;
+    }
+    document.getElementById('filterproductDirectpurchase').value = '';
+  }
+  delete_directpurchase(index){
+    cls_productcode.directpurchase_list.splice(index,1);
+    var data_directpurchase = cls_productcode.generate_directpurchase_list(cls_productcode.directpurchase_list)
+    var content = `
+          <table id="tbl_productselected" class="table table-striped table-bordered">
+            <thead>
+              <tr class="text-center bg-secondary">
+                <th scope="col-sm-2">C&oacute;digo</th>
+                <th scope="col-sm-4">Descripci&oacute;n</th>
+                <th scope="col-sm-2">Cantidad</th>
+                <th scope="col-sm-2">Medida</th>
+                <th scope="col-sm-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data_directpurchase}
+            </tbody>
+          </table>
+        `;
+    document.getElementById('product_selected').innerHTML = content;
+  }
+  process_directpurchase(){
+    var provider_slug = document.getElementById('providerDirectpurchase').name;
+    if (cls_general.is_empty_var(provider_slug) === 0) {
+      cls_general.shot_toast_bs('Seleccione un proveedor.',{bg: 'text-bg-warning'}); return false;
+    }
+    if (cls_productcode.directpurchase_list.length === 0) {
+      cls_general.shot_toast_bs('Debe ingresar productos.', { bg: 'text-bg-warning' }); return false;
+    }
+    var url = '/directpurchase/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: cls_productcode.directpurchase_list, b: provider_slug });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_productcode.directpurchase_list = [];
+        var data_directpurchase = cls_productcode.generate_directpurchase_list(cls_productcode.directpurchase_list)
+        var content = `
+          <table id="tbl_productselected" class="table table-striped table-bordered">
+            <thead>
+              <tr class="text-center bg-secondary">
+                <th scope="col-sm-2">C&oacute;digo</th>
+                <th scope="col-sm-4">Descripci&oacute;n</th>
+                <th scope="col-sm-2">Cantidad</th>
+                <th scope="col-sm-2">Medida</th>
+                <th scope="col-sm-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data_directpurchase}
+            </tbody>
+          </table>
+        `;
+        document.getElementById('product_selected').innerHTML = content;
+        document.getElementById('providerDirectpurchase').name = '';
+        document.getElementById('providerDirectpurchase').value = '';
+
+        cls_directpurchase.saved_list = obj.data.list;
+        // document.getElementById('container_directpurchase').innerHTML = cls_directpurchase.generate_directpurchase_saved(cls_directpurchase.saved_list);
+
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+}
+
+class class_directpurchase {
+  constructor(raw_list){
+    this.saved_list = raw_list;
+  }
+  directPurchase_init() {
+    var content_directpurchase = cls_directpurchase.generate_directpurchase_saved(cls_directpurchase.saved_list);
+
+    var content = `
+      <div class="row">
+        <div class="col-12 col-lg-6">
+          <label for="saved_filter" class="form-label">Buscar</label>
+          <div class="input-group mb-3">
+            <input type="text" id="filter_directpurchase" class="form-control" placeholder="Buscar por proveedor">
+            <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_productcode.filter(document.getElementById('filter_directpurchase').value)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="col-12 col-lg-6 pt-4">
+          <button type="button" class="btn btn-primary btn-lg" onclick="cls_productcode.create_directpurchase();">Crear</button>
+          &nbsp;
+          <button type="button" class="btn btn-secondary btn-lg" onclick="window.location.href = '/purchase';">Volver</button>
+        </div>
+      </div>
+      <div class="row">
+        <span>Listado de Ingresos</span>
+        <div id="container_directpurchase" class="col-12 v_scrollable" style="height: 70vh">
+          ${content_directpurchase}
+        </div>
+      </div>
+    `;
+    document.getElementById('container_purchase').innerHTML = content;
+    $(function () {
+      $("#notprocesedDatefilter").datepicker();
+      $("#procesedDatefilter").datepicker();
+    });
+  }
+  generate_directpurchase_saved(raw_list) {
+    var content = '<ul class="list-group">';
+    raw_list.map((directpurchase) => {
+      let bg = (directpurchase.tx_directpurchase_status === 0) ? 'text-bg-secondary' : '';
+      content += `<li class="list-group-item cursor_pointer fs_20 text-truncate ${bg}" onclick="cls_directpurchase.show('${directpurchase.tx_directpurchase_slug}')" title="${directpurchase.tx_provider_value}">${directpurchase.tx_provider_value} (${cls_general.datetime_converter(directpurchase.created_at)} ${cls_general.time_converter(directpurchase.created_at)})</li>`;
+    });
+    content += '</ul>';
+    return content;
+  }
+  show(slug){
+    var url = '/directpurchase/'+slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('directpurchaseModal_content').innerHTML = `
+          <div class="row">
+            <div class="col-sm-8">
+              <label for="directpurchaseProviderselected" class="form-label">Proveedor Elegido</label>
+              <input type="text" id="directpurchaseProviderselected" class="form-control" readonly onclick="cls_directpurchase.change_provider('${obj.data.info.tx_directpurchase_slug}')" value="${obj.data.info.tx_provider_value}">
+              <input type="hidden" id="directpurchaseSlug" value="${slug}">
+            </div>
+            <div class="col-sm-4">
+              <label for="directpurchaseDate" class="form-label">Fecha</label>
+              <input type="text" id="directpurchaseDate" class="form-control" disabled value="${cls_general.datetime_converter(obj.data.info.created_at)}">
+            </div>            
+          </div>            
+          <div class="row">
+            <div id="container_datadirectpurchase" class="col-sm-12">
+              
+            </div>
+          </div>
+        `;
+        var btn = (obj.data.info.tx_directpurchase_status === 0) ? `<button id="deletedirectpurchase" type="button" class="btn btn-danger">Eliminar</button>
+          <button id="convertdirectpurchase" type="button" class="btn btn-success btn-lg">Ingresar</button>` : ''
+        document.getElementById('directpurchaseModal_footer').innerHTML = `
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          ${btn}
+        `;
+
+        document.getElementById('container_datadirectpurchase').innerHTML = cls_directpurchase.generate_datalist(obj.data.list);
+
+        const modal = new bootstrap.Modal('#directpurchaseModal', {})
+        modal.show();
+
+        document.getElementById('deletedirectpurchase').addEventListener('click', function () {
+          cls_general.disable_submit(this, 1)
+          cls_directpurchase.delete(slug);
+        });
+        document.getElementById('convertdirectpurchase').addEventListener('click', function () {
+          cls_general.disable_submit(this, 1)
+          cls_directpurchase.convert_directpurchase(slug);
+        });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+
+  }
+  generate_datalist(raw_list) {
+    var content = '<h5>Contenido</h5><div class="list-group">';
+    raw_list.map((data) => {
+      content += `
+        <a href="#" class="list-group-item list-group-item-action" aria-current="true">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">${data.tx_datadirectpurchase_quantity}.- ${data.tx_datadirectpurchase_description}</h5>
+            <small>${data.tx_measure_value}</small>
+          </div>
+          <small>${data.tx_productcode_value}</small>
+        </a>
+      `;
+    })
+    return content + '</div >';
+  }
+  delete(slug){
+    var url = '/directpurchase/'+slug;
+    var method = 'DELETE';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_directpurchase.saved_list = obj.data.list;
+        document.getElementById('container_directpurchase').innerHTML = cls_directpurchase.generate_directpurchase_saved(cls_directpurchase.saved_list);
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  convert_directpurchase(slug){
+    var url = '/purchase/convert/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: slug });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_productinput.notprocesed = obj.data.productinput.notprocesed;
+
+        cls_productinput.opened = obj.data.productinput.opened;
+        cls_productinput.render();
+
+        const Modal = bootstrap.Modal.getInstance('#directpurchaseModal');
+        Modal.hide();
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
 }

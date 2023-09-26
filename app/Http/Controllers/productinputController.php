@@ -15,6 +15,8 @@ use App\tm_measure;
 use App\tm_datarequisition;
 use App\rel_measure_product;
 use App\tm_paymentprovider;
+use App\tm_directpurchase;
+use App\tm_datadirectpurchase;
 
 class productinputController extends Controller
 {
@@ -39,6 +41,7 @@ class productinputController extends Controller
         $rs_product = tm_product::join('tm_productcategories','tm_productcategories.ai_productcategory_id','tm_products.product_ai_productcategory_id')->where('tx_product_status',1)->get();
         $rs_productcategory = tm_productcategory::where('tx_productcategory_status',1)->get();
         $chk_low_inventory = tm_product::where('tx_product_status',1)->where('tx_product_quantity','<','tx_product_minimum')->where('tx_product_alarm',1)->count();
+        $rs_directpurchase = tm_directpurchase::select('tm_providers.tx_provider_value','tm_directpurchases.created_at','tm_directpurchases.tx_directpurchase_slug','tm_directpurchases.tx_directpurchase_status')->join('tm_providers','tm_providers.ai_provider_id','tm_directpurchases.directpurchase_ai_provider_id')->orderby('tx_directpurchase_status','ASC')->get();
         $data = [
             'providerlist' => $rs_provider['active'],
             'notprocesed' => $rs_productinput['notprocesed'],
@@ -47,7 +50,8 @@ class productinputController extends Controller
             'requisition_procesed' => $rs_requisition['procesed'],
             'requisition_notprocesed' => $rs_requisition['notprocesed'],
             'productcategory' => $rs_productcategory,
-            'low_inventory' => $chk_low_inventory
+            'low_inventory' => $chk_low_inventory,
+            'directpurchase' => $rs_directpurchase
         ];
         return view('purchase.index', compact('data'));
     }
@@ -123,6 +127,7 @@ class productinputController extends Controller
         $tm_productinput->tx_productinput_total      = $total;
         $tm_productinput->tx_productinput_due        = $total;
         $tm_productinput->tx_productinput_date       = date('Y-m-d');
+
         $productinput_slug = time().str_replace(' ','',$number);
         $tm_productinput->tx_productinput_slug       = $productinput_slug;
         $tm_productinput->save();
@@ -240,15 +245,18 @@ class productinputController extends Controller
         // ESTO NO POR EL MOMENTO
 
         // SUMAR LAS CANTIDADES A LA EXISTENCIA DE LOS PRODUCTOS
-        $rs_data = tm_dataproductinput::where('dataproductinput_ai_productinput_id',$rs['ai_productinput_id'])->get();
-        foreach ($rs_data as $key => $data) {
-            $qry_product = tm_product::where('ai_product_id',$data['dataproductinput_ai_product_id']);
-            $rs_product = $qry_product->first();
-            
-            if ($rs_product['tx_product_discountable'] === 1) {
-                $rs_relation = rel_measure_product::where('measure_product_ai_measure_id',$data['dataproductinput_ai_measurement_id'])->where('measure_product_ai_product_id',$data['dataproductinput_ai_product_id'])->first();
-                $q = $rs_product['tx_product_quantity']+($data['tx_dataproductinput_quantity']*$rs_relation['tx_measure_product_relation']);
-                $qry_product->update(['tx_product_quantity' => $q]);
+        $check_requisition = rel_requisition_productinput::where('requisition_productinput_ai_productinput_id',$rs['ai_productinput_id'])->count();
+        if ($check_requisition > 0) {
+            $rs_data = tm_dataproductinput::where('dataproductinput_ai_productinput_id',$rs['ai_productinput_id'])->get();
+            foreach ($rs_data as $key => $data) {
+                $qry_product = tm_product::where('ai_product_id',$data['dataproductinput_ai_product_id']);
+                $rs_product = $qry_product->first();
+                
+                if ($rs_product['tx_product_discountable'] === 1) {
+                    $rs_relation = rel_measure_product::where('measure_product_ai_measure_id',$data['dataproductinput_ai_measurement_id'])->where('measure_product_ai_product_id',$data['dataproductinput_ai_product_id'])->first();
+                    $q = $rs_product['tx_product_quantity']+($data['tx_dataproductinput_quantity']*$rs_relation['tx_measure_product_relation']);
+                    $qry_product->update(['tx_product_quantity' => $q]);
+                }
             }
         }
         
@@ -257,12 +265,17 @@ class productinputController extends Controller
         $requisitionController = new requisitionController;
         $requisition_all = $requisitionController->getAll();
         $productinput_all = $this->getAll();
-        return response()->json(['status'=>'success','message'=>'La orden de compra se ingresó.', 
+        $rs_directpurchase = tm_directpurchase::select('tm_providers.tx_provider_value','tm_directpurchases.created_at','tm_directpurchases.tx_directpurchase_status','tm_directpurchases.tx_directpurchase_slug')->join('tm_providers','tm_providers.ai_provider_id','tm_directpurchases.directpurchase_ai_provider_id')->orderby('tx_directpurchase_status','ASC')->get();
+
+        return response()->json(['status'=>'success','message'=>'Factura ingresada.', 
         'data'=>
         ['productinput'=>[
             'notprocesed'=> $productinput_all['notprocesed'],
             'procesed'=> $productinput_all['procesed']
-        ] ]]);
+        ],
+        'directpurchase'=>[
+            'list'=>$rs_directpurchase
+        ] ]  ]);
     }
 
     /**
@@ -320,15 +333,18 @@ class productinputController extends Controller
         $qry->update(['tx_productinput_status'=>0]);
 
         // RESTA LAS CANTIDADES A LOS PRODUCTOS
-        $rs_data = tm_dataproductinput::where('dataproductinput_ai_productinput_id',$rs['ai_productinput_id'])->get();
-        foreach ($rs_data as $key => $data) {
-            $qry_product = tm_product::where('ai_product_id',$data['dataproductinput_ai_product_id']);
-            $rs_product = $qry_product->first();
-            
-            if ($rs_product['tx_product_discountable'] === 1) {
-                $rs_relation = rel_measure_product::where('measure_product_ai_measure_id',$data['dataproductinput_ai_measurement_id'])->where('measure_product_ai_product_id',$data['dataproductinput_ai_product_id'])->first();
-                $q = $rs_product['tx_product_quantity']-($data['tx_dataproductinput_quantity']*$rs_relation['tx_measure_product_relation']);
-                $qry_product->update(['tx_product_quantity' => $q]);
+        $check_requisition = rel_requisition_productinput::where('requisition_productinput_ai_productinput_id',$rs['ai_productinput_id'])->count();
+        if ($check_requisition > 0) {
+            $rs_data = tm_dataproductinput::where('dataproductinput_ai_productinput_id',$rs['ai_productinput_id'])->get();
+            foreach ($rs_data as $key => $data) {
+                $qry_product = tm_product::where('ai_product_id',$data['dataproductinput_ai_product_id']);
+                $rs_product = $qry_product->first();
+                
+                if ($rs_product['tx_product_discountable'] === 1) {
+                    $rs_relation = rel_measure_product::where('measure_product_ai_measure_id',$data['dataproductinput_ai_measurement_id'])->where('measure_product_ai_product_id',$data['dataproductinput_ai_product_id'])->first();
+                    $q = $rs_product['tx_product_quantity']-($data['tx_dataproductinput_quantity']*$rs_relation['tx_measure_product_relation']);
+                    $qry_product->update(['tx_product_quantity' => $q]);
+                }
             }
         }
 
@@ -473,17 +489,72 @@ class productinputController extends Controller
         ->join('tm_measures','tm_measures.ai_measure_id','tm_dataproductinputs.dataproductinput_ai_measurement_id')
         ->where('tm_dataproductinputs.created_at','>=',$c_from)
         ->where('tm_dataproductinputs.created_at','<=',$c_to)->get();
-
-        // $rs = DB::table('tm_productinputs')
-        //         ->select(DB::raw('SUM(tm_productinputs.tx_productinput_taxable) as total_taxable'),DB::raw('SUM(tm_productinputs.tx_productinput_tax) as total_tax'), DB::raw('SUM(tm_productinputs.tx_productinput_nontaxable) as total_nontaxable'),'tm_providers.tx_provider_value','tm_providers.tx_provider_ruc','tm_providers.tx_provider_dv','tm_providers.tx_provider_status')
-        //         ->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')
-        //         ->where('tm_productinputs.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))
-        //         ->where('tm_productinputs.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))
-        //         ->groupby('tm_productinputs.productinput_ai_provider_id')
-        //         ->get();
-
         return [ 'list' => $rs ];
     }
+    public function convert_directpurchase(Request $request)
+    {
+        $directpurchase_slug = $request->input('a');
+
+        $qry_directpurchase = tm_directpurchase::where('tx_directpurchase_slug',$directpurchase_slug);
+        if ($qry_directpurchase->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'No existe.']);
+        }
+        $qry_directpurchase->update(['tx_directpurchase_status'=>2]);
+        $rs_directpurchase = $qry_directpurchase->first();
+        $rs_datadirectpurchase = tm_datadirectpurchase::select('tm_datadirectpurchases.tx_datadirectpurchase_quantity','tm_datadirectpurchases.datadirectpurchase_ai_product_id','tm_datadirectpurchases.datadirectpurchase_ai_measure_id','tm_datadirectpurchases.tx_datadirectpurchase_description','tm_measures.tx_measure_value','tm_productcodes.tx_productcode_value')
+        ->join('tm_measures','tm_measures.ai_measure_id','tm_datadirectpurchases.datadirectpurchase_ai_measure_id')
+        ->join('tm_productcodes','tm_productcodes.ai_productcode_id','tm_datadirectpurchases.datadirectpurchase_ai_productcode_id')
+        ->where('tm_datadirectpurchases.datadirectpurchase_ai_directpurchase_id',$rs_directpurchase['ai_directpurchase_id'])->get();
+
+        $nontaxable = 0;
+        $taxable = 0;
+        $discount = 0;
+        $tax = 0;
+        $total = 0;
+
+        $user = $request->user();
+        $count = tm_productinput::count();
+        $number = substr('0000000000'.$count+55,-10);
+
+        $tm_productinput = new tm_productinput;
+        $tm_productinput->productinput_ai_user_id    = $user['id'];
+        $tm_productinput->productinput_ai_provider_id = $rs_directpurchase['directpurchase_ai_provider_id'];
+        $tm_productinput->tx_productinput_number     = $number;
+        $tm_productinput->tx_productinput_nontaxable = $nontaxable;
+        $tm_productinput->tx_productinput_taxable    = $taxable;
+        $tm_productinput->tx_productinput_discount   = $discount;
+        $tm_productinput->tx_productinput_tax        = $tax;
+        $tm_productinput->tx_productinput_total      = $total;
+        $tm_productinput->tx_productinput_due        = $total;
+        $tm_productinput->tx_productinput_date       = date('Y-m-d');
+        $productinput_slug = time().str_replace(' ','',$number);
+        $tm_productinput->tx_productinput_slug       = $productinput_slug;
+        $tm_productinput->save();
+        $productinput_id = $tm_productinput->ai_productinput_id;
+
+        foreach ($rs_datadirectpurchase as $product) {
+            $this->save_data($user['id'], $productinput_id, $product['datadirectpurchase_ai_product_id'], $product['tx_datadirectpurchase_description'], $product['tx_datadirectpurchase_quantity'], $product['datadirectpurchase_ai_measure_id'], 0, 0, 0, 0,null);
+        }
+
+        // foreach ($rs_requisition as $requisition) {
+        //     $rel_requisition_productinput = new rel_requisition_productinput;
+        //     $rel_requisition_productinput->requisition_productinput_ai_requisition_id   = $requisition['ai_requisition_id'];
+        //     $rel_requisition_productinput->requisition_productinput_ai_productinput_id  = $productinput_id;
+        //     $rel_requisition_productinput->save();
+        // }
+
+
+        // ANSWER
+        $productinput_all = $this->getAll();
+        $rs_productinput = $this->showit($productinput_slug);
+        return response()->json(['status'=>'success','message'=>'La orden de compra se ingresó.', 
+        'data'=>[
+        'productinput'=>[
+            'notprocesed'=> $productinput_all['notprocesed'],
+            'opened'=>['info' => $rs_productinput['info'], 'dataproductinput'=>$rs_productinput['dataproductinput'] ]
+        ] ]]);
+    }
+
 
 }
 
