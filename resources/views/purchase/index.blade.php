@@ -93,7 +93,7 @@
           </div>
         </div>
         <div id="createproviderrequisitionModal_footer" class="modal-footer">
-          <button class="btn btn-secondary" id="btn_providerrequisitionModal" data-bs-target="#providerrequisitionModal" data-bs-toggle="modal">Volver</button>
+          <button class="btn btn-secondary" id="btn_createproviderrequisitionModal" data-bs-target="#createproviderrequisitionModal" data-bs-toggle="modal">Volver</button>
           <button id="saveproviderRequisition" type="button" class="btn btn-primary">Guardar</button>
         </div>
       </div>

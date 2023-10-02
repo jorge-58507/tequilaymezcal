@@ -299,11 +299,11 @@ class class_report
       <table class="table table-bordered table-condensed table-striped table-print">
         <thead style="border: solid">
           <tr class="text-center">
-            <th class="col-sm-1">Fecha</th>
+            <th class="col-sm-2">Fecha</th>
             <th class="col-sm-1">#Num</th>
             <th class="col-sm-5">Cliente</th>
-            <th class="col-sm-3">RUC</th>
-            <th class="col-sm-1">Imp.</th>
+            <th class="col-sm-2">Cajera(o)</th>
+            <th class="col-sm-1">%Desc.</th>
             <th class="col-sm-1">Total</th>
           </tr>
         </thead>
@@ -312,11 +312,11 @@ class class_report
     raw_charge.map((charge) => {
       list += `
         <tr>
-          <td>${cls_general.datetime_converter(charge.created_at)}</td>
+          <td>${cls_general.datetime_converter(charge.created_at)} ${cls_general.time_converter(charge.created_at,1)}</td>
           <td>${charge.tx_charge_number}</td>
-          <td>${charge.tx_client_name}</td>
-          <td>${charge.tx_client_cif} DV:${charge.tx_client_dv}</td>
-          <td>${cls_general.val_price(charge.tx_charge_tax, 2, 1, 1) }</td>
+          <td>${charge.tx_client_name} RUC: ${charge.tx_client_cif} DV:${charge.tx_client_dv}</td>
+          <td>${charge.user_name}</td>
+          <td>${cls_general.val_price(charge.tx_charge_discount, 2, 1, 1) }</td>
           <td>${cls_general.val_price(charge.tx_charge_total, 2, 1, 1)}</td>
         </tr>
       `;
@@ -341,10 +341,10 @@ class class_report
       <table class="table table-bordered table-condensed table-striped table-print">
         <thead style="border: solid">
           <tr class="text-center">
-            <th class="col-sm-1">Fecha</th>
+            <th class="col-sm-2">Fecha</th>
             <th class="col-sm-1">#Num</th>
             <th class="col-sm-5">Cliente</th>
-            <th class="col-sm-3">RUC</th>
+            <th class="col-sm-2">Cajera(o)</th>
             <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Imp.</th>
             <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total</th>
           </tr>
@@ -354,10 +354,10 @@ class class_report
     raw_creditnote.map((creditnote) => {
       list += `
         <tr>
-          <td>${cls_general.datetime_converter(creditnote.created_at)}</td>
+          <td>${cls_general.datetime_converter(creditnote.created_at)} ${cls_general.time_converter(creditnote.created_at,1)}</td>
           <td>${creditnote.tx_creditnote_number}</td>
-          <td>${creditnote.tx_client_name}</td>
-          <td>${creditnote.tx_client_cif} DV:${creditnote.tx_client_dv}</td>
+          <td>${creditnote.tx_client_name} RUC: ${creditnote.tx_client_cif} DV:${creditnote.tx_client_dv}</td>
+          <td>${creditnote.user_name}</td>
           <td>${cls_general.val_price(creditnote.tx_creditnote_tax, 2, 1, 1) }</td>
           <td>${cls_general.val_price((creditnote.tx_creditnote_nontaxable + creditnote.tx_creditnote_taxable + creditnote.tx_creditnote_tax), 2, 1, 1)}</td>
         </tr>

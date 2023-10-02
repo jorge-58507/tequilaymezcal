@@ -480,7 +480,7 @@ class class_command{
             <div class="col-sm-6 bs_1 border_gray radius_10 text-bg-success text-truncate text-right">
               <span id="span_commandTotal"><h5>Total: B/ 0.00</h5></span>
             </div>
-            <div id="article_selected" class="col-xs-12 v_scrollable" style="height: 40vh">
+            <div id="article_selected" class="col-xs-12 v_scrollable" style="height: 65vh; transition: all ease 1s;">
             </div>
           </div>
           <div class="row">
@@ -494,7 +494,7 @@ class class_command{
             </div>
             <div class="col-sm-9 mb-3 pt-2" style="height: 10vh">
               <div class="input-group" style="height: 10vh">
-                <input type="text" id="articleFilter" class="form-control" placeholder="Buscar por c&oacute;digo o descripci&oacute;n" onkeyup="cls_command.filter_article(this.value)">
+                <input type="text" id="articleFilter" class="form-control" placeholder="Buscar por c&oacute;digo o descripci&oacute;n" onkeyup="cls_command.filter_article(this.value)" onfocus="document.getElementById('article_list').style.height = '25vh';document.getElementById('article_selected').style.height = '40vh';" onblur="document.getElementById('article_list').style.height = '0vh';document.getElementById('article_selected').style.height = '65vh';">
                 <button class="btn btn-outline-secondary" type="button" onclick="cls_command.filter_article(document.getElementById('articleFilter').value)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
@@ -505,7 +505,7 @@ class class_command{
           </div>
           <div class="row">
             <span>Listado de Art&iacute;culos</span>
-            <div id="article_list" class="col-xs-12 v_scrollable" style="height: 25vh">
+            <div id="article_list" class="col-xs-12 v_scrollable" style="height: 0vh; transition: all ease 1s;">
 
             </div>
             <div class="col-xs-12 h_scrollable" style="height: 10vh">

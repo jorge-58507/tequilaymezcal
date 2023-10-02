@@ -735,30 +735,21 @@ class class_requisition{
           <button class="btn btn-primary" data-bs-target="#createproviderrequisitionModal" data-bs-toggle="modal">Crear Proveedor</button>
         </div>
         <div class="col-sm-12 pb-1">
-          <label for="providerSelected" class="form-label">Proveedor Elegido</label>
-          <input type="text" id="providerSelected" class="form-control" disabled>
+          <label for="requisition_providerSelected" class="form-label">Proveedor Elegido</label>
+          <input type="text" id="requisition_providerSelected" class="form-control" disabled>
         </div>
         <div class="col-md-12 col-lg-6 pb-1">
           <label for="providerFilter" class="form-label">Buscar Proveedor</label>
-          <input type="text" id="providerFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['word', 'number', 'punctuation', 'mathematic'])" onkeyup="cls_provider.filter(this.value,'container_providerfiltered')">
+          <input type="text" id="providerFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['word', 'number', 'punctuation', 'mathematic'])" onkeyup="cls_provider.filter(this.value,'container_providerfiltered_requisition')">
         </div>
-        <div id="container_providerfiltered" class="col-sm-12 h_300 v_scrollable"></div>
+        <div id="container_providerfiltered_requisition" class="col-sm-12 h_300 v_scrollable"></div>
       </div>
     `;
     document.getElementById('requisitionModal_footer').innerHTML = `
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-      <button id="btn_saveRequisition" type="button" class="btn btn-primary">Procesar</button>
+      <button id="btn_saveRequisition" type="button" class="btn btn-primary" onclick="cls_general.disable_submit(this, 1); cls_requisition.process();">Procesar</button>
     `;
-    cls_provider.filter('', 'container_providerfiltered_requisition')
-
-    document.getElementById('btn_saveRequisition').addEventListener('click', function () {
-      cls_general.disable_submit(this, 1)
-      cls_requisition.process();
-    });
-
-
-
-    document.getElementById('container_providerfiltered').innerHTML = cls_provider.generate_providerlist(cls_provider.providerlist);
+    document.getElementById('container_providerfiltered_requisition').innerHTML = cls_provider.generate_providerlist(cls_provider.providerlist);
 
     document.getElementById('providerFilter').value = '';
     document.getElementById('providerValue').value = '';
@@ -770,18 +761,17 @@ class class_requisition{
     document.getElementById('providerSelected').value = '';
     document.getElementById('providerSelected').name = '';
 
-    const modal = new bootstrap.Modal('#providerrequisitionModal', {})
+    const modal = new bootstrap.Modal('#requisitionModal', {})
     modal.show();
   }
   process(){
-    var provider_slug = document.getElementById('providerSelected').name;
+    var provider_slug = document.getElementById('requisition_providerSelected').name;
 
     var raw_product = [];
     cls_requisition.product_added.map((product) => {
       raw_product.push({ price: product.price, discount: product.discountrate, tax: product.taxrate, quantity: product.quantity})
     });
     var raw_total = cls_general.calculate_sale(raw_product);
-
     var url = '/requisition/';
     var method = 'POST';
     var body = JSON.stringify({ a: cls_requisition.product_added, b: provider_slug, c: raw_total});
@@ -793,7 +783,7 @@ class class_requisition{
         cls_requisition.requisition_notprocesed = obj.data.notprocesed;
         document.getElementById('requisitionList').innerHTML = cls_requisition.generate_requisitionlist(cls_requisition.requisition_notprocesed);
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-        const Modal = bootstrap.Modal.getInstance('#providerrequisitionModal');
+        const Modal = bootstrap.Modal.getInstance('#requisitionModal');
         Modal.hide();
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
@@ -904,11 +894,6 @@ class class_requisition{
     `;
     document.getElementById('requisitionModal_footer').innerHTML = ``;
     cls_provider.filter('', 'container_providerfiltered_requisition')
-
-    document.getElementById('btn_saveRequisition').addEventListener('click', function () {
-      cls_general.disable_submit(this, 1)
-      cls_requisition.process();
-    });
   }
   update_provider(provider_slug, requisition_slug){
     var url = '/requisition/'+requisition_slug+'/provider';
@@ -1058,17 +1043,10 @@ class class_requisition{
     });
   }
   async filter() {
-
-    // if (field_str === 'container_productinputnotprocesed') {
     var date_i = document.getElementById('requisitionDatefilter').value;
     var str = document.getElementById('requisitionFilter').value;
     var filtered = await cls_requisition.look_for(str, date_i);
     document.getElementById('requisitionList').innerHTML = cls_requisition.generate_requisitionlist(filtered);
-    // } else {
-    //   var date_i = document.getElementById('procesedDatefilter').value;
-    //   var filtered = await cls_productinput.look_for(str, status, date_i);
-    //   document.getElementById(field_str).innerHTML = cls_productinput.generate_processed(filtered);
-    // }
   }
 }
 
@@ -1078,8 +1056,9 @@ class class_provider{
   }
   generate_providerlist(raw_provider){
     var content = '<ul class="list-group">';
+    console.log(raw_provider);
     raw_provider.map((provider)=> {
-      content += `<li class="list-group-item cursor_pointer" onclick="cls_provider.set_provider('${provider.tx_provider_slug}','${provider.tx_provider_value}')">${provider.tx_provider_value}</li>`;
+      content += `<li class="list-group-item cursor_pointer" onclick="cls_provider.set_provider_requisition('${provider.tx_provider_slug}','${provider.tx_provider_value}')">${provider.tx_provider_value}</li>`;
     })
     content += '</ul>';
     return content;
@@ -1122,10 +1101,15 @@ class class_provider{
       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
     }
   }
-  set_provider(slug, value){
-    document.getElementById('providerSelected').value = value;
-    document.getElementById('providerSelected').name = slug;
+  // set_provider(slug, value){
+  //   document.getElementById('providerSelected').value = value;
+  //   document.getElementById('providerSelected').name = slug;
+  // }
+  set_provider_requisition(slug, value) {
+    document.getElementById('requisition_providerSelected').value = value;
+    document.getElementById('requisition_providerSelected').name = slug;
   }
+
   set_provider_updrequisition(provider_slug){
     var requisition_slug = document.getElementById('btn_createprovider_updrequisition').name;
     cls_requisition.update_provider(provider_slug, requisition_slug);
@@ -1157,22 +1141,22 @@ class class_provider{
     var filtered = await cls_provider.look_for(str);
     switch (field_str) {
       case 'container_providerfiltered_requisition':
-        document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist_updrequisition(filtered);        
+        document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist(filtered);        
         break;
 
       case 'container_providerfiltered_directpurchase':
         document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist_directpurchase(filtered);
         break;
 
+      case 'container_providerfiltered_updrequisition':
+        document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist_updrequisition(filtered);
+        break;
+
+
       default:
         document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist(filtered);
         break;
     }
-    // if (field_str === 'container_providerfiltered_requisition') {
-    //   document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist_updrequisition(filtered);
-    // }else{
-    //   document.getElementById(field_str).innerHTML = cls_provider.generate_providerlist(filtered);
-    // }
   }
   create(requisition_slug){
     document.getElementById('requisitionModal_title').innerHTML = `Crear proveedor`;

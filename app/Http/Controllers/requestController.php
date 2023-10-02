@@ -47,14 +47,7 @@ class requestController extends Controller
     }
     public function getAll()
     {
-    //     $rs_openrequest =       tm_request::select('tm_requests.ai_request_id','tm_requests.request_ai_table_id','tm_requests.tx_request_code','tm_requests.tx_request_title','tm_requests.tx_request_status','tm_requests.tx_request_slug','tm_requests.created_at','tm_clients.ai_client_id','tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_slug','tm_clients.tx_client_status','tm_tables.ai_table_id','tm_tables.table_ai_ubication_id','tm_tables.tx_table_code','tm_tables.tx_table_value','tm_tables.tx_table_image','tm_tables.tx_table_active','tm_tables.tx_table_slug')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',0)->get();
-    //     $rs_closedrequest =     tm_request::join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',1)->limit(100)->get();
-    //     $rs_canceledrequest =   tm_request::join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)->limit(100)->get();
-
         return [
-            // 'open_request' => $rs_openrequest,
-            // 'closed_request' => $rs_closedrequest,
-            // 'canceled_request' => $rs_canceledrequest,
             'open_request' => $this->getOpenRequest(),
             'closed_request' => $this->getClosedRequest(),
             'canceled_request' => $this->getCanceledRequest(),
@@ -207,8 +200,7 @@ class requestController extends Controller
         return $rs_openrequest;
     }
     public function getClosedRequest(){
-
-        $rs_closedrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',1)->orderby('tm_requests.created_at','DESC')->get();
+        $rs_closedrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',1)->orderby('tm_requests.created_at','DESC')->get();
         $commandController = new commandController; //CALCULAR EL TOTAL
         foreach ($rs_closedrequest as $a => $request) {
             $raw_command = $commandController->getByRequest($request['ai_request_id']);
@@ -225,7 +217,7 @@ class requestController extends Controller
         return $rs_closedrequest;
     }
     public function getCanceledRequest(){
-        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at')->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)->orderby('tm_charges.created_at','DESC')->limit(200)->get();
+        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at','tm_charges.updated_at')->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)->orderby('tm_charges.created_at','DESC')->limit(200)->get();
         return $rs_canceledrequest;
     }
     /**

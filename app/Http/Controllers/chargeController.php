@@ -142,13 +142,13 @@ class chargeController extends Controller
             $qry_giftcard->update(['tx_giftcard_amount' => ($rs_giftcard['tx_giftcard_amount'] - $payment['amount'])]);
         }
         $charge_data = $this->showIt($charge_slug);
-        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
+        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'] );
         // $this->print_receipt($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
 
         return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
 
-    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change){
+    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name){
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
@@ -203,14 +203,21 @@ class chargeController extends Controller
         $command_id = 0 ;
         foreach ($raw_item as $item) {
             if ($item['tx_commanddata_status'] === 1) {  
-                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
+
+
+                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']);
+                $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+                $printer -> setEmphasis(true);
+                $printer -> text(" (".$item['tx_presentation_value'].")\n");
+                $printer -> setEmphasis(false);
+                $printer -> selectPrintMode();
+
+                // $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
                 $printer -> setEmphasis(true);
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
                 $printer -> setEmphasis(false);
                 $printer -> selectPrintMode();
-
-
 
                 $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
                 foreach ($raw_recipe as $ingredient) {
@@ -342,6 +349,7 @@ class chargeController extends Controller
             $printer -> text($payment['tx_paymentmethod_value'].": ".number_format($payment['tx_payment_amount'],2)."\n");
         }
         $printer -> text("Cambio: ".number_format($change,2)."\n");
+        $printer -> text("Cajera: ".number_format($user_name,2)."\n");
 
         /* Footer */
         $printer -> feed(2);
@@ -500,14 +508,14 @@ class chargeController extends Controller
         return response()->json(['status'=>'success','message'=>'','data'=>['charge'=>$rs['charge'], 'payment'=>$rs['payment'], 'article'=>$rs['article']]]);
     }
     public function filter(Request $request, $from,$to,$limit){
-        $str = $request->input('a');
-        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at')
+        // $str = $request->input('a');
+        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.updated_at','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at')
         ->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')
         ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
         ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)
         ->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))
         ->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))
-        ->where('tm_requests.tx_request_title','LIKE',"%{$str}%")
+        // ->where('tm_requests.tx_request_title','LIKE',"%{$str}%")
         ->orderby('tm_charges.created_at','DESC')->limit($limit)->get();
         return response()->json(['status'=>'success','message'=>'','data'=>['canceled'=>$rs_canceledrequest]]);
     }
@@ -720,7 +728,7 @@ class chargeController extends Controller
     }
 
     public function report ($from,$to){
-        $rs = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable','tm_charges.tx_charge_taxable','tm_charges.tx_charge_discount','tm_charges.tx_charge_tax','tm_charges.tx_charge_total','tm_charges.tx_charge_change','tm_charges.created_at')->join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->get();
+        $rs = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable','tm_charges.tx_charge_taxable','tm_charges.tx_charge_discount','tm_charges.tx_charge_tax','tm_charges.tx_charge_total','tm_charges.tx_charge_change','tm_charges.created_at','users.name as user_name')->join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('users','users.id','tm_charges.charge_ai_user_id')->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->orderby('tm_charges.created_at')->get();
         $rs_paymentmethod = tm_charge::select('tm_payments.payment_ai_paymentmethod_id','tm_payments.tx_payment_amount','tm_payments.tx_payment_number','tm_charges.created_at')->join('tm_payments','tm_payments.payment_ai_charge_id','tm_charges.ai_charge_id')->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))->get();
 
         return [ 'list' => $rs, 'paymentmethod' => $rs_paymentmethod ];

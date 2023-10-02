@@ -51,7 +51,7 @@ class class_request{
           </div>
           <span class="badge bg-primary fs_20">B/ ${cls_general.val_price(request.total,2,1,1)}</span>
           &nbsp;&nbsp;&nbsp;
-          <span>${cls_general.datetime_converter(request.created_at)}</span>
+          <span>${cls_general.datetime_converter(request.updated_at)} ${cls_general.time_converter(request.updated_at,1)}</span>
       </li>`;
     })
     content += '</ul>';
@@ -68,9 +68,7 @@ class class_request{
         </div>
         <span class="badge bg-secondary fs_20">B/ ${cls_general.val_price(charge.tx_charge_total, 2, 1, 1) }</span>
         &nbsp;&nbsp;&nbsp;
-        <span>${cls_general.datetime_converter(charge.created_at)}</span>
-
-      
+        <span>${cls_general.datetime_converter(charge.updated_at)} ${cls_general.time_converter(charge.updated_at,1)}</span>    
       </li>`;
     })
     content += '</ul>';
@@ -106,12 +104,6 @@ class class_request{
               cls_request.closed_request = obj.data.closed_request;
 
               cls_charge.show(request_slug)
-
-
-              // cls_request.render('open', cls_request.open_request);
-              // cls_request.render('closed', cls_request.closed_request);
-
-              // cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
             } else {
               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
             }
@@ -468,14 +460,13 @@ class class_charge{
         let yearDiff = fechaTo.getFullYear() - fechaFrom.getFullYear();
         let MonthDiff = fechaTo.getMonth() - fechaFrom.getMonth();
         if (yearDiff > 0) {
-          cls_general.shot_toast_bs('El rango de fecha debe ser maximo 30 dias.', { bg: 'text-bg-warning' }); return false;
+          cls_general.shot_toast_bs('El rango de fecha debe ser maximo 90 dias.', { bg: 'text-bg-warning' }); return false;
         }
-        if (MonthDiff > 1) {
-          cls_general.shot_toast_bs('El rango de fecha debe ser maximo 30 dias.', { bg: 'text-bg-warning' }); return false;
+        if (MonthDiff > 3) {
+          cls_general.shot_toast_bs('El rango de fecha debe ser maximo 90 dias.', { bg: 'text-bg-warning' }); return false;
         }
 
         if (cls_general.is_empty_var(str) === 0) {
-          // cls_general.shot_toast_bs('Ingrese el codigo o título.', { bg: 'text-bg-warning' }); return false;
           str = ' '
         }
         if (cls_general.is_empty_var(date_i) === 0 || cls_general.is_empty_var(date_f) === 0) {
@@ -745,7 +736,6 @@ class class_charge{
 
   }
   print(charge_slug){
-    // cls_general.print_html('/print_charge/' + charge_slug);
     var url = '/print_charge/'+charge_slug;
     var method = 'GET';
     var body = '';
@@ -1222,9 +1212,6 @@ class class_creditnote{
       }, 500)
     });
   }
-
-
-
   render(charge_slug,number,date,client,raw_article,raw_creditnote, payment){
     var article_charge = cls_creditnote.generate_articlecharge(raw_article);
     var creditnote_list = cls_creditnote.generate_creditnote(raw_creditnote);
