@@ -1560,6 +1560,7 @@ class class_cashregister{
         <li class="list-group-item d-flex justify-content-between align-items-start">
           <div class="ms-2 me-auto">
             <div class="fw-bold">Venta Neta: ${cashregister['tx_cashregister_netsale']}</div>
+            <small> Cajera: ${cashregister['user_name']}</small>
           </div>
           <button class="badge btn btn-info" onclick="cls_cashregister.print_cashregister(${cashregister['ai_cashregister_id']})">
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
@@ -1772,7 +1773,7 @@ class class_cashregister{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  generate_inspectedCR(cashregister,payment,canceled,giftcard){
+  generate_inspectedCR(cashregister,payment,canceled,giftcard,charge_list){
     var title = 'Arqueo del '+cls_general.datetime_converter(cashregister.created_at)+' a las '+cls_general.time_converter(cashregister.created_at);
     var income_cash = (cls_general.is_empty_var(payment[1]) === 1)    ? payment[1] : 0;
     var outcome_cash = (cls_general.is_empty_var(canceled[1]) === 1)  ? payment[1] : 0;
@@ -1952,7 +1953,38 @@ class class_cashregister{
     </div>
     `;
 
-    return {title: title, content: content};
+    var detail_list = '';
+    charge_list.map((charge) => {
+      detail_list += `
+        <tr>
+          <td>${cls_general.datetime_converter(charge.created_at)} ${cls_general.time_converter(charge.created_at,1)}</td>
+          <td>${charge.tx_charge_number}</td>
+          <td>${charge.tx_client_name} RUC ${charge.tx_client_cif} DV ${charge.tx_client_dv}</td>
+          <td>${cls_general.val_price(charge.tx_charge_total)}</td>
+        </tr>
+      `
+    })
+    var detail = `
+      <div class="row">
+        <div class="col-12">
+          <table class="table table-bordered">
+            <thead>
+              <tr class="table-success text-center">
+                <th>Fecha</th>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+            ${detail_list}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      `;
+
+    return {title: title, content: content, detail: detail};
   }
   show(cashregister_id){
     var url = '/cashregister/' + cashregister_id;
@@ -1973,9 +2005,9 @@ class class_cashregister{
             total_giftcard.active += ttl_giftcard;
           }
         })
-        var raw_inspected = cls_cashregister.generate_inspectedCR(obj.data.cashregister, obj.data.payment, obj.data.canceled, total_giftcard)
+        var raw_inspected = cls_cashregister.generate_inspectedCR(obj.data.cashregister, obj.data.payment, obj.data.canceled, total_giftcard, obj.data.charge)
         document.getElementById('inspectCR_title').innerHTML = raw_inspected.title;
-        document.getElementById('inspectCR_container').innerHTML = raw_inspected.content;
+        document.getElementById('inspectCR_container').innerHTML = raw_inspected.content + raw_inspected.detail;
 
         const modal = new bootstrap.Modal('#inspectCRModal', {})
         modal.show();

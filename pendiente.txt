@@ -1,5 +1,7 @@
 Bodego secundario 200 => Crear tabla tm_warehouse (listado de productos de acceso rapido) es una copia de la tabla productos las product output al guardarse debe actualizar las cantidades en esta tabla
 cohorte de inventario 150 => se debe crear la interfaz donde se realiza un cohorte muy similar al directpurchase, crear tm_inventory (id, bodega) y tm_datainventory (id, inventory_id, producto_id, measure_id, productcode_id, producto_description, quantity)
+REGISTRO DE ASISTENCIA 200
+
 
 Repporte de anulaciones y ventas en listados
 ingreso de mercancia a traves de lector de codigo de barras

@@ -284,8 +284,7 @@ class general_funct {
 
     const hoy = fecha.getDate();
     const mesActual = fecha.getMonth() + 1; 
-
-    return [`${fecha.getFullYear()}-${(fecha.getMonth() > 9) ? fecha.getMonth() + 1 : '0' + (fecha.getMonth() + 1)}-${fecha.getDate()}`,`${fecha.getHours()}:${fecha.getMinutes()}`]
+    return [`${fecha.getFullYear()}-${(fecha.getMonth() > 8) ? fecha.getMonth() + 1 : '0' + (fecha.getMonth() + 1)}-${(fecha.getDate() > 9) ? fecha.getDate() : '0' + fecha.getDate()}`,`${fecha.getHours()}:${fecha.getMinutes()}`]
   }
   date_converter(from, to, string) { //Ymd,dmY,fecha
     var raw_fecha = string.split('-');

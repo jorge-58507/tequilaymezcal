@@ -97,8 +97,33 @@ class cashregisterController extends Controller
      */
     public function get_by_date($date)
     {
-        $rs_cashregister = tm_cashregister::where('created_at','like','%'.$date.'%')->get();
+        $rs_cashregister = tm_cashregister::select('tm_cashregisters.ai_cashregister_id','tm_cashregisters.tx_cashregister_payment','tm_cashregisters.tx_cashregister_paymentnull','tm_cashregisters.tx_cashregister_grosssale','tm_cashregisters.tx_cashregister_netsale','tm_cashregisters.tx_cashregister_realsale',
+        'tm_cashregisters.tx_cashregister_cashback','tm_cashregisters.tx_cashregister_discount','tm_cashregisters.tx_cashregister_returntax','tm_cashregisters.tx_cashregister_tax','tm_cashregisters.tx_cashregister_returntaxable','tm_cashregisters.tx_cashregister_taxable','tm_cashregisters.tx_cashregister_returnnontaxable','tm_cashregisters.tx_cashregister_nontaxable',
+        'tm_cashregisters.created_at','tm_cashregisters.tx_cashregister_returnquantitydoc','tm_cashregisters.tx_cashregister_quantitydoc','tm_cashregisters.tx_cashregister_cashoutputnull','tm_cashregisters.tx_cashregister_cashoutputout','tm_cashregisters.tx_cashregister_cashoutputin','tm_cashregisters.tx_cashregister_canceled',
+        'users.name as user_name')
+        ->join('users','users.id','tm_cashregisters.cashregister_ai_user_id')->where('tm_cashregisters.created_at','like','%'.$date.'%')->get();
         return $rs_cashregister;
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 
     public function show($cashregister_id)
@@ -147,7 +172,11 @@ class cashregisterController extends Controller
 
         $rs_giftcard = tm_giftcard::where('giftcard_ai_cashregister_id',$cashregister_id)->get();
 
-        return ['cashregister'=>$rs_cashregister, 'payment'=>$raw_payment, 'canceled'=>$raw_canceled, 'giftcard'=>$rs_giftcard];
+        // $rs_charge = tm_charge::select()->where('charge_ai_cashregister_id',$cashregister_id)->get();
+        $rs_charge = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable','tm_charges.tx_charge_taxable','tm_charges.tx_charge_discount','tm_charges.tx_charge_tax','tm_charges.tx_charge_total','tm_charges.tx_charge_change','tm_charges.created_at')->join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('charge_ai_cashregister_id',$cashregister_id)
+        ->orderby('tm_charges.created_at')->get();
+
+        return ['cashregister'=>$rs_cashregister, 'payment'=>$raw_payment, 'canceled'=>$raw_canceled, 'giftcard'=>$rs_giftcard, 'charge'=>$rs_charge];
     }
     public function filter($date)
     {

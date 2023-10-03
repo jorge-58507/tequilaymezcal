@@ -349,7 +349,7 @@ class chargeController extends Controller
             $printer -> text($payment['tx_paymentmethod_value'].": ".number_format($payment['tx_payment_amount'],2)."\n");
         }
         $printer -> text("Cambio: ".number_format($change,2)."\n");
-        $printer -> text("Cajera: ".number_format($user_name,2)."\n");
+        $printer -> text("Cajera: ".$user_name."\n");
 
         /* Footer */
         $printer -> feed(2);
@@ -368,7 +368,7 @@ class chargeController extends Controller
         $printer -> close();
     }
 
-    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change){
+    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name){
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
@@ -471,6 +471,7 @@ class chargeController extends Controller
             $printer -> text($payment['tx_paymentmethod_value'].": ".number_format($payment['tx_payment_amount'],2)."\n");
         }
         $printer -> text("Cambio: ".number_format($change,2)."\n");
+        $printer -> text("Cajera: ".$user_name."\n");
 
         /* Footer */
         $printer -> feed(2);
