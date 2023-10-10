@@ -1626,15 +1626,21 @@ class class_articleproduct{
         <span>Debe agregar el ingrediente. Seleccione la cantidad, el producto y la medida. En caso de que el ingrediente pueda variar sabores agregar todos los productos que puedan conformar el ingrediente.</span>
       </div>
       <hr/>
-      <div class="col-sm-4">
+      <div class="col-12 col-md-2">
         <label for="recipeQuantity" class="form-label">Cantidad</label>
         <input type="text" class="form-control" id="recipeQuantity" onfocus="cls_general.validFranz(this.id, ['number'],'.')">
       </div>
-      <div class="col-sm-4">
+      <div class="col-12 col-md-3 pt-3">
+        <div class="form-check form-switch py-3">
+          <input class="form-check-input" type="checkbox" role="switch" id="recipeTogo">
+          <label class="form-check-label" for="recipeTogo">Para llevar</label>
+        </div>
+      </div>
+      <div class="col-4 col-md-4">
         <label for="recipeProduct" class="form-label">Producto</label>
         <select name="recipeProduct" id="recipeProduct" class="form-select" onchange="cls_articleproduct.set_recipemeasure(this.value)"><option value='' disabled selected>Seleccione</option>${option_product}</select>
       </div>
-      <div id="container_recipemeasure" class="col-sm-4">
+      <div id="container_recipemeasure" class="col-12 col-md-3">
       </div>
       <div class="col-sm-12 text-center pt-1">
         <button type="button" class="btn btn-primary" onclick="cls_articleproduct.add_ingredient()">Aceptar</button>
@@ -1683,6 +1689,8 @@ class class_articleproduct{
     var quantity = document.getElementById('recipeQuantity').value;
     var product = document.getElementById("recipeProduct");
     var measure = document.getElementById("recipeMeasure");
+    var togo = (document.getElementById('recipeTogo').checked === true) ? 1 : 0;
+
     if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(product.value) === 0 || cls_general.is_empty_var(measure.value) === 0) {
       cls_general.shot_toast_bs('Faltan datos', { bg: 'text-bg-warning' }); return false;
     }
@@ -1692,6 +1700,7 @@ class class_articleproduct{
       measure_id: measure.value,
       measure_value: measure.options[measure.selectedIndex].text,
       quantity: quantity,
+      to_go: togo
     });
     cls_general.shot_toast_bs('Producto agregado.')
     cls_articleproduct.render_ingredient();

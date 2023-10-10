@@ -12,6 +12,7 @@ use App\tm_cashoutput;
 use App\tm_cashregister;
 use App\tm_client;
 use App\tm_giftcard;
+use App\tm_article;
 
 require '../vendor/autoload.php';
 
@@ -35,6 +36,7 @@ class chargeController extends Controller
         $requestController = new requestController;
         $clientController = new clientController;
         $creditnoteController = new creditnoteController;
+        $tableController = new tableController;
         
         $rs_openrequest =       $requestController->getOpenRequest();
         $rs_closedrequest =     $requestController->getClosedRequest();
@@ -42,6 +44,8 @@ class chargeController extends Controller
         $rs_paymentmethod =     tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
         $rs_client =            $clientController->getAll();
         $rs_creditnote =        $creditnoteController->getAll();
+        $rs_article =           tm_article::select('tm_articles.ai_article_id','tm_articles.tx_article_thumbnail','tm_articles.tx_article_code', 'tm_articles.tx_article_value', 'tm_articles.tx_article_promotion','tm_articles.tx_article_slug','tm_categories.ai_category_id','tm_categories.tx_category_value')->join('tm_categories','tm_categories.ai_category_id','tm_articles.article_ai_category_id')->where('tx_article_status',1)->orderby('tx_article_promotion','DESC')->orderby('tx_article_value','ASC')->get();
+        $rs_table =             $tableController->getAll();
 
         $data = [
             'open_request'      => $rs_openrequest,
@@ -49,7 +53,9 @@ class chargeController extends Controller
             'canceled_request'  => $rs_canceledrequest,
             'paymentmethod'     => $rs_paymentmethod,
             'client_list'       => $rs_client,
-            'creditnote_list'   => $rs_creditnote
+            'article_list'      => $rs_article,
+            'creditnote_list'   => $rs_creditnote,
+            'table_list'        => $rs_table['list']
         ];
         return view('charge.index', compact('data'));
     }
@@ -202,8 +208,8 @@ class chargeController extends Controller
         $last_observation = '';
         $command_id = 0 ;
         foreach ($raw_item as $item) {
+        // foreach ($raw_item as $key => $item) {
             if ($item['tx_commanddata_status'] === 1) {  
-
 
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']);
                 $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
@@ -212,7 +218,6 @@ class chargeController extends Controller
                 $printer -> setEmphasis(false);
                 $printer -> selectPrintMode();
 
-                // $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
                 $printer -> setEmphasis(true);
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
@@ -229,6 +234,12 @@ class chargeController extends Controller
                         }
                     }
                 }
+
+                // if ($raw_item[$key+1]['ai_command_id'] != $key['ai_command_id']) {
+                //     $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+                // }
+                
+
                 if (strlen($content_observation) > 0) {
                     $position = strpos($content_observation,$item['tx_command_observation']);
                     if ($position === false) {
@@ -517,7 +528,9 @@ class chargeController extends Controller
         ->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))
         ->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))
         // ->where('tm_requests.tx_request_title','LIKE',"%{$str}%")
-        ->orderby('tm_charges.created_at','DESC')->limit($limit)->get();
+        ->orderby('tm_charges.created_at','DESC')
+        // ->limit($limit)
+        ->get();
         return response()->json(['status'=>'success','message'=>'','data'=>['canceled'=>$rs_canceledrequest]]);
     }
 

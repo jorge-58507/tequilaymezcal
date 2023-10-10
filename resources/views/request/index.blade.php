@@ -77,7 +77,7 @@
       </div>
     </div>
   </div>
-  <!-- Modal LOGIN TO CREDITNOTE -->
+  <!-- Modal LOGIN TO CANCEL COMMANDDATA -->
   <div class="modal fade" id="login_cancelModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-scrollable">
       <div class="modal-content">

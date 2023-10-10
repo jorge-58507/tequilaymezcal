@@ -18,7 +18,17 @@ class tableController extends Controller
      */
     public function index()
     {
-        //
+        $rs = $this->getAll();
+
+        return response()->json(['status'=>'success','data'=>['list'=>$rs['list'],'bar'=>$rs['bar'], 'table'=>$rs['table']]]);
+    }
+    
+    public function getAll(){
+        $rs_bar = tm_table::where('tx_table_type',1)->get();
+        $rs_table = tm_table::where('tx_table_type',2)->get();
+        $rs = tm_table::get();
+        
+        return ['list'=>$rs, 'bar'=>$rs_bar, 'table'=>$rs_table];
     }
 
     /**

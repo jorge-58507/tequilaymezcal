@@ -58,10 +58,12 @@ class commandController extends Controller
 
         // INSERTAR LOS ARTICULOS DE LA COMANDA
         $article_list = $request->input('a');
+        
         $commanddataController = new commanddataController;
         $commanddataController->store($article_list,$user['id'],$command_id,$rs_client['tx_client_exempt']);
+
         $productController = new productController;
-        $productController->minus_byArticle($article_list);
+        $productController->minus_byArticle($article_list,$request->input('e'));
 
         // ANSWER
         $rs_request = tm_request::where('ai_request_id',$request_id)->first();
@@ -177,7 +179,7 @@ class commandController extends Controller
         $commanddataController->store($article_list,$user['id'],$command_id,$rs_client['tx_client_exempt']);
         
         $productController = new productController;
-        $productController->minus_byArticle($article_list);
+        $productController->minus_byArticle($article_list,$request->input('e'));
 
         // ANSWER
         $rs_command = $this->getByRequest($rs_request['ai_request_id']);

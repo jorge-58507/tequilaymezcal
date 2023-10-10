@@ -70,6 +70,7 @@ Route::post('/charge/{param_a}/{param_b}/{param_c}', 'chargeController@filter');
 Route::post('/user_role/{param_a}/add', 'userController@add_role');
 Route::post('/user_role/{param_a}/delete', 'userController@delete_role');
 Route::post('/purchase/convert', 'productinputController@convert_directpurchase');
+Route::post('/commanddatalastrequest/', 'commanddataController@add_tolastrequest');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
@@ -129,6 +130,14 @@ Route::get('print_charge/{param}', 'printController@print_charge');
 Route::get('print_reportcommanddata/{param_a}/{param_b}/{param_c}', 'printController@print_reportcommanddata');
 Route::get('print_reportdataproductinput/{param_a}/{param_b}/{param_c}', 'printController@print_reportdataproductinput');
 Route::get('print_reportcommanddataproduct/{param_a}/{param_b}/{param_c}', 'printController@print_reportcommanddataproduct');
+Route::get('print_reporttotalproductinput/{param_a}/{param_b}', 'printController@print_reporttotalproductinput');
+Route::get('print_reporttotalcharge/{param_a}/{param_b}', 'printController@print_reporttotalcharge');
+Route::get('print_reportdetailproductinput/{param_a}/{param_b}', 'printController@print_reportdetailproductinput');
+Route::get('print_reportdetailcharge/{param_a}/{param_b}', 'printController@print_reportdetailcharge');
+Route::get('print_reportdetailcreditnote/{param_a}/{param_b}', 'printController@print_reportdetailcreditnote');
+Route::get('print_reportproductinputbyprovider/{param_a}/{param_b}', 'printController@print_reportproductinputbyprovider');
+Route::get('print_reportdepletion/{param_a}/{param_b}', 'printController@print_reportdepletion');
+Route::get('print_reportcommanddatanulled/{param_a}/{param_b}', 'printController@print_reportcommanddatanulled');
 
 
 

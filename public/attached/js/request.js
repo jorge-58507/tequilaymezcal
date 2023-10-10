@@ -733,7 +733,7 @@ class class_command{
         content_recipe += `
           <div class="col-md-12 col-lg-6">
           <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
-          <select class="form-select" name="show" id="ingredient_${i}">`;
+          <select class="form-select" name="show" id="ingredient_${i}" alt="${raw_ingredient[0].to_go}">`;
         raw_ingredient.map((ingredient) => {
           content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
         })
@@ -742,7 +742,7 @@ class class_command{
         content_recipe += `
           <div class="col-md-12 col-lg-6 display_none">
             <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
-            <select class="form-select" name="noshow" id="ingredient_${i}">`;
+            <select class="form-select" name="noshow" id="ingredient_${i}" alt="${raw_ingredient[0].to_go}">`;
               raw_ingredient.map((ingredient) => {
                 content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
               })
@@ -873,7 +873,8 @@ class class_command{
     $('#container_recipe').find('select').each(function () {
       var index = $(this.selectedOptions).text();
       let show = this.getAttribute("name");
-      raw_recipe.push({ [index]: $(this).val() + ',' + show })
+      let togo = (this.getAttribute("alt") === "1") ? 'togo' : '';
+      raw_recipe.push({ [index]: $(this).val() + ',' + show + ',' + togo })
     });
     var select_presentation = document.getElementById('articlePresentation');
     cls_command.command_list.push({

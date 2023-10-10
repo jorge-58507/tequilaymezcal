@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\tm_commanddata;
 use App\tm_measure;
 use App\tm_product;
+use App\tm_request;
+use App\tm_command;
 
 class commanddataController extends Controller
 {
@@ -38,6 +40,7 @@ class commanddataController extends Controller
         }
         $qry->update(['tx_commanddata_status' => 0]);
         
+        $rs_command = tm_command::select('tm_commands.tx_command_consumption')->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->where('ai_commanddata_id',$commanddata_id)->first();
         if ($request->input('a') === 1) {
             $rs = $qry->first();
             $article_list = [
@@ -48,7 +51,7 @@ class commanddataController extends Controller
                 ]
             ];
             $productController = new productController;
-            $productController->plus_byArticle($article_list);
+            $productController->plus_byArticle($article_list,$rs_command['tx_command_consumption']);
         }
 
         // ANSWER
@@ -112,5 +115,21 @@ class commanddataController extends Controller
         }
     }
 
+    public function add_tolastrequest (Request $request){
+        $qry_request = tm_request::select('tm_requests.ai_request_id','tm_commands.ai_command_id','tm_clients.tx_client_exempt')->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tx_request_slug',$request->input('a'))->orderby('ai_command_id','DESC');
+        if ($qry_request->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'No existe']);
+        }
+        $rs_request = $qry_request->first();
+        $user = $request->user();
+        $article_list = $request->input('b');
+        $this->store($article_list,$user['id'],$rs_request['ai_command_id'],$rs_request['tx_client_exempt']);
+
+        // ANSWER
+        $rs_request = tm_request::where('tx_request_slug',$request->input('a'))->first();
+        $commandController = new commandController;
+        $rs_command = $commandController->getByRequest($rs_request['ai_request_id']);
+        return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command, 'request_info'=>$rs_request ]]);
+    }
     
 }

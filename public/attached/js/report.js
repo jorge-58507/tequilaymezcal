@@ -106,12 +106,21 @@ class class_report
     })
 
     document.getElementById('container_report').innerHTML = `
-      <div class="row h_100">
+      <div class="row py-4">
+        <div class="col-12 py-2 text-center">
+          <button class="badge btn btn-info" onclick="cls_productinput.print_totalproductinput()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+              <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+              <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+            </svg>
+          </button>
+        </div>
+
         <div class="col-sm-12 text-center">
           <h3>Reporte de Compras</h3>
           <strong>Desde:</strong> ${from}
           &nbsp;
-          <strong>Hasta:</strong> ${to}			
+          <strong>Hasta:</strong> ${to}		dasdsadsad	
         </div>
       </div>
       <div class="row">
@@ -159,7 +168,15 @@ class class_report
       raw_paymenttotal[payment.payment_ai_paymentmethod_id] += payment.tx_payment_amount;
     })
     document.getElementById('container_report').innerHTML = `
-      <div class="row h_100">
+      <div class="row py-4">
+        <div class="col-12 py-2 text-center">
+          <button class="badge btn btn-info" onclick="cls_charge.print_totalcharge()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+              <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+              <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+            </svg>
+          </button>
+        </div>
         <div class="col-sm-12 text-center">
           <h3>Reporte de Ventas</h3>
           <strong>Desde:</strong> ${from}
@@ -241,6 +258,14 @@ class class_report
     var total_taxable = 0;
     var total_tax = 0;
     var list = `
+    <div class="col-12 py-2 text-center">
+      <button class="badge btn btn-info" onclick="cls_productinput.print_detailproductinput()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+          <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+          <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+        </svg>
+      </button>
+    </div>
     <h5>Listado de Compras, Desde: ${from} Hasta: ${to}</h5>
       <table class="table table-bordered table-condensed table-striped table-print">
         <thead style="border: solid">
@@ -295,6 +320,15 @@ class class_report
     var total_cn_tax = 0;
 
     var list = `
+    <div class="col-12 py-2 text-center">
+      <button class="badge btn btn-info" onclick="cls_charge.print_detailcharge()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+          <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+          <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+        </svg>
+      </button>
+    </div>
+
     <h5>Listado de Ventas, Desde: ${from} Hasta: ${to}</h5>
       <table class="table table-bordered table-condensed table-striped table-print">
         <thead style="border: solid">
@@ -378,8 +412,6 @@ class class_report
       </table>
     `;
 
-
-
     document.getElementById('container_report').innerHTML = list;
   }
   render_creditnote(from, to, raw_creditnote) {
@@ -389,6 +421,14 @@ class class_report
 
     var list = '';
     list += `
+      <div class="col-12 py-2 text-center">
+        <button class="badge btn btn-info" onclick="cls_creditnote.print_detailcreditnote()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+            <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+            <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+          </svg>
+        </button>
+      </div>
       <h5>Listado de Notas de Cr&eacute;dito, Desde: ${from} Hasta: ${to}</h5>
       <table class="table table-bordered table-condensed table-striped table-print">
         <thead style="border: solid">
@@ -439,6 +479,14 @@ class class_report
     var total_taxable = 0;
     var total_tax = 0;
     var list = `
+    <div class="col-12 py-2 text-center">
+      <button class="badge btn btn-info" onclick="cls_productinput.print_productinputbyprovider()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+          <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+          <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+        </svg>
+      </button>
+    </div>
     <h5>Listado de Compras, Desde: ${from} Hasta: ${to}</h5>
       <table class="table table-bordered table-condensed table-striped table-print">
         <thead style="border: solid">
@@ -486,6 +534,14 @@ class class_report
   render_depletion(from, to, raw_depletion){
     var list = '';
     list += `
+      <div class="col-12 py-2 text-center">
+        <button class="badge btn btn-info" onclick="cls_depletion.print_reportdepletion()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+            <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+            <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+          </svg>
+        </button>
+      </div>
       <h5>Listado de Mermas, Desde: ${from} Hasta: ${to}</h5>
       <div class="list-group">
     `;
@@ -506,6 +562,14 @@ class class_report
   render_anulled(from, to, raw_annuled) {
     var list = '';
     list += `
+      <div class="col-12 py-2 text-center">
+        <button class="badge btn btn-info" onclick="cls_commanddata.print_reportanulled()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+            <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+            <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+          </svg>
+        </button>
+      </div>
       <h5>Listado de Comandas Anuladas, Desde: ${from} Hasta: ${to}</h5>
       <div class="list-group">
     `;
@@ -809,7 +873,29 @@ class class_commanddata
     var to = document.getElementById('reportToDatefilter').value;
     cls_general.print_html(`/print_reportcommanddataproduct/${from}/${to}/${str}`);
   }
+  print_reportanulled(){
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportcommanddatanulled/${from}/${to}`);
+  }
+}
 
+class class_productinput{
+  print_totalproductinput(){
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reporttotalproductinput/${from}/${to}`);
+  }
+  print_detailproductinput(){
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportdetailproductinput/${from}/${to}`);
+  }
+  print_productinputbyprovider(){
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportproductinputbyprovider/${from}/${to}`);
+  }
 }
 
 class class_dataproductinput {
@@ -885,5 +971,34 @@ class class_dataproductinput {
     var from = document.getElementById('reportFromDatefilter').value;
     var to = document.getElementById('reportToDatefilter').value;
     cls_general.print_html(`/print_reportdataproductinput/${from}/${to}/${str}`);
+  }
+}
+
+class class_charge {
+  print_totalcharge() {
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reporttotalcharge/${from}/${to}`);
+  }
+  print_detailcharge() {
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportdetailcharge/${from}/${to}`);
+  }
+}
+
+class class_creditnote {
+  print_detailcreditnote(){
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportdetailcreditnote/${from}/${to}`);
+  }
+}
+
+class class_depletion{
+  print_reportdepletion(){
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportdepletion/${from}/${to}`);
   }
 }

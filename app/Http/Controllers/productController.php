@@ -232,37 +232,88 @@ class productController extends Controller
         return response()->json(['status'=>'success','message'=>'Conteo Actualizado.','data'=>['product'=>$rs_product]]);
 
     }
-    public function minus_byArticle($article_list){
+    public function minus_byArticle($article_list,$consumption){
         foreach ($article_list as $a => $article) {
             foreach ($article['recipe'] as $ingredient) {
                 foreach ($ingredient as $reduced) {
                     $raw_explode = explode(",",$reduced);
-                    $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
-                    ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
-                    ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
-                    
-                    if ($rs_measureproduct['tx_product_discountable'] == 1) {
-                        $quantity = $rs_measureproduct['tx_product_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
-                        $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+
+                    if ($consumption === 'Local') {
+                        if (!empty($raw_explode[4])) {
+                            if ($raw_explode[4] != 'togo') {
+                                $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                                ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                                ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                                
+                                if ($rs_measureproduct['tx_product_discountable'] == 1) {
+                                    $quantity = $rs_measureproduct['tx_product_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+                                    $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                                }
+                            }
+                        }else{
+                            $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                            ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                            ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                            
+                            if ($rs_measureproduct['tx_product_discountable'] == 1) {
+                                $quantity = $rs_measureproduct['tx_product_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+                                $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                            }
+                        }
+                    }else{
+                        $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                        ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                        ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                        
+                        if ($rs_measureproduct['tx_product_discountable'] == 1) {
+                            $quantity = $rs_measureproduct['tx_product_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+                            $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                        }
                     }
+
                 }
 
             }
         }
     }
-    public function plus_byArticle($article_list){
+    public function plus_byArticle($article_list, $consumption){
         foreach ($article_list as $a => $article) {
             $recipe = json_decode($article['recipe'],true);
             foreach ($recipe as $ingredient) {
                 foreach ($ingredient as $reduced) {
                     $raw_explode = explode(",",$reduced);
-                    $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
-                    ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
-                    ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
                     
-                    if ($rs_measureproduct['tx_product_discountable'] == 1) {
-                        $quantity = $rs_measureproduct['tx_product_quantity']+(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
-                        $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                    if ($consumption === 'Local') {
+                        if (!empty($raw_explode[4])) {
+                            if ($raw_explode[4] != 'togo') {
+                                $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                                ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                                ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                                
+                                if ($rs_measureproduct['tx_product_discountable'] == 1) {
+                                    $quantity = $rs_measureproduct['tx_product_quantity']+(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+                                    $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                                }
+                            }
+                        }else{
+                            $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                            ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                            ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                            
+                            if ($rs_measureproduct['tx_product_discountable'] == 1) {
+                                $quantity = $rs_measureproduct['tx_product_quantity']+(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+                                $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                            }
+                        }
+                    }else{
+                        $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                        ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                        ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                        
+                        if ($rs_measureproduct['tx_product_discountable'] == 1) {
+                            $quantity = $rs_measureproduct['tx_product_quantity']+(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+                            $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                        }
                     }
                 }
 

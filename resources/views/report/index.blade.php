@@ -63,6 +63,10 @@
 		var cls_report = new class_report();
 		var cls_commanddata = new class_commanddata();
 		var cls_dataproductinput = new class_dataproductinput();
+		var cls_productinput = new class_productinput();
+		var cls_charge = new class_charge();
+		var cls_creditnote = new class_creditnote();
+		var cls_depletion = new class_depletion();
 
     $( function() {
       var dateFormat = "mm/dd/yy",
