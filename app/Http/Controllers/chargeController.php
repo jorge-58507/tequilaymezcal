@@ -244,21 +244,21 @@ class chargeController extends Controller
                 }
                 
 
-                if (strlen($content_observation) > 0) {
-                    $position = strpos($content_observation,$item['tx_command_observation']);
-                    if ($position === false) {
-                        $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
-                        $content_observation .= $item['tx_command_observation']."\n";
-                    }
-                    $last_observation = "";
-                }else{
-                    $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
-                    $content_observation .= $item['tx_command_observation']."\n";
-                }
-                if ($command_id != $item['ai_command_id']) {
-                    // $printer -> text("OBS. ".$last_observation."\n");
-                    $command_id = $item['ai_command_id'];
-                }
+                // if (strlen($content_observation) > 0) {
+                //     $position = strpos($content_observation,$item['tx_command_observation']);
+                //     if ($position === false) {
+                //         $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
+                //         $content_observation .= $item['tx_command_observation']."\n";
+                //     }
+                //     $last_observation = "";
+                // }else{
+                //     $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
+                //     $content_observation .= $item['tx_command_observation']."\n";
+                // }
+                // if ($command_id != $item['ai_command_id']) {
+                //     // $printer -> text("OBS. ".$last_observation."\n");
+                //     $command_id = $item['ai_command_id'];
+                // }
             }
         }
 

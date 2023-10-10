@@ -40,7 +40,7 @@ class commanddataController extends Controller
         }
         $qry->update(['tx_commanddata_status' => 0]);
         
-        $rs_command = tm_command::select('tm_commands.tx_command_consumption')->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->where('ai_commanddata_id',$commanddata_id)->first();
+        $rs_command = tm_command::select('tm_commands.tx_command_consumption','tm_commands.ai_command_id')->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->where('ai_commanddata_id',$commanddata_id)->first();
         if ($request->input('a') === 1) {
             $rs = $qry->first();
             $article_list = [
@@ -54,6 +54,21 @@ class commanddataController extends Controller
             $productController->plus_byArticle($article_list,$rs_command['tx_command_consumption']);
         }
 
+        // Desactivar COMMAND
+        $rs_request = tm_request::join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')
+        ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
+        ->where('ai_commanddata_id',$commanddata_id)
+        ->first();
+
+        $check_command = tm_request::join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')
+        ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
+        ->where('tx_commanddata_status',1)
+        ->where('ai_request_id',$rs_request['ai_request_id'])
+        ->count();
+
+        if ($check_command === 0) {
+            tm_request::where('ai_request_id',$rs_request['ai_request_id'])->update(['tx_request_status' => 3]);
+        }
         // ANSWER
         $rs_request = tm_commanddata::join('tm_commands','tm_commands.ai_command_id','tm_commanddatas.commanddata_ai_command_id')->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')->where('tm_commanddatas.ai_commanddata_id',$commanddata_id)->first();
         $commandController = new commandController;
@@ -116,7 +131,7 @@ class commanddataController extends Controller
     }
 
     public function add_tolastrequest (Request $request){
-        $qry_request = tm_request::select('tm_requests.ai_request_id','tm_commands.ai_command_id','tm_clients.tx_client_exempt')->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tx_request_slug',$request->input('a'))->orderby('ai_command_id','DESC');
+        $qry_request = tm_request::select('tm_requests.ai_request_id','tm_commands.ai_command_id','tm_commands.tx_command_consumption','tm_clients.tx_client_exempt')->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tx_request_slug',$request->input('a'))->orderby('ai_command_id','DESC');
         if ($qry_request->count() === 0) {
             return response()->json(['status'=>'failed','message'=>'No existe']);
         }
@@ -124,6 +139,9 @@ class commanddataController extends Controller
         $user = $request->user();
         $article_list = $request->input('b');
         $this->store($article_list,$user['id'],$rs_request['ai_command_id'],$rs_request['tx_client_exempt']);
+
+        $productController = new productController;
+        $productController->minus_byArticle($article_list,$rs_request['tx_command_consumption']);
 
         // ANSWER
         $rs_request = tm_request::where('tx_request_slug',$request->input('a'))->first();
