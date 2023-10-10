@@ -5,6 +5,10 @@ Login de usuario 100 =>
 eliminar los pedidos
 Anular comandas desde la pantalla de caja
 En listado de pagados, mostrar la cajera que lo cobro
+Quitar los teclados
+En la receta los articulos que son para llevar mostrar que son TOGO
+imprimir precuenta
+AL agregar productos en la caja de cobro poder anular comandas y verificar si se restan los productos para enviar
 
 poner producos nodescontables en la receta
 nuevaventa desde la caja

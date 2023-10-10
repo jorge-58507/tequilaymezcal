@@ -207,8 +207,8 @@ class chargeController extends Controller
         $content_observation = '';
         $last_observation = '';
         $command_id = 0 ;
-        foreach ($raw_item as $item) {
-        // foreach ($raw_item as $key => $item) {
+        // foreach ($raw_item as $item) {
+        foreach ($raw_item as $key => $item) {
             if ($item['tx_commanddata_status'] === 1) {  
 
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']);
@@ -235,9 +235,13 @@ class chargeController extends Controller
                     }
                 }
 
-                // if ($raw_item[$key+1]['ai_command_id'] != $key['ai_command_id']) {
-                //     $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-                // }
+                if (!empty($raw_item[$key+1])) {
+                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
+                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+                    }
+                }else{
+                    $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+                }
                 
 
                 if (strlen($content_observation) > 0) {
@@ -252,7 +256,7 @@ class chargeController extends Controller
                     $content_observation .= $item['tx_command_observation']."\n";
                 }
                 if ($command_id != $item['ai_command_id']) {
-                    $printer -> text("OBS. ".$last_observation."\n");
+                    // $printer -> text("OBS. ".$last_observation."\n");
                     $command_id = $item['ai_command_id'];
                 }
             }
