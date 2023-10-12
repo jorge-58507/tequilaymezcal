@@ -11,6 +11,12 @@ use App\tm_client;
 use App\tm_command;
 use App\tm_product;
 
+
+use Mike42\Escpos\Printer;
+use Mike42\Escpos\EscposImage;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
+
 class requestController extends Controller
 {
     /**
@@ -196,11 +202,11 @@ class requestController extends Controller
     }
 
     public function getOpenRequest(){
-        $rs_openrequest = tm_request::join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',0)->orderby('tm_requests.created_at','DESC')->get();
+        $rs_openrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at','users.name as user_name')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')->join('users','users.id','tm_commands.command_ai_user_id')->where('tx_request_status',0)->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at','DESC')->get();
         return $rs_openrequest;
     }
     public function getClosedRequest(){
-        $rs_closedrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',1)->orderby('tm_requests.created_at','DESC')->get();
+        $rs_closedrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at','users.name as user_name')->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')->join('users','users.id','tm_commands.command_ai_user_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',1)->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at','DESC')->get();
         $commandController = new commandController; //CALCULAR EL TOTAL
         foreach ($rs_closedrequest as $a => $request) {
             $raw_command = $commandController->getByRequest($request['ai_request_id']);
@@ -217,7 +223,7 @@ class requestController extends Controller
         return $rs_closedrequest;
     }
     public function getCanceledRequest(){
-        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at','tm_charges.updated_at')->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)->orderby('tm_charges.created_at','DESC')->limit(200)->get();
+        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at','tm_charges.updated_at','users.name as user_name')->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')->join('users','users.id','tm_charges.charge_ai_user_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)->orderby('tm_charges.created_at','DESC')->limit(200)->get();
         return $rs_canceledrequest;
     }
     /**
@@ -240,5 +246,133 @@ class requestController extends Controller
         $raw_request = $this->getAll();
         return response()->json(['status'=>'success','message'=>'','data'=>['open_request'=>$raw_request['open_request'], 'closed_request'=>$raw_request['closed_request'], 'canceled_request'=>$raw_request['canceled_request']]]);
     }
+    public function print($request_slug){
+        $qry = tm_request::where('tx_request_slug',$request_slug);
+        if ($qry->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'No existe.']);
+        }
+        $rs_request = $qry->first();
 
+        $commandController = new commandController;
+        $raw_item = $commandController->getByRequest($rs_request['ai_request_id']);
+
+
+
+
+
+
+    // public function print_receipt($raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name){
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $printer = new Printer($connector);
+
+        /* Information for the receipt */
+        
+        /* Start the printer */
+        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
+        // $printer = new Printer($connector);
+        
+        // PRINT TOP DATE
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> text(date('d-m-Y')."\n");
+
+        /* Print top logo */
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> bitImage($logo);
+        
+        /* Name of shop */
+        $printer -> text("Cancino Nuñez, S.A.\n");
+        $printer -> text("155732387-2-2023 DV 14.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("PRECUENTA\n");
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> feed();
+        
+        /* Title of receipt */
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("PRECUENTA PEDIDO #".$rs_request['tx_request_code']."\n");
+        $printer -> setEmphasis(false);
+        $printer -> feed(2);
+        
+        /* Items */
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("PRECUENTA\n");
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> setJustification(Printer::JUSTIFY_LEFT);
+        $printer -> text("Articulos Relacionados.\n");
+
+        $raw_price = [];
+        foreach ($raw_item as $key => $item) {
+            if ($item['tx_commanddata_status'] === 1) {  
+                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
+                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+
+                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+                foreach ($raw_recipe as $ingredient) {
+                    foreach ($ingredient as $k => $formule) {
+                        $splited_formule = explode(",",$formule);
+                        if ($splited_formule[3] === 'show') {
+                            $ing = explode(")",$k,2);
+                            $printer -> text('   -'.$ing[1]."\n");
+                        }
+                    }
+                }
+
+                if (!empty($raw_item[$key+1])) {
+                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
+                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+                        $printer -> feed(1);
+                    }
+                }else{
+                    $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+                    $printer -> feed(1);
+                }
+
+                $raw_price[] = [
+                    'price' => $item['tx_commanddata_price'],
+                    'discount' => $item['tx_commanddata_discountrate'],
+                    'tax' => $item['tx_commanddata_taxrate'],
+                    'quantity' => $item['tx_commanddata_quantity']
+                ];
+            }
+        }
+
+        $chargeController = new chargeController;
+        $raw_total = $chargeController->calculate_sale($raw_price);
+
+        $printer -> feed(2);
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("Subtotal. B/ ".number_format($raw_total['subtotal'] + $raw_total['st_notaxable'],2)."\n");
+        $printer -> setEmphasis(false);
+        
+        /* Tax and total */
+        $printer -> text("Descuento. B/ ".number_format($raw_total['discount'],2)."\n");
+        $printer -> text("ITBMS. B/ ".number_format($raw_total['tax'],2)."\n");
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("TOTAL. B/ ".number_format($raw_total['total'],2)."\n");
+        $printer -> selectPrintMode();
+        $printer -> feed(1);
+
+        /* Footer */
+        $printer -> feed(2);
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("PRECUENTA\n");
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> feed(2);
+        
+        /* Cut the receipt and open the cash drawer */
+        $printer -> cut();
+        $printer -> close();
+
+        return response()->json(['status'=>'success','message'=>'Impreso satisfactoriamente.']);
+
+    }
 }

@@ -119,17 +119,6 @@
         
         <script src="{{ asset('attached/js/jquery-ui.min_edit.js')}}"></script>
         <link href="{{ asset('attached/dist/css/jquery-ui.css')}}" rel="stylesheet">
-        <!-- keyboard widget css & script -->
-        <link href="{{ asset('attached/dist/css/keyboard.min.css')}}" rel="stylesheet">
-        <script src="{{ asset('attached/dist/js/jquery.keyboard.js')}}"></script>
-
-        <!-- css for the preview keyset extension -->
-        <link href="{{ asset('attached/dist/css/keyboard-previewkeyset.min.css')}}" rel="stylesheet">
-
-        <!-- keyboard optional extensions - include ALL (includes mousewheel) -->
-        <script src="{{ asset('attached/dist/js/jquery.keyboard.extension-all.min.js')}}"></script>
-
-
 
         <script type="text/javascript">
 
@@ -145,13 +134,6 @@
                 document.getElementById('email').value = email;
                 document.getElementById('password').focus();
             }
-
-            $(function(){
-                $('#password').keyboard();
-            });
-            $('#password').bind('accepted', function (e, keyboard, el) {
-                document.getElementById('submit_login').click();
-            });
 
         </script>
     </body>

@@ -110,7 +110,11 @@ class commandController extends Controller
     }
     public function getByRequest($request_id)
     {
-        $rs_command = tm_command::join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')->where('command_ai_request_id',$request_id)->orderby('tx_commanddata_status','DESC')->orderby('ai_command_id','ASC')->get();
+        $rs_command = tm_command::join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
+        ->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')
+        ->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')
+        ->where('command_ai_request_id',$request_id)
+        ->orderby('tx_commanddata_status','DESC')->orderby('ai_command_id','ASC')->get();
         return $rs_command;
     }
     public function getByCharge($charge_id)

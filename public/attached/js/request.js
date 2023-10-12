@@ -381,6 +381,23 @@ class class_request {
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
+  print(){
+    var request_slug = document.getElementById('btn_commandprocess').name;
+    if (cls_general.is_empty_var(request_slug) === 0) {
+      cls_general.shot_toast_bs('No hay artículos agregados.');
+    }
+    var url = '/request/'+request_slug+'/print';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_general.shot_toast_bs(obj.message);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
 }
 class class_article {
   constructor(article_list){
@@ -578,7 +595,17 @@ class class_command{
 
         <div class="col-md-12 col-lg-6">
           <div class="row">
-            <span>Listado de Comandas</span>
+            <div class="col-12 col-lg-8">
+              <span>Listado de Comandas</span>
+            </div>
+            <div class="col-12 col-lg-4">
+              <button class="badge btn btn-info" onclick="cls_request.print('${request_slug}')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+                  <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+                  <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+                </svg>
+              </button>
+            </div>
             <div id="commandList" class="col-sm-12 v_scrollable" style="height: 70vh">
               ${content_command_procesed.content}
             </div>

@@ -328,20 +328,12 @@ class chargeController extends Controller
                         }
                     }
                 }
-                if (strlen($content_observation) > 0) {
-                    $position = strpos($content_observation,$item['tx_command_observation']);
-                    if ($position === false) {
-                        $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
-                        $content_observation .= $item['tx_command_observation']."\n";
+                if (!empty($raw_item[$key+1])) {
+                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
+                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
                     }
-                    $last_observation = "";
                 }else{
-                    $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
-                    $content_observation .= $item['tx_command_observation']."\n";
-                }
-                if ($command_id != $item['ai_command_id']) {
-                    $printer -> text("OBS. ".$last_observation."\n");
-                    $command_id = $item['ai_command_id'];
+                    $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
                 }
             }
         }
@@ -432,9 +424,6 @@ class chargeController extends Controller
         $printer -> setJustification(Printer::JUSTIFY_LEFT);
         $printer -> text("Articulos Relacionados.\n");
 
-        $content_observation = '';
-        $last_observation = '';
-        $command_id = 0 ;
         foreach ($raw_item as $item) {
             if ($item['tx_commanddata_status'] === 1) {  
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
@@ -450,20 +439,14 @@ class chargeController extends Controller
                         }
                     }
                 }
-                if (strlen($content_observation) > 0) {
-                    $position = strpos($content_observation,$item['tx_command_observation']);
-                    if ($position === false) {
-                        $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
-                        $content_observation .= $item['tx_command_observation']."\n";
+                if (!empty($raw_item[$key+1])) {
+                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
+                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+                        $printer -> feed(1);
                     }
-                    $last_observation = "";
                 }else{
-                    $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
-                    $content_observation .= $item['tx_command_observation']."\n";
-                }
-                if ($command_id != $item['ai_command_id']) {
-                    $printer -> text("OBS. ".$last_observation."\n");
-                    $command_id = $item['ai_command_id'];
+                    $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+                    $printer -> feed(1);
                 }
             }
         }
@@ -737,8 +720,8 @@ class chargeController extends Controller
         }
         return [
             'gross_total' =>  round($ttl_gross,2),
-            'subtotal'=>  round($subtotal,2), 
-            'st_notaxable'=>  round($st_notaxable,2), 
+            'subtotal'=>  round($subtotal,2),           //taxable
+            'st_notaxable'=>  round($st_notaxable,2),   //non_taxable
             'total' =>  round($total,2),
             'discount' =>  round($ttl_discount,2), 
             'tax' =>  round($ttl_tax,2)

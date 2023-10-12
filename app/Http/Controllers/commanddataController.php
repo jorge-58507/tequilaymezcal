@@ -73,7 +73,9 @@ class commanddataController extends Controller
         $rs_request = tm_commanddata::join('tm_commands','tm_commands.ai_command_id','tm_commanddatas.commanddata_ai_command_id')->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')->where('tm_commanddatas.ai_commanddata_id',$commanddata_id)->first();
         $commandController = new commandController;
         $rs_command = $commandController->getByRequest($rs_request['ai_request_id']);
-        return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command]]);
+        $rs_request = tm_request::where('ai_request_id',$rs_request['ai_request_id'])->first();
+
+        return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command, 'request_info'=>$rs_request]]);
 
     }
     public function reportAnnulled($from, $to){
@@ -95,25 +97,56 @@ class commanddataController extends Controller
     public function report_product($from, $to){
         $c_from = date('Y-m-d H:i:s',strtotime($from." 00:00:01"));
         $c_to = date('Y-m-d H:i:s',strtotime($to." 23:59:00"));
-        $rs = tm_commanddata::select('tm_commanddatas.tx_commanddata_recipe')
+        $rs = tm_commanddata::select('tm_commanddatas.tx_commanddata_recipe', 'tm_commanddatas.tx_commanddata_status', 'tm_commands.tx_command_consumption')
+        ->join('tm_commands','tm_commands.ai_command_id','tm_commanddatas.commanddata_ai_command_id')
         ->where('tm_commanddatas.created_at','>=',$c_from)
         ->where('tm_commanddatas.created_at','<=',$c_to)->get();
 
         $raw_product = [];
         foreach ($rs as $commanddata) {
-            $raw_recipe = json_decode($commanddata['tx_commanddata_recipe'],true);
-            foreach ($raw_recipe as $key => $recipe) {
-                foreach ($recipe as $ingredient) {
-                    $split = explode(",",$ingredient);
-                    $rs_measure = tm_measure::select('tx_measure_value')->where('ai_measure_id',$split[1])->first();
-                    $rs_product = tm_product::select('tx_product_value')->where('ai_product_id',$split[2])->first();
-                    array_push($raw_product, [
-                        'quantity' => $split[0],
-                        'measure_id' => $split[1],
-                        'measure_value' => $rs_measure['tx_measure_value'],
-                        'product_id' => $split[2],
-                        'product_value' => $rs_product['tx_product_value']
-                    ]);
+            if ($commanddata['tx_commanddata_status'] === 1) {
+                $raw_recipe = json_decode($commanddata['tx_commanddata_recipe'],true);
+                foreach ($raw_recipe as $key => $recipe) {
+
+                    foreach ($recipe as $ingredient) {
+                        $split = explode(",",$ingredient);
+
+                        if ($commanddata['tx_command_consumption'] === 'Local') {
+                            if (!empty($split[4])) {
+                                if ($split[4] != 'togo') {
+                                    $rs_measure = tm_measure::select('tx_measure_value')->where('ai_measure_id',$split[1])->first();
+                                    $rs_product = tm_product::select('tx_product_value')->where('ai_product_id',$split[2])->first();
+                                    array_push($raw_product, [
+                                        'quantity' => $split[0],
+                                        'measure_id' => $split[1],
+                                        'measure_value' => $rs_measure['tx_measure_value'],
+                                        'product_id' => $split[2],
+                                        'product_value' => $rs_product['tx_product_value']
+                                    ]);
+                                }
+                            }else{
+                                $rs_measure = tm_measure::select('tx_measure_value')->where('ai_measure_id',$split[1])->first();
+                                $rs_product = tm_product::select('tx_product_value')->where('ai_product_id',$split[2])->first();
+                                array_push($raw_product, [
+                                    'quantity' => $split[0],
+                                    'measure_id' => $split[1],
+                                    'measure_value' => $rs_measure['tx_measure_value'],
+                                    'product_id' => $split[2],
+                                    'product_value' => $rs_product['tx_product_value']
+                                ]);
+                            }
+                        }else{
+                            $rs_measure = tm_measure::select('tx_measure_value')->where('ai_measure_id',$split[1])->first();
+                            $rs_product = tm_product::select('tx_product_value')->where('ai_product_id',$split[2])->first();
+                            array_push($raw_product, [
+                                'quantity' => $split[0],
+                                'measure_id' => $split[1],
+                                'measure_value' => $rs_measure['tx_measure_value'],
+                                'product_id' => $split[2],
+                                'product_value' => $rs_product['tx_product_value']
+                            ]);
+                        }
+                    }
                 }
             }
         }

@@ -39,6 +39,7 @@ Route::get('recipe/{param_a}/{param_b}', 'articleproductController@showRecipe')-
 Route::get('request/{param}/table', 'requestController@showByTable')->middleware('auth');
 Route::get('request/{param}/bar', 'requestController@showByBar')->middleware('auth');
 Route::get('request/reload', 'requestController@reload');
+Route::get('request/{param}/print', 'requestController@print')->middleware('auth');
 Route::get('command/{param}/byrequest', 'commandController@getByRequest_json')->middleware('auth');
 Route::get('paydesk/{param}/creditnote', 'creditnoteController@getByCharge_json')->middleware('auth');
 Route::get('depletion/{param}/article', 'depletionController@getByArticle')->middleware('auth');

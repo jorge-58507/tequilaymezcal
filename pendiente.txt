@@ -1,15 +1,14 @@
 Bodego secundario 200/300 => Crear tabla tm_warehouse (listado de productos de acceso rapido) es una copia de la tabla productos las product output al guardarse debe actualizar las cantidades en esta tabla
 cohorte de inventario 100/200 => se debe crear la interfaz donde se realiza un cohorte muy similar al directpurchase, crear tm_inventory (id, bodega) y tm_datainventory (id, inventory_id, producto_id, measure_id, productcode_id, producto_description, quantity)
-REGISTRO DE ASISTENCIA 200/400
-Login de usuario 100 => 
-eliminar los pedidos
+REGISTRO DE ASISTENCIA 200/400 => crear interfaz parra marcaciones, interfaz para obtener reportes, 
+Login de usuario 100 => crear tabla donde se almacena el codigo con el usuario y la contraseña en texto plano
+imprimir precuenta
+
 Anular comandas desde la pantalla de caja
 En listado de pagados, mostrar la cajera que lo cobro
 Quitar los teclados
+eliminar los pedidos
 En la receta los articulos que son para llevar mostrar que son TOGO
-imprimir precuenta
-AL agregar productos en la caja de cobro poder anular comandas y verificar si se restan los productos para enviar
-
 poner producos nodescontables en la receta
 nuevaventa desde la caja
 agregar ariculos desde la pantalla de caja

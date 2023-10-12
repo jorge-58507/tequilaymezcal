@@ -36,7 +36,7 @@ class class_request{
   generate_openrequest(open) {
     var content = '<ul class="list-group">';
     open.map((request) => {
-      content += `<li class="list-group-item cursor_pointer" onclick="cls_request.close('${request.tx_request_slug}')"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5><small>${request.tx_request_title} - ${request.tx_table_value}</small></li>`;
+      content += `<li class="list-group-item cursor_pointer" onclick="cls_request.close('${request.tx_request_slug}')"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5><small>${request.tx_request_title} - ${request.tx_table_value}, Elaborador: ${request.user_name}</small></li>`;
     })
     content += '</ul>';
     return content;
@@ -47,7 +47,7 @@ class class_request{
       content += `<li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_charge.show('${request.tx_request_slug}')">
           <div class="ms-2 me-auto">
             <div class="fw-bold"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5></div>
-            <small>${request.tx_request_title} - ${request.tx_table_value}</small>
+            <small>${request.tx_request_title} - ${request.tx_table_value}, Elaborador: ${request.user_name}</small>
           </div>
           <span class="badge bg-primary fs_20">B/ ${cls_general.val_price(request.total,2,1,1)}</span>
           &nbsp;&nbsp;&nbsp;
@@ -64,7 +64,7 @@ class class_request{
 
         <div class="ms-2 me-auto">
           <div class="fw-bold"><h5>${charge.tx_charge_number} - ${charge.tx_client_name}</h5></div>
-          <small>${charge.tx_request_title} - ${charge.tx_table_value}</small>
+          <small>${charge.tx_request_title} - ${charge.tx_table_value}, Cajera: ${charge.user_name}</small>
         </div>
         <span class="badge bg-secondary fs_20">B/ ${cls_general.val_price(charge.tx_charge_total, 2, 1, 1) }</span>
         &nbsp;&nbsp;&nbsp;
@@ -216,8 +216,8 @@ class class_request{
       if (obj.status === 'success') {
         cls_request.open_request = obj.data.open_request;
         cls_request.closed_request = obj.data.closed_request;
-        cls_request.filter('closed', document.getElementById('filter_closedrequest').value);
-        cls_request.filter('open', document.getElementById('filter_openrequest').value);
+        document.getElementById('btn_filterClosedRequest').click();
+        document.getElementById('btn_filterOpenedRequest').click();
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
@@ -338,7 +338,7 @@ class class_charge{
               <div class="col-md-12 col-lg-6">
                 <div class="input-group my-3">
                   <input type="text" id="filter_openrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('open',this.value)">
-                  <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('open',document.getElementById('filter_openrequest').value)">
+                  <button class="btn btn-outline-secondary" type="button" id="btn_filterOpenedRequest" onclick="cls_request.filter('open',document.getElementById('filter_openrequest').value)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                       <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
                     </svg>
@@ -1122,10 +1122,12 @@ class class_command{
     command_procesed.map((command) => {
       if (command.tx_commanddata_status === 0) {
         var bg_status = 'text-bg-warning text-body-tertiary';
+        var btn = '';
       } else {
         // [{ PRICE, discount, tax, quantity }]
         raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
         var bg_status = '';
+        var btn = `<button type="button" class="btn btn-secondary" onclick="event.preventDefault(); cls_command.loginuser_cancel(${command.ai_commanddata_id})">Anular</button>`;
       }
 
       content_command_procesed += `
@@ -1134,6 +1136,9 @@ class class_command{
             <h5 class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description}</h5>
           </div>
           <small class="float_right">B/ ${cls_general.val_price(command.tx_commanddata_price,2,1,1)}</small><br/>
+          <div class="text-center">
+            ${btn}
+          </div>
         </a>
       `;
     })
@@ -1809,28 +1814,33 @@ class class_command{
       .then((ans) => {
         switch (ans) {
           case 'si':
-            var content_commandList = document.getElementById('commandList').innerHTML;
-            var content_requestTotal = document.getElementById('requestTotal').innerHTML;
-
-            document.getElementById('commandList').innerHTML = '<img src="attached/image/loading.gif" width="30px"></img>';
-            document.getElementById('requestTotal').innerHTML = '<img src="attached/image/loading.gif" width="10px"></img>';
-
             var url = '/command/' + commanddata_id + '/cancel';
             var method = 'PUT';
             var body = JSON.stringify({ a: 1 });;
             var funcion = function (obj) {
               if (obj.status === 'success') {
 
-                cls_command.command_procesed = obj.data.command_procesed;
-                var command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
-                var total_sale = cls_general.calculate_sale(command_procesed.price);
+                
 
-                document.getElementById('commandList').innerHTML = command_procesed.content;
-                document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
+                var content_command = cls_command.generate_articleprocesed(obj.data.command_procesed)
+                document.getElementById('container_commandlist').innerHTML = content_command.content;
+                let price = cls_general.calculate_sale(content_command.price)
+                document.getElementById('sp_gross').innerHTML = 'B/. ' + cls_general.val_price(price.gross_total, 2, 1, 1);
+                document.getElementById('sp_discount').innerHTML = 'B/. ' + cls_general.val_price(price.discount, 2, 1, 1);
+                document.getElementById('sp_subtotal').innerHTML = 'B/. ' + cls_general.val_price(price.subtotal, 2, 1, 1);
+                document.getElementById('sp_tax').innerHTML = 'B/. ' + cls_general.val_price(price.tax, 2, 1, 1);
+                document.getElementById('sp_total').innerHTML = 'B/. ' + cls_general.val_price(price.total, 2, 1, 1);
+
+                cls_charge.charge_request = { request_id: obj.data.request_info.ai_request_id, gross_total: price.gross_total, subtotal: price.subtotal, total: price.total, discount: price.discount, tax: price.tax };
+
+
+
+
+
 
               } else {
-                document.getElementById('commandList').innerHTML = content_commandList;
-                document.getElementById('requestTotal').innerHTML = content_requestTotal;
+                // document.getElementById('commandList').innerHTML = content_commandList;
+                // document.getElementById('requestTotal').innerHTML = content_requestTotal;
 
                 cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
               }
@@ -1838,11 +1848,11 @@ class class_command{
             cls_general.async_laravel_request(url, method, funcion, body);
             break;
           case 'solo':
-            var content_commandList = document.getElementById('commandList').innerHTML;
-            var content_requestTotal = document.getElementById('requestTotal').innerHTML;
+            // var content_commandList = document.getElementById('commandList').innerHTML;
+            // var content_requestTotal = document.getElementById('requestTotal').innerHTML;
 
-            document.getElementById('commandList').innerHTML = '<img src="attached/image/loading.gif" width="30px"></img>';
-            document.getElementById('requestTotal').innerHTML = '<img src="attached/image/loading.gif" width="10px"></img>';
+            // document.getElementById('commandList').innerHTML = '<img src="attached/image/loading.gif" width="30px"></img>';
+            // document.getElementById('requestTotal').innerHTML = '<img src="attached/image/loading.gif" width="10px"></img>';
 
             var url = '/command/' + commanddata_id + '/cancel';
             var method = 'PUT';
@@ -1871,8 +1881,6 @@ class class_command{
         }
       });
   }
-
-
 }
 class class_article{
   constructor(article_list) {
@@ -2111,7 +2119,6 @@ class class_payment{
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
         cls_payment.payment = [];
         cls_payment.giftcard = [];
-        // cls_charge.print(obj.data.slug);
         window.location.reload();
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
