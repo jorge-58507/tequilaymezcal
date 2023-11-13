@@ -505,11 +505,6 @@ class general_funct {
     return str;
   }
   val_dec(str,decimal,refill,split){
-    str = str.toFixed(decimal + 1);
-    var pow = Math.pow(10, decimal);
-    str *= pow;
-    str = Math.round(str);
-    var str = str / pow;
     //decimal = cantidad de decimales permitidos
     //refill  = rellenar la cantidad de decimales con ceros
     //split   = hay que cortar el string al limite indicado
@@ -517,6 +512,13 @@ class general_funct {
     str = (ans) ? '' : str;
     if (str === '') { return '';	}
     str = parseFloat(str);          //convertirlo a decimal
+
+    str = str.toFixed(decimal + 1);
+    var pow = Math.pow(10, decimal);
+    str *= pow;
+    str = Math.round(str);
+    var str = str / pow;
+
     if (decimal > 0) {
       var pat = new RegExp('(^[-][0-9]{1}|^[0-9]+|[0-9]+)([.][0-9]{1,' + decimal + '})?$');
       if(!pat.test(str)) { return false; }
