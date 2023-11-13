@@ -1855,8 +1855,6 @@ class class_articleproduct{
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-
-
   }
 }
 class class_price{
@@ -2043,65 +2041,71 @@ class class_client {
       var telephone = (cls_general.is_empty_var(client.tx_client_telephone) === 0) ? '' : client.tx_client_telephone;
       var email = (cls_general.is_empty_var(client.tx_client_email) === 0) ? '' : client.tx_client_email;
       var direction = (cls_general.is_empty_var(client.tx_client_direction) === 0) ? '' : client.tx_client_direction;
+      var birthday = (cls_general.is_empty_var(client.tx_client_birthday) === 0) ? '' : client.tx_client_birthday;
+      
       var content = `
-      <div class="row">
-        <div class="col">
-          <div class="row">
-            <div class="col-xs-12">
-              <h4>Modificar Cliente</h4>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-12">
-              <label for="clientName" class="form-label">Nombre y Apellido</label>
-              <input type="text" id="clientName" name="${client.tx_client_slug}" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,120,1)" onblur="cls_general.limitText(this,120,1)" value="${client.tx_client_name}">
-            </div>
-            <div class="col-md-12 col-lg-6">
-              <label for="clientCIF" class="form-label">C&eacute;dula/Pasaporte</label>
-              <input type="text" id="clientCIF" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'],'-')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${client.tx_client_cif}">
-            </div>
-            <div class="col-md-12 col-lg-2">
-              <label for="clientDV" class="form-label">DV</label>
-              <input type="text" id="clientDV" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this,4,1)" onblur="cls_general.limitText(this,4,1)" value="${dv}">
-            </div>
-            <div class="col-md-12 col-lg-4">
-              <label for="clientTelephone" class="form-label">Teléfono</label>
-              <input type="text" id="clientTelephone" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'],' -')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${telephone}">
-            </div>
-            <div class="col-md-12 col-lg-6">
-              <label for="clientEmail" class="form-label">Correo E.</label>
-              <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="${email}">
-            </div>
-            <div class="col-md-12">
-              <label for="clientDirection" class="form-label">Dirección</label>
-              <input type="text" id="clientDirection" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,140,1)" onblur="cls_general.limitText(this,140,1)" value="${direction}">
-            </div>
-            <div class="col-md-12 col-lg-3">
-              <div class="form-check form-switch pt_35">
-                <input class="form-check-input" type="checkbox" role="switch" id="clientExempt" ${exempt_checked}>
-                <label class="form-check-label" for="clientExempt">Exento</label>
+        <div class="row">
+          <div class="col">
+            <div class="row">
+              <div class="col-xs-12">
+                <h4>Modificar Cliente</h4>
               </div>
             </div>
-            <div class="col-md-12 col-lg-3">
-              <div class="form-check form-switch pt_35">
-                <input class="form-check-input" type="checkbox" role="switch" id="clientStatus" ${status_checked}>
-                <label class="form-check-label" for="clientStatus">Activo</label>
+            <div class="row">
+              <div class="col-md-12">
+                <label for="clientName" class="form-label">Nombre y Apellido</label>
+                <input type="text" id="clientName" name="${client.tx_client_slug}" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,120,1)" onblur="cls_general.limitText(this,120,1)" value="${client.tx_client_name}">
               </div>
-            </div>
-            <div class="col-md-12 col-lg-6">
-              <label for="clientTaxpayer" class="form-label">Tipo de Cliente</label>
-              <select id="clientTaxpayer" class="form-select">
-                <option value="102">No Contribuyente</option>
-                <option value="101">Contribuyente</option>
-                <option value="201">Empresa</option>
-                <option value="203">Gobierno</option>
-                <option value="204">Extranjero</option>
-              </select>
+              <div class="col-md-12 col-lg-6">
+                <label for="clientCIF" class="form-label">C&eacute;dula/Pasaporte</label>
+                <input type="text" id="clientCIF" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'],'-')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${client.tx_client_cif}">
+              </div>
+              <div class="col-md-12 col-lg-2">
+                <label for="clientDV" class="form-label">DV</label>
+                <input type="text" id="clientDV" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this,4,1)" onblur="cls_general.limitText(this,4,1)" value="${dv}">
+              </div>
+              <div class="col-md-12 col-lg-4">
+                <label for="clientTelephone" class="form-label">Teléfono</label>
+                <input type="text" id="clientTelephone" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'],' -')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${telephone}">
+              </div>
+              <div class="col-md-12 col-lg-6">
+                <label for="clientEmail" class="form-label">Correo E.</label>
+                <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="${email}">
+              </div>
+              <div class="col-md-12 col-lg-6">
+                <label for="clientBirthday" class="form-label">F. Nacimiento</label>
+                <input type="email" id="clientBirthday" class="form-control" value="${cls_general.datetime_converter(birthday)}" readonly>
+              </div>
+              <div class="col-md-12">
+                <label for="clientDirection" class="form-label">Dirección</label>
+                <input type="text" id="clientDirection" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'])" onkeyup="cls_general.limitText(this,140,1)" onblur="cls_general.limitText(this,140,1)" value="${direction}">
+              </div>
+              <div class="col-md-12 col-lg-3">
+                <div class="form-check form-switch pt_35">
+                  <input class="form-check-input" type="checkbox" role="switch" id="clientExempt" ${exempt_checked}>
+                  <label class="form-check-label" for="clientExempt">Exento</label>
+                </div>
+              </div>
+              <div class="col-md-12 col-lg-3">
+                <div class="form-check form-switch pt_35">
+                  <input class="form-check-input" type="checkbox" role="switch" id="clientStatus" ${status_checked}>
+                  <label class="form-check-label" for="clientStatus">Activo</label>
+                </div>
+              </div>
+              <div class="col-md-12 col-lg-6">
+                <label for="clientTaxpayer" class="form-label">Tipo de Cliente</label>
+                <select id="clientTaxpayer" class="form-select">
+                  <option value="102">No Contribuyente</option>
+                  <option value="101">Contribuyente</option>
+                  <option value="201">Empresa</option>
+                  <option value="203">Gobierno</option>
+                  <option value="204">Extranjero</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
       var content_bottom = `
         <div class="row">
           <div class="col-lg-12 text-center pt-2">
@@ -2113,6 +2117,14 @@ class class_client {
       `;
       document.getElementById('container').innerHTML = content + content_bottom;
       document.getElementById('clientTaxpayer').value = client.tx_client_taxpayer + '' +client.tx_client_type;
+      $(function () {
+        $("#clientBirthday").datepicker({
+          defaultDate: '-20y',
+          changeYear: true,
+          changeMonth: true
+        });
+      });
+
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
@@ -2145,6 +2157,10 @@ class class_client {
             <div class="col-md-12 col-lg-6">
               <label for="clientEmail" class="form-label">Correo E.</label>
               <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="">
+            </div>
+            <div class="col-md-12 col-lg-6">
+              <label for="clientBirthday" class="form-label">F. Nacimiento</label>
+              <input type="email" id="clientBirthday" class="form-control" readonly>
             </div>
             <div class="col-md-12">
               <label for="clientDirection" class="form-label">Dirección</label>
@@ -2185,6 +2201,14 @@ class class_client {
         </div>
       `;
     document.getElementById('container').innerHTML = content + content_bottom;
+    $(function () {
+      $("#clientBirthday").datepicker({
+        defaultDate: '-20y',
+        changeYear: true,
+        changeMonth: true
+      });
+    });
+
   }
   save() {
     var name = cls_general.set_name(document.getElementById('clientName').value);
@@ -2192,6 +2216,7 @@ class class_client {
     var dv = document.getElementById('clientDV').value;
     var telephone = document.getElementById('clientTelephone').value;
     var email = document.getElementById('clientEmail').value;
+    var birthday = document.getElementById('clientBirthday').value;
     var direction = document.getElementById('clientDirection').value;
     var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
     var taxpayer = document.getElementById('clientTaxpayer').value;
@@ -2229,7 +2254,7 @@ class class_client {
 
     var method = 'POST';
     var url = '/client/';
-    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
+    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status, j: birthday });
     var funcion = function (obj) {
       if (obj.status === 'success') {
         cls_client.render()
@@ -2245,6 +2270,7 @@ class class_client {
     var dv = document.getElementById('clientDV').value;
     var telephone = document.getElementById('clientTelephone').value;
     var email = document.getElementById('clientEmail').value;
+    var birthday = document.getElementById('clientBirthday').value;
     var direction = document.getElementById('clientDirection').value;
     var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
     var taxpayer = document.getElementById('clientTaxpayer').value;
@@ -2282,7 +2308,7 @@ class class_client {
 
     var method = 'PUT';
     var url = '/client/' + client_slug;
-    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
+    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status, j: birthday });
     var funcion = function (obj) {
       if (obj.status === 'success') {
         cls_client.render()

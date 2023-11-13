@@ -2,8 +2,38 @@ Bodego secundario 200/300 => Crear tabla tm_warehouse (listado de productos de a
 cohorte de inventario 100/200 => se debe crear la interfaz donde se realiza un cohorte muy similar al directpurchase, crear tm_inventory (id, bodega) y tm_datainventory (id, inventory_id, producto_id, measure_id, productcode_id, producto_description, quantity)
 REGISTRO DE ASISTENCIA 200/400 => crear interfaz parra marcaciones, interfaz para obtener reportes, 
 Login de usuario 100 => crear tabla donde se almacena el codigo con el usuario y la contraseña en texto plano
-imprimir precuenta
+Las felicitaciones en la pantalla al seleccionar el cliente en la comanda y en el tickete
 
+sudo /opt/bitnami/ctlscript.sh restart mariadb
+
+sudo cp /opt/bitnami/apache/conf/vhosts/cancinostore-vhost.conf /etc/apache2/sites-enabled/
+[Mon Nov 06 04:31:39.960660 2023] [authz_core:error] [pid 8140:tid 140158439503616] [client **ip_address**:54314] AH01630: 
+client denied by server configuration: /opt/bitnami/projects/cancinostore/public/favicon.ico, referer: http://3.81.231.148/ 
+[Mon Nov 06 04:33:03.043371 2023] [authz_core:error] [pid 8139:tid 140158431110912] [client **ip_address**:54351] AH01630:
+ client denied by server configuration: /opt/bitnami/projects/cancinostore/public/ 
+[Mon Nov 06 04:33:03.182176 2023] [authz_core:error] [pid 8139:tid 140158551217920] [client **ip_address**:54351] AH01630: 
+client denied by server configuration: /opt/bitnami/projects/cancinostore/public/favicon.ico, referer: http://3.81.231.148/
+
+DocumentRoot "/opt/bitnami/projects/cancinostore"
+<Directory "/opt/bitnami/projects/cancinostore">
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
+
+76GSId:m=DaU  <-lamp_jadeinstance
+
+boton para anular pedidos online
+mostrar los pedidos online en la àntalla de request
+Poner pantalla de carga a los casos en que no esta el token
+mostrarla informacion del localrequest relacionado
+la pantalla de carga para los llamados al api
+interfaz para agregar esos pedidos al aplicativo principal -> por cada comanda agregar el articulo correspondiente y al procesar actualizar el estatus del request_online
+El boton siguiente paso agregarle el paso al que continua y n cerrar el modal
+crear tabla en la store que almacene la comanda que se proceso y relacionarla con con la tabla cs_request asi saber que comanda se relaciono al pedido hecho
+poder buscar los pedidos que ya han sido procesados
+filtrar los pedidos enlinea,
+imprimir precuenta
 Anular comandas desde la pantalla de caja
 En listado de pagados, mostrar la cajera que lo cobro
 Quitar los teclados

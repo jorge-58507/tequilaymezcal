@@ -72,16 +72,37 @@ class class_table{
         </div>`;
       }
     });
+    
+    content_tab += `
+      <button class="nav-link" id="btn_onlinerequest" onclick="cls_request.get_onlinependant()" data-bs-toggle="tab" data-bs-target="#tab_onlinerequest" type="button" role="tab" aria-controls="nav-home" aria-selected="true">
+        P. Online
+        <span id="online_counter" class="badge text-bg-danger">
+          0
+        </span>
+      </button>
+    `
+    content_tab_container += `
+        </div>
+      </div>
+      <div class="tab-pane fade" id="tab_onlinerequest" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+      </div>
+    `;
+
+
+
     content_tab_container += `</div>`;
     document.getElementById('nav-tab').innerHTML = content_tab;
     document.getElementById('nav-tabContent').innerHTML = content_tab_container;
   }
 }
 class class_request {
-  constructor(open_request, closed_request, canceled_request){
+  constructor(open_request, closed_request, canceled_request, api_url){
     this.open_request = open_request;
     this.closed_request = closed_request;
     this.canceled_request = canceled_request;
+    this.api_url = api_url;
+    this.api_token = '';
+    this.online_pendant = [];
   }
   index(){
     var content = `
@@ -365,6 +386,55 @@ class class_request {
     });
 
   }
+  // close_inaction(btn) {
+  //   var request_slug = document.getElementById('btn_commandprocess').name;
+  //   if (cls_general.is_empty_var(request_slug) === 0) {
+  //     cls_general.shot_toast_bs('No hay elementos para cerrar.', { bg: 'text-bg-warning' }); return false;
+  //   }
+  //   swal({
+  //     title: "¿Desea cerrar este pedido?",
+  //     text: "Ya no podrán agregarle comandas.",
+  //     icon: "info",
+
+  //     buttons: {
+  //       si: {
+  //         text: "Si, cerrarlo",
+  //         className: "btn btn-success btn-lg"
+  //       },
+  //       no: {
+  //         text: "No",
+  //         className: "btn btn-warning btn-lg",
+  //       },
+  //     },
+  //     dangerMode: true,
+  //   })
+  //     .then((ans) => {
+  //       switch (ans) {
+  //         case 'si':
+  //           cls_general.disable_submit(btn);
+  //           var url = '/request/' + request_slug + '/close';
+  //           var method = 'PUT';
+  //           var body = JSON.stringify({ a: 1 });;
+  //           var funcion = function (obj) {
+  //             if (obj.status === 'success') {
+  //               cls_request.open_request = obj.data.open_request;
+  //               cls_request.closed_request = obj.data.closed_request;
+
+  //               cls_request.show(request_slug)
+  //             } else {
+  //               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+  //             }
+  //           }
+  //           cls_general.async_laravel_request(url, method, funcion, body);
+  //           break;
+  //         case 'no':
+
+  //           break;
+  //       }
+  //     });
+
+  // }
+
   reload(){
     var url = '/request/reload';
     var method = 'GET';
@@ -398,6 +468,78 @@ class class_request {
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
+
+  // API METHODS
+  async api_login() {
+    var url = cls_request.api_url + 'APIlogin';
+    var method = 'POST';
+    var body = JSON.stringify({ email: 'apirequest@mail.com', password: 'requestable7812' });
+    var funcion = function (obj) {
+      if (obj.data.status === 'success') {
+        cls_request.api_token = obj.data.token;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    await cls_general.async_api_request(url, method, funcion, body);
+  }
+
+  async get_onlinependant() {
+    var url = cls_request.api_url + 'APIrequest/pendant';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_request.online_pendant = obj.data;
+        cls_request.render_onlinependant();
+      } else {
+        cls_request.api_login();
+        setTimeout(() => {
+          cls_request.get_onlinependant();
+        }, 5000);
+      }
+    }
+    var api_token = cls_request.api_token;
+    await cls_general.async_api_request(url, method, funcion, body, api_token);
+  }
+  render_onlinependant(){
+    var list = cls_request.generate_onlinerequest(cls_request.online_pendant.slice(0, 10));
+    document.getElementById('online_counter').innerHTML = list.counter;
+    document.getElementById('tab_onlinerequest').innerHTML = list.content;
+  }
+  generate_onlinerequest(raw_request) {
+    var content = '<div class="row"><div class="col-12"><ul class="list-group">';
+    var counter = 0;
+    raw_request.map((request) => {
+      if (request.tx_request_status === 1) {
+        var bg_status = 'text-bg-warning';
+        counter++;
+      }
+      var table = (cls_general.is_empty_var(request.tx_table_value) === 0) ? 'Sin Mesa' : request.tx_table_value;
+      switch (request.tx_request_paymentmethod) {
+        case 'yappy':
+          var payment = 'Pagado por Yappy'
+          break;
+        case 'creditcard':
+          var payment = 'Pagado TDC';
+          break;
+        default:
+          var payment = 'Pago en caja'
+          break;
+      }
+      content += `<li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start ${bg_status}" onclick="cls_command.create_request('${request.tx_request_slug}')">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold"><h5>${request.tx_request_code} - ${request.tx_client_name} - Pago: <strong>${payment}</strong></h5> </div>
+            <small>${table} Consumo: ${request.tx_request_consumption}</small>
+          </div>
+          &nbsp;&nbsp;&nbsp;
+          <span>${cls_general.datetime_converter(request.created_at)} ${cls_general.time_converter(request.created_at, 1)}</span>
+      </li>`;
+    })
+    content += '</ul>';
+    return { content: content, counter: counter };
+  }
+
 }
 class class_article {
   constructor(article_list){
@@ -672,7 +814,6 @@ class class_command{
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
   }
-
   filter_articlethumbnail(str) {
     var filtered = cls_article.look_for(str, 100);
     var content = cls_command.generate_articlethumbnail_list(filtered)
@@ -719,9 +860,6 @@ class class_command{
     content += '</div>';
     return content;
   }
-
-
-
   filter_article(str){
     var filtered = cls_article.look_for(str,100);
     var content = cls_command.generate_article_list(filtered)
@@ -904,6 +1042,7 @@ class class_command{
       raw_recipe.push({ [index]: $(this).val() + ',' + show + ',' + togo })
     });
     var select_presentation = document.getElementById('articlePresentation');
+    var price = parseFloat(document.getElementById('articlePrice').value);
     cls_command.command_list.push({
       'article_slug': article_slug,
       'article_id': article_id,
@@ -912,7 +1051,7 @@ class class_command{
       'option' : option.slice(0,-1),
       'presentation_id' : select_presentation.value,
       'presentation_value': select_presentation.options[select_presentation.selectedIndex].text,
-      'price' : document.getElementById('articlePrice').value,
+      'price' : price.toFixed(2),
       'tax_rate': document.getElementById('articleTaxrate').value,
       'discount_rate' : document.getElementById('articleDiscountrate').value,
       'recipe': raw_recipe
@@ -965,7 +1104,9 @@ class class_command{
       raw_price.push({price: article.price, discount: article.discount_rate, tax: article.tax_rate, quantity: article.quantity})
       
     })
+    console.log(raw_price);
     var price_sale = cls_general.calculate_sale(raw_price);
+    console.log(price_sale);
     content += '</ul>';
     return { 'content': content, 'price_sale': price_sale };
   }
@@ -1190,18 +1331,24 @@ class class_command{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  set_client(slug,name,exent){
+  set_client(slug,name,exent,birthday = ''){
     document.getElementById('requestClient').setAttribute('alt', exent);
     document.getElementById('requestClient').setAttribute('name', slug);
     document.getElementById('requestClient').value = name;
-
+    var today = cls_general.getDate();
+    var raw_birthday = birthday.split("-");
+    var split_birthday = raw_birthday[2] +'/'+ raw_birthday[1];
+    var raw_today = today[0].split("-");
+    var split_today = raw_today[2] + '/' + raw_today[1]
+    if (birthday != '1970-01-01' && split_birthday === split_today) {
+      swal("El cliente seleccionado cumpleaños hoy.");
+    }
     const Modal = bootstrap.Modal.getInstance('#clientModal');
     if (Modal != null) {
       Modal.hide();
     }
 
   }
-
   loginuser_cancel(commanddata_id) {
     document.getElementById('hd_command_cancel').value = commanddata_id;
 
@@ -1324,6 +1471,472 @@ class class_command{
       }
     });
   }
+  // API
+  async create_request(request_slug) {
+    var url = cls_request.api_url + 'APIrequest/show/' + request_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var raw_data = obj.data;
+        var onlinerequest_info = raw_data.request_api;
+        var onlinerequest_slug = onlinerequest_info.tx_request_slug
+
+        var table_slug = '';
+        var opt_tablelist = '';
+        cls_table.table_list.map((table) => {
+          if (table.tx_table_active === 1) {
+            if (table.tx_table_value === onlinerequest_info.tx_table_value) {
+              opt_tablelist += `<option value="${table.ai_table_id}" selected>${table.tx_table_code} - ${table.tx_table_value}</option>`;
+              table_slug = table.tx_table_slug;
+            } else {
+              opt_tablelist += `<option value="${table.ai_table_id}">${table.tx_table_code} - ${table.tx_table_value}</option>`;
+            }
+          }
+        })
+
+        var request_code = 'Sin c&oacute;digo';
+        var client_name = 'Contado';
+        var client_slug = '001';
+        var exempt = 0;
+
+        if (cls_general.is_empty_var(table_slug) === 0) {
+          cls_table.table_list.map((table) => {
+            if (table.tx_table_active === 1 && table.tx_table_type === 1) {
+              table_slug = table.tx_table_slug;
+            }
+          })
+        }
+
+        if (table_slug === '') {
+          cls_general.shot_toast_bs('No existe alguna barra activa.', { bg: 'text-bg-warning' });
+        }
+
+        var content_command_procesed = `<div class="list-group">`;
+        var command_procesed = raw_data.commanddata;
+        var raw_price = [];
+        command_procesed.map((command) => {
+          var raw_command = command.tx_commanddata_option.split(',');
+          if (raw_command.length > 1) {
+            var option = '<ul>';
+            raw_command.map((opt) => { option += `<li>${opt}</li>` });
+            option += '</ul>';
+          } else {
+            var option = '';
+          }
+          var observation = (cls_general.is_empty_var(command.tx_command_observation) === 1) ? ', <strong>Obs.</strong> ' + command.tx_command_observation : '';
+          if (command.tx_commanddata_status === 0) {
+            var bg_status = 'text-bg-warning text-body-tertiary';
+          } else {
+            // [{ PRICE, discount, tax, quantity }]
+            raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
+            var bg_status = '';
+          }
+
+
+          var recipe = JSON.parse(command.tx_commanddata_recipe);
+          var content_recipe = '<ul class="fs_14">';
+          recipe.map((ingredient) => {
+            for (const index in ingredient) {
+              content_recipe += `<li><small  class="fs_14">${index}</small></li>`;
+            }
+          })
+          content_recipe += `</ul>`;
+
+          content_command_procesed += `
+            <a href="#" class="list-group-item list-group-item-action ${bg_status}" data-bs-toggle="modal" data-bs-target="#modalArticleList" aria-current="true" onclick="event.preventDefault(); cls_command.filter_articlethumbnail('')">
+              <div class="d-flex w-100 justify-content-between">
+                <span class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description} (${command.tx_presentation_value})</h5>
+                <br/>
+              </div>
+              ${content_recipe}
+              <p class="mb-1">${option}</p>
+              <small>Consumo: ${command.tx_request_consumption}${observation}</small><br/>
+            </a>
+          `;
+        })
+        content_command_procesed += `</div>`;
+
+
+        var raw_total = cls_general.calculate_sale(raw_price);
+        var raw_category = [];
+        cls_article.article_list.map((article) => {
+          var cat = raw_category.find((category) => { return category === article.tx_category_value })
+          if (cls_general.is_empty_var(cat) === 0) {
+            raw_category.push(article.tx_category_value);
+          }
+        })
+        var content_categorythumbnail = '';
+        raw_category.map((category) => {
+          content_categorythumbnail += `<button class="btn btn-primary fs_20" style="height: 8vh;" onclick="cls_command.filter_articlethumbnail_category('${category}');">${category}</button>&nbsp;`;
+        })
+        document.getElementById('container_articlethumbnail_categories').innerHTML = content_categorythumbnail;
+        switch (onlinerequest_info.tx_request_paymentmethod) {
+          case 'yappy':
+            var payment = 'Pagado por Yappy'
+            break;
+          case 'creditcard':
+            var payment = 'Pagado TDC';
+            break
+          default:
+            var payment = 'Pago en caja'
+            break;
+        }
+
+        var content = `
+          <div class="row">
+            <div class="col-12 col-lg-3">
+              <div class="row">
+                <div class="col-sm-12">
+                  <p class="mb-0">Pedido En linea</p>
+                  <p class="mb-0 font_bolder">${payment}</p>
+                  <p class="mb-0 fst-italic">Observacion. ${(cls_general.is_empty_var(onlinerequest_info.tx_request_observation) === 0) ? '' : onlinerequest_info.tx_request_observation}</p>
+                </div>
+                <div id="article_online" class="col-xs-12 v_scrollable" style="height: 80vh; transition: all ease 1s;">
+                  ${content_command_procesed}
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-4">
+              <div class="row">
+                <div class="col-sm-6">
+                  <span>Art&iacute;culos Seleccionados</span>
+                </div>
+                <div class="col-sm-6 bs_1 border_gray radius_10 text-bg-success text-truncate text-right">
+                  <span id="span_commandTotal"><h5>Total: B/ 0.00</h5></span>
+                </div>
+                <div id="article_selected" class="col-xs-12 v_scrollable" style="height: 90vh; transition: all ease 1s;">
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-1 text-center d-none d-lg-block d-xxl-block">
+              <div class="row">
+                <div class="col-md-12 text-center" style="height:20vh;display: flex;align-items: top;">
+                  <button class="btn btn-warning btn-lg h_50" data-bs-toggle="tooltip" data-bs-title="Cerrar Pedido" onclick="cls_request.close(document.getElementById('btn_commandprocess'))">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" fill="currentColor" class="bi bi-door-closed-fill" viewBox="0 0 16 16">
+                      <path d="M12 1a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V2a1 1 0 0 1 1-1h8zm-2 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="col-md-12 text-center" style="height:60vh;display: flex;align-items: center;">
+                  <button id="btn_commandprocess" class="btn tmgreen_bg btn-lg h_150" name="" onclick="cls_command.save_online(this.name,'${table_slug}','${onlinerequest_slug}');" data-bs-toggle="tooltip" data-bs-title="Procesar Comanda">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="col-md-12 text-center" style="height:10vh;display: flex;align-items: top;">
+                  <button class="btn btn-danger btn-lg h_50" data-bs-toggle="tooltip" data-bs-title="Cerrar Pedido Online" onclick="cls_command.close_online(document.getElementById('btn_commandprocess'),'${onlinerequest_slug}')">
+                    <svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="28" width="30" viewBox="0 0 980.029 980.029" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M980.029,144.398H0v691.233h980.029V144.398z M915.029,770.631H65V209.398h850.029V770.631z"></path> <polygon points="887.334,561.987 821.303,561.987 821.303,537.022 887.334,537.022 887.334,472.022 821.303,472.022 821.303,448.988 887.334,448.988 887.334,383.988 756.303,383.988 756.303,626.987 887.334,626.987 "></polygon> <polygon points="220.225,561.987 154.195,561.987 154.195,448.988 220.225,448.988 220.225,383.988 89.195,383.988 89.195,626.987 220.225,626.987 "></polygon> <path d="M570.568,383.988H407.038v242.998h163.531V383.988z M505.568,561.987h-33.531V448.988h33.531V561.987z"></path> <polygon points="379.841,561.987 313.81,561.987 313.81,385.544 248.81,385.544 248.81,626.987 379.841,626.987 "></polygon> <polygon points="728.504,472.022 662.867,472.022 662.867,448.994 728.898,448.994 728.898,383.994 597.867,383.994 597.867,537.022 663.504,537.022 663.504,560.051 597.473,560.051 597.473,625.051 728.504,625.051 "></polygon> </g> </g> </g></svg>
+                  </button>
+                </div>
+                <div class="col-md-12 text-center" style="height:10vh;display: flex;align-items: bottom;">
+                  <button class="btn btn-secondary btn-lg h_50" onclick="window.location.href = '/paydesk';" data-bs-toggle="tooltip" data-bs-title="Salir">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12 text-center d-md-block d-lg-none">
+              <div class="row">
+                <div class="col-md-4 text-center pb-1">
+                  <button class="btn btn-warning btn-lg h_50" onclick="cls_request.close(document.getElementById('btn_commandprocess'))">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" fill="currentColor" class="bi bi-door-closed-fill" viewBox="0 0 16 16">
+                      <path d="M12 1a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V2a1 1 0 0 1 1-1h8zm-2 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                    </svg>
+                    Cerrar Pedido
+                  </button>
+                </div>
+
+                <div class="col-md-4 text-center pb-1">
+                  <button id="btn_commandprocess" class="btn tmgreen_bg btn-lg h_50" name="" onclick="cls_command.save_online(this.name,'${table_slug}','${onlinerequest_slug}');">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+                    </svg>
+                    Procesar Comanda
+                  </button>
+                </div>
+                <div class="col-md-2 text-center pb-1">
+                  <button class="btn btn-danger btn-lg h_50" data-bs-toggle="tooltip" data-bs-title="Cerrar Pedido Online" onclick="cls_command.close_online(document.getElementById('btn_commandprocess'),'${onlinerequest_slug}')">
+                    <svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="28" width="30" viewBox="0 0 980.029 980.029" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M980.029,144.398H0v691.233h980.029V144.398z M915.029,770.631H65V209.398h850.029V770.631z"></path> <polygon points="887.334,561.987 821.303,561.987 821.303,537.022 887.334,537.022 887.334,472.022 821.303,472.022 821.303,448.988 887.334,448.988 887.334,383.988 756.303,383.988 756.303,626.987 887.334,626.987 "></polygon> <polygon points="220.225,561.987 154.195,561.987 154.195,448.988 220.225,448.988 220.225,383.988 89.195,383.988 89.195,626.987 220.225,626.987 "></polygon> <path d="M570.568,383.988H407.038v242.998h163.531V383.988z M505.568,561.987h-33.531V448.988h33.531V561.987z"></path> <polygon points="379.841,561.987 313.81,561.987 313.81,385.544 248.81,385.544 248.81,626.987 379.841,626.987 "></polygon> <polygon points="728.504,472.022 662.867,472.022 662.867,448.994 728.898,448.994 728.898,383.994 597.867,383.994 597.867,537.022 663.504,537.022 663.504,560.051 597.473,560.051 597.473,625.051 728.504,625.051 "></polygon> </g> </g> </g></svg>
+                  </button>
+                </div>
+                <div class="col-md-2 text-center">
+                  <button class="btn btn-secondary btn-lg h_50" onclick="window.location.href = '/paydesk';">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+                    </svg>
+                    Volver
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-12 col-lg-4">
+              <div class="row">
+                <span>Listado de Comandas</span>
+                <div id="commandList" class="col-sm-12 v_scrollable" style="height: 70vh">
+                </div>
+                <div class="col-sm-12 bt_1 border_gray">
+                  <div class="row">
+                    <label for="requestClient">Cliente</label>
+                    <div class="col-md-12 col-lg-6">
+                      <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="requestClient" alt="${exempt}" name="${client_slug}" value="${client_name}" readonly onfocus="cls_client.render_modal()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="cls_client.render_modal()">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-md-12 col-lg-6 fs_30 bs_1 border_gray radius_10 text-bg-success text-truncate">
+                      <label class="fs_10">Total</label>
+                      <span id="requestTotal">B/ ${cls_general.val_price(raw_total.total)} </span>
+                    </div>
+                    <div class="col-md-12 col-lg-4">
+                      <label for="requestCode">C&oacute;digo</label>
+                      <input type="text" class="form-control" id="requestCode" placeholder="${request_code}" readonly>
+                    </div>
+                    <div class="col-md-12 col-lg-4">
+                      <label for="requestTable">Mesa</label>
+                      <select class="form-select" id="requestTable"><option>Seleccione</option>${opt_tablelist}</select>
+                    </div>
+                    <div id="container_buttonUpdateInfo" class="col-md-12 col-lg-4 pt-2 text-center">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.getElementById('container_request').innerHTML = content;
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+      } else {
+        cls_general.shot_toast_bs('Hubieron problemas para conectarse al servidor, reintentando en 10 seg.',{bg: 'text-bg-secondary'})
+        cls_request.api_login();
+        setTimeout(() => {
+          cls_request.create_request(request_slug);
+        }, 5000);
+      }
+    }
+    var api_token = cls_request.api_token;
+    await cls_general.async_api_request(url, method, funcion, body, api_token);
+  }
+  save_online(request_slug, table_slug, onlinerequest_slug) { //ESTA FUNCION SOLO ABRE EL MODAL
+    var command_list = cls_command.command_list;
+    if (command_list < 1) {
+      cls_general.shot_toast_bs('Seleccione los art&iacute;culos.', { bg: 'text-bg-warning' });
+      return false;
+    }
+    var content = `
+      <div class="row">
+        <div class="col-md-12">
+          <label for="commandConsumption">Consumo</label>
+          <select id="commandConsumption" class="form-select">
+            <option value="Local">Local</option>
+            <option value="Retira">Retira</option>
+            <option value="Llevar">Llevar</option>
+          </select>
+        </div>  
+        <div class="col-md-12">
+          <label for="commandObservation">Observaciones</label>
+          <textarea id="commandObservation" class="form-control" onfocus="cls_general.franz_textarea(this,this.value)" onkeyup="cls_general.limitText(this,120,1)" onblur="cls_general.limitText(this,120,1)"></textarea>
+        </div>
+      </div>
+    `;
+    var footer = `
+      <div class="row">
+        <div class="col-sm-12">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-primary" onclick="cls_general.disable_submit(this,0); cls_command.process_online('${request_slug}','${table_slug}','${onlinerequest_slug}')">Guardar</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('commandModal_title').innerHTML = 'Despacho';
+    document.getElementById('commandModal_content').innerHTML = content;
+    document.getElementById('commandModal_footer').innerHTML = footer;
+
+    const modal = new bootstrap.Modal('#commandModal', {})
+    modal.show();
+  }
+  process_online(request_slug, table_slug, onlinerequest_slug) {
+    if (cls_general.is_empty_var(request_slug) === 0) {
+      const Modal = bootstrap.Modal.getInstance('#commandModal');
+      Modal.hide();
+      cls_general.disable_submit(document.getElementById('commandModal'));
+      swal({
+        title: 'Titulo',
+        text: "Puede ingresar un nombre para este pedido o dejarlo en blanco.",
+
+        content: {
+          element: "input",
+          attributes: {
+            placeholder: "Solo letras",
+            type: "text",
+          },
+        },
+      })
+        .then((title) => {
+          if (cls_general.is_empty_var(title) === 0) {
+            title = 'Contado';
+          }
+          cls_command.store_online(table_slug, title.replace(/[^a-zA-Z]/g, ""), onlinerequest_slug);
+        });
+    } else {
+      cls_command.update_online(request_slug, onlinerequest_slug);
+    }
+  }
+  store_online(table_slug, title, onlinerequest_slug) {
+    cls_general.disable_submit(document.getElementById('btn_commandprocess'), 0);
+    var command_list = cls_command.command_list;
+    var client = document.getElementById('requestClient');
+    var consumption = document.getElementById('commandConsumption').value;
+    var observation = document.getElementById('commandObservation').value;
+
+    var url = '/command/'; var method = 'POST';
+    var body = JSON.stringify({ a: command_list, b: table_slug, c: client.name, d: 'Ped.' + title, e: consumption, f: observation, g: onlinerequest_slug, h: cls_request.api_token });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
+        document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
+        cls_command.command_procesed = obj.data.command_procesed;
+        cls_command.command_list = [];
+        var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
+        cls_command.render_articleselected();
+        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+
+        document.getElementById('commandList').innerHTML = content_command_procesed.content;
+        document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
+
+        document.getElementById('btn_commandprocess').disabled = false;
+
+        if (obj.data.cashier === 1) {
+          swal({
+            title: "¿Desea cobrar este pedido?",
+            icon: "info",
+
+            buttons: {
+              si: {
+                text: "Si, cobrarlo",
+                className: "btn btn-success btn-lg"
+              },
+              no: {
+                text: "No",
+                className: "btn btn-warning btn-lg",
+              },
+            },
+            dangerMode: true,
+          })
+            .then((ans) => {
+              switch (ans) {
+                case 'si':
+                  var request_slug = document.getElementById('btn_commandprocess').name;
+                  var url = '/request/' + request_slug + '/close';
+                  var method = 'PUT';
+                  var body = JSON.stringify({ a: 1 });;
+                  var funcion = function (obj) {
+                    if (obj.status === 'success') {
+                      window.location = "/paydesk";
+                    } else {
+                      cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+                    }
+                  }
+                  cls_general.async_laravel_request(url, method, funcion, body);
+
+                  break;
+                case 'no':
+
+                  break;
+              }
+            });
+        }
+      } else {
+        if (obj.message === 'La mesa esta ocupada.') {
+          cls_command.update_online(obj.data.tx_request_slug, onlinerequest_slug);
+        } else {
+          document.getElementById('btn_commandprocess').disabled = false;
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  update_online(request_slug, onlinerequest_slug) {
+    var command_list = cls_command.command_list;
+    var consumption = document.getElementById('commandConsumption').value;
+    var observation = document.getElementById('commandObservation').value;
+
+    var url = '/command/' + request_slug; var method = 'PUT';
+    var body = JSON.stringify({ a: command_list, e: consumption, f: observation, g: onlinerequest_slug, h: cls_request.api_token });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_command.command_procesed = obj.data.command_procesed;
+        cls_command.command_list = [];
+        var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
+        cls_command.render_articleselected();
+        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+
+        document.getElementById('commandList').innerHTML = content_command_procesed.content;
+        document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
+
+        const Modal = bootstrap.Modal.getInstance('#commandModal');
+        if (Modal) {
+          Modal.hide();
+        }
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  close_online(btn, onlinerequest_slug){
+    swal({
+      title: "¿Se cerrará el pedido online?",
+      text: "¿Le informó al cliente?.",
+      icon: "info",
+
+      buttons: {
+        si: {
+          text: "Si, cerrarlo",
+          className: "btn btn-success btn-lg"
+        },
+        no: {
+          text: "No",
+          className: "btn btn-warning btn-lg",
+        },
+      },
+      dangerMode: true,
+    })
+    .then((ans) => {
+      switch (ans) {
+        case 'si':
+          cls_general.disable_submit(btn);
+          var url = cls_request.api_url + 'APIrequest/' + onlinerequest_slug + '/closeit'; var method = 'PUT';
+          var body = '';
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              window.location.href = '/request'
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+            }
+          }
+          var api_token = cls_request.api_token;
+          cls_general.async_api_request(url, method, funcion, body, api_token);
+          // cls_general.async_laravel_request(url, method, funcion, body);
+          break;
+        case 'no':
+
+          break;
+      }
+    });
+  }
+
 }
 class class_client{
   constructor(client_list){
@@ -1338,7 +1951,7 @@ class class_client{
       if (counter >= limit) { break; }
       var ocurrencys = 0;
       for (const a in needles) {
-        if (haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+        if (haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
       }
       if (ocurrencys === needles.length) {
         raw_filtered.push(haystack[i]);
@@ -1350,7 +1963,7 @@ class class_client{
   generate_modal_clientlist(filtered){
     var content = '<ul class="list-group">';
     filtered.map((client) => {
-      content += `<li class="list-group-item cursor_pointer" onclick="cls_command.set_client('${client.tx_client_slug}','${client.tx_client_name}',${client.tx_client_exempt})">${client.tx_client_name} - ${client.tx_client_cif}</li>`;
+      content += `<li class="list-group-item cursor_pointer" onclick="cls_command.set_client('${client.tx_client_slug}','${client.tx_client_name}',${client.tx_client_exempt}, '${client.tx_client_birthday}')">${client.tx_client_name} - ${client.tx_client_cif}</li>`;
     })
     content += '</ul>';
     return content;
@@ -1366,12 +1979,12 @@ class class_client{
     var content = `
       <div class="row">
         <div class="col-md-12 text-center">
-          <button type="button" class="btn btn-primary" onclick="cls_client.render_modal_create('','','','','','','',0,102,1)">Crear Cliente</button>&nbsp;
+          <button type="button" class="btn btn-primary" onclick="cls_client.render_modal_create('','','','','','','',0,102,1,'')">Crear Cliente</button>&nbsp;
           ${btn_update_client}
         </div>
         <div class="col-md-12 col-lg-6 pb-1">
           <label for="clientFilter" class="form-label">Buscar Cliente</label>
-          <input type="text" id="clientFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_client.filter_modal(this.value)">
+          <input type="text" id="clientFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'])" onkeyup="cls_client.filter_modal(this.value)">
         </div>
         <div id="container_clientfiltered" class="col-sm-12 h_300 v_scrollable"></div>
       </div>
@@ -1391,9 +2004,10 @@ class class_client{
     const modal = new bootstrap.Modal('#clientModal', {})
     modal.show();
   }
-  render_modal_create(slug,name,cif,dv,telephone,email,direction,exempt,taxpayer,status) {
+  render_modal_create(slug,name,cif,dv,telephone,email,direction,exempt,taxpayer,status,birthday) {
     var exempt_checked = (exempt === 1) ? 'checked' : '';
     var status_checked = (status === 1) ? 'checked' : '';
+    birthday = (cls_general.is_empty_var(birthday) === 0) ? '' : cls_general.datetime_converter(birthday);
     dv = (cls_general.is_empty_var(dv) === 0) ? '' : dv;
     telephone = (cls_general.is_empty_var(telephone) === 0) ? '' : telephone;
     direction = (cls_general.is_empty_var(direction) === 0) ? '' : direction;
@@ -1423,6 +2037,10 @@ class class_client{
         <div class="col-md-12 col-lg-6">
           <label for="clientEmail" class="form-label">Correo E.</label>
           <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="${email}">
+        </div>
+        <div class="col-md-12 col-lg-6">
+          <label for="clientBirthday" class="form-label">F. Nacimiento</label>
+          <input type="email" id="clientBirthday" class="form-control" value="${birthday}" readonly>
         </div>
         <div class="col-md-12">
           <label for="clientDirection" class="form-label">Dirección</label>
@@ -1466,6 +2084,15 @@ class class_client{
     document.getElementById('clientModal_content').innerHTML = content;
     document.getElementById('clientModal_footer').innerHTML = footer;
     document.getElementById('clientTaxpayer').value = taxpayer;
+
+    $(function () {
+      $("#clientBirthday").datepicker({
+        defaultDate: '-20y',
+        changeYear: true,
+        changeMonth: true
+      });
+    });
+
   }
   render_modal_edit(){
     var client_slug = document.getElementById('requestClient').name;
@@ -1475,7 +2102,7 @@ class class_client{
     var funcion = function (obj) {
       var client = obj.data.client;
       if (obj.status === 'success') {
-        cls_client.render_modal_create(client.tx_client_slug, client.tx_client_name, client.tx_client_cif, client.tx_client_dv, client.tx_client_telephone, client.tx_client_email, client.tx_client_direction, client.tx_client_exempt, client.tx_client_taxpayer+client.tx_client_type, client.tx_client_status);
+        cls_client.render_modal_create(client.tx_client_slug, client.tx_client_name, client.tx_client_cif, client.tx_client_dv, client.tx_client_telephone, client.tx_client_email, client.tx_client_direction, client.tx_client_exempt, client.tx_client_taxpayer + client.tx_client_type, client.tx_client_status, client.tx_client_birthday);
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
@@ -1489,6 +2116,7 @@ class class_client{
     var dv = document.getElementById('clientDV').value;
     var telephone = document.getElementById('clientTelephone').value;
     var email = document.getElementById('clientEmail').value;
+    var birthday = document.getElementById('clientBirthday').value;
     var direction = document.getElementById('clientDirection').value;
     var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
     var taxpayer = document.getElementById('clientTaxpayer').value;
@@ -1517,7 +2145,21 @@ class class_client{
         return false;
       }
     }else{
-      var pattern = /^[1-9]-?\d{2,}-?\d{2,}$/
+      var pattern = /\d+/ //NATURAL NO CONTRIBUYENTE 102
+    }
+    switch (taxpayer) {
+      case "101": //NATURAL CONTRIBUYENTE
+        var pattern = /^[0-9]{0,2}-?\d{2,}-?\d{2,}$/
+      break;
+      case "201": //EMPRESA
+        var pattern = /^[0-9]{0,2}-?\d{1,}-?\d{1,}-?\d{1,}-?\d{1,}-?\d{1,}$/
+        break;
+      case "203": //GOBIERNO
+        var pattern = /^[0-9]{1,}-?[a-zA-Z]+-?\d{2,}-?\d{2,}-?\d{2,}$|^[1-9]{0,2}-?\d{1,}-?\d{1,}-?\d{1,}-?\d{1,}-?\d{1,}$/
+        break;
+      case "204": //PASAPORTE
+        var pattern = /\d+/
+        break;
     }
     if (pattern.test(cif) != true) {
       cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
@@ -1531,11 +2173,11 @@ class class_client{
       var method = 'PUT';
       var url = '/client/' + request_client; 
     }
-    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
+    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status, j: birthday });
     var funcion = function (obj) {
       if (obj.status === 'success') {
         cls_client.client_list = obj.data.client_list;
-        cls_command.set_client(obj.data.client.tx_client_slug, obj.data.client.tx_client_name, obj.data.client.tx_client_exempt)
+        cls_command.set_client(obj.data.client.tx_client_slug, obj.data.client.tx_client_name, obj.data.client.tx_client_exempt, `'${obj.data.client.tx_client_birthday}'`).
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
       }else{
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });

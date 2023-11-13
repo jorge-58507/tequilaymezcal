@@ -51,8 +51,12 @@ class commandController extends Controller
         $rs_client = $qry_client->first();
 
         $requestController = new requestController;
-        $request_id = $requestController->save($rs_table['ai_table_id'],$rs_client['ai_client_id'],$code,$request->input('d'));
+        $ans_request = $requestController->save($rs_table['ai_table_id'],$rs_client['ai_client_id'],$code,$request->input('d'));
+        if ($ans_request['status'] === 'failed') {
+            return response()->json(['status'=>'failed','message'=>$ans_request['message'], 'data'=>$ans_request['data']]);
+        }
 
+        $request_id = $ans_request['data']['id'];
         $user = $request->user();
         $command_id = $this->save($user['id'],$request_id,'',$request->input('e'),$request->input('f'));
 
@@ -68,7 +72,24 @@ class commandController extends Controller
         // ANSWER
         $rs_request = tm_request::where('ai_request_id',$request_id)->first();
         $rs_command = $this->getByRequest($request_id);
-        
+
+        // ACTUALIZAR EL SERVIDOR EXTERNO
+        if (!empty($request->input('g'))) {
+            $url = 'http://localhost:8000/api/APIrequest/'.$request->input('g').'/confirm';
+            $option = [
+                'http' => [
+                    'header' => "Content-type: application/json\r\nAcept: application/json\r\nAuthorization: Bearer  ".$request->input('h'),
+                    'method' => 'POST',
+                    'content' => json_encode(['a' => $user['id'], 'b' => ['command_procesed'=>$rs_command,'request'=>$rs_request]]),
+                ]
+            ];
+            $context = stream_context_create($option);
+            $result = file_get_contents($url,false,$context);
+            if ($result === false) {
+                return response()->json(['status'=>'failed','message'=>'No se pudo actualizar.']);   
+            };
+        }
+
         $cashier = 0;
         if ( auth()->user()->hasAnyRole(['cashier']) === true){ 
             $cashier = 1;
@@ -186,7 +207,26 @@ class commandController extends Controller
         $productController->minus_byArticle($article_list,$request->input('e'));
 
         // ANSWER
+        $rs_request = tm_request::where('ai_request_id',$rs_request['ai_request_id'])->first();
         $rs_command = $this->getByRequest($rs_request['ai_request_id']);
+
+        // ACTUALIZAR EL SERVIDOR EXTERNO
+        if (!empty($request->input('g'))) {
+            $url = 'http://localhost:8000/api/APIrequest/'.$request->input('g').'/confirm';
+            $option = [
+                'http' => [
+                    'header' => "Content-type: application/json\r\nAcept: application/json\r\nAuthorization: Bearer  ".$request->input('h'),
+                    'method' => 'POST',
+                    'content' => json_encode(['a' => $user['id'], 'b' => ['command_procesed'=>$rs_command,'request'=>$rs_request]]),
+                ]
+            ];
+            $context = stream_context_create($option);
+            $result = file_get_contents($url,false,$context);
+            if ($result === false) {
+                return response()->json(['status'=>'failed','message'=>'No se pudo actualizar.']);   
+            };
+        }
+
         return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command]]);
     }
     public function set_ready($id)

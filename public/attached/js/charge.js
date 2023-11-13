@@ -19,6 +19,7 @@ class class_request{
   constructor(open_request, closed_request){
     this.open_request = open_request;
     this.closed_request = closed_request;
+    this.online_pendant = [];
   }
   render(target, raw) {
     switch (target) {
@@ -31,6 +32,13 @@ class class_request{
       case 'canceled':
         document.getElementById('container_canceledrequest').innerHTML = cls_request.generate_canceledrequest(raw);
       break;
+      case 'online':
+        var list = cls_request.generate_onlinerequest(raw);
+        if (document.getElementById('container_onlinerequest')) {
+          document.getElementById('container_onlinerequest').innerHTML = list.content;
+          document.getElementById('online_counter').innerHTML = list.counter;
+        }
+      break;      
    }
   }
   generate_openrequest(open) {
@@ -74,6 +82,57 @@ class class_request{
     content += '</ul>';
     return content;
   }
+  generate_onlinerequest(raw_request) {
+    var content = '<ul class="list-group">';
+    var counter = 0;
+    raw_request.map((request) => {
+      if (request.tx_request_status === 1) {
+        var bg_status = 'text-bg-warning';
+        counter++;
+      }
+      var table = (cls_general.is_empty_var(request.tx_table_value) === 0) ? 'Sin Mesa' : request.tx_table_value;
+      switch (request.tx_request_status) {
+        case 0:
+          var status = 'Anulada';
+          break;
+        case 1:
+          var status = 'Pendiente';
+          break;
+        case 2:
+          var status = 'Confirmada';
+          break;
+        case 3:
+          var status = 'Preparada';
+          break;
+        case 4:
+          var status = 'Cerrada';
+          break;
+      }
+      switch (request.tx_request_paymentmethod) {
+        case 'yappy':
+          var payment = 'Pagado por Yappy'
+          break;
+        case 'creditcard':
+          var payment = 'Pagado TDC';
+          break;    
+        default:
+          var payment = 'Pago en caja'
+          break;
+      }
+      content += `<li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start ${bg_status}" onclick="cls_request.show_online('${request.tx_request_slug}')">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold"><h5>${request.tx_request_code} - ${request.tx_client_name} - Pago: <strong>${payment}</strong></h5> </div>
+            <small>${table} (${status}) Consumo: ${request.tx_request_consumption}</small>
+          </div>
+          &nbsp;&nbsp;&nbsp;
+          <span>${cls_general.datetime_converter(request.created_at)} ${cls_general.time_converter(request.created_at, 1)}</span>
+      </li>`;
+    })
+    content += '</ul>';
+    return {content: content, counter: counter};
+  }
+
+
   close(request_slug){
     swal({
       title: "¿Desea cerrar este pedido?",
@@ -176,6 +235,11 @@ class class_request{
       case 'canceled':
         document.getElementById('container_canceledrequest').innerHTML  = cls_request.generate_canceledrequest(await cls_charge.look_for(str));
         break;
+      case 'online':
+        var list = cls_request.generate_onlinerequest(await cls_request.look_for(str,"2"));
+        document.getElementById('container_onlinerequest').innerHTML = list.content;
+        break;
+
     }
   }
   look_for(str, status) {
@@ -191,6 +255,10 @@ class class_request{
             var haystack = cls_request.closed_request;
             var limit = document.getElementById('closedrequestLimit').value;
             break;
+          case "2":
+            var haystack = cls_request.online_pendant;
+            var limit = document.getElementById('onlinerequestLimit').value;
+            break;
         }
         var needles = str.split(' ');
         var raw_filtered = [];
@@ -198,6 +266,7 @@ class class_request{
           if (i == limit) {  break;  }
           var ocurrencys = 0;
           for (const a in needles) {
+            haystack[i]['tx_table_value'] = (cls_general.is_empty_var(haystack[i]['tx_table_value'] === 0)) ? '' : haystack[i]['tx_table_value'];
             if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_code'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
           }
           if (ocurrencys === needles.length) {
@@ -249,166 +318,592 @@ class class_request{
     cls_general.async_laravel_request(url, method, funcion, body);
   }
 
+  update_info(request_slug) {
+    var client = document.getElementById('requestClient').name;
+    var table = document.getElementById('requestTable').value;
+
+    var url = '/request/' + request_slug + '/client/table/';
+    var method = 'PUT';
+    var body = JSON.stringify({ a: client, b: table });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+  // API METHODS
+  async get_onlinependant(){
+    var url = cls_charge.api_url + 'APIrequest/pendant';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        if (obj.data.length > 0) {
+          cls_request.online_pendant = obj.data;
+          cls_request.render('online', cls_request.online_pendant.slice(0, 20));
+        }
+      } else {
+        cls_general.shot_toast_bs('Hubieron problemas para conectarse al servidor, reintentando en 10 seg.', { bg: 'text-bg-secondary' })
+        cls_charge.api_login();
+        setTimeout(() => {
+          cls_request.get_onlinependant();
+        }, 5000);
+      }
+    }
+    var api_token = cls_charge.api_token;
+    await cls_general.async_api_request(url, method, funcion, body, api_token);
+  }
+  async get_onlinerequest(){
+    var status = document.getElementById('onlinerequestStatus').value;
+    var limit = document.getElementById('onlinerequestLimit').value;
+    switch (status) {
+      case "0":
+        var url = cls_charge.api_url + 'APIrequest/anuled/'+limit;
+        break;
+      case "1":
+        var url = cls_charge.api_url + 'APIrequest/pendant';
+        break;
+      case "2":
+        var url = cls_charge.api_url + 'APIrequest/confirmed';
+        break;
+      case "3":
+        var url = cls_charge.api_url + 'APIrequest/ready';
+        break;
+      case "4":
+        var url = cls_charge.api_url + 'APIrequest/closed/' + limit;
+        break;
+    
+      default:
+        var url = cls_charge.api_url + 'APIrequest/all/' + limit;
+        break;
+    }
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_request.online_pendant = obj.data;
+        cls_request.render('online', cls_request.online_pendant.slice(0, 20));
+      } else {
+        cls_general.shot_toast_bs('Hubieron problemas para conectarse al servidor, reintentando en 10 seg.', { bg: 'text-bg-secondary' })
+        cls_charge.api_login();
+        setTimeout(() => {
+          cls_request.get_onlinependant();
+        }, 5000);
+      }
+    }
+    var api_token = cls_charge.api_token;
+    await cls_general.async_api_request(url, method, funcion, body, api_token);
+  }
+  async show_online(request_slug){
+
+    // get_anuled    -> mostrar modal con informacion 
+    // get_pendant   -> Abrir interfaz para crear pedido o cambiar status a anulado
+    // get_confirmed -> mostrar modal y boton para cabiar status a ready
+    // get_ready     -> mostrar modal y boton para cabiar status a cerrado
+    // get_closed    -> mostrar modal con informacion
+
+    var url = cls_charge.api_url + 'APIrequest/show/' + request_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        switch (obj.data.request_info.tx_request_status) {
+          case 0:
+            cls_request.inspect_information(obj.data);
+          break;
+          case 1:
+            cls_command.create_request(obj.data);
+          break;
+          case 2:
+            cls_request.inspect_information(obj.data);
+          break;
+          case 3:
+            cls_request.inspect_information(obj.data);
+          break;
+          case 4:
+            cls_request.inspect_information(obj.data);
+          break;
+        
+          default:
+            console.log('default');
+            break;
+        }
+      } else {
+        cls_general.shot_toast_bs('Hubieron problemas para conectarse al servidor, reintentando en 10 seg.', { bg: 'text-bg-secondary' })
+        cls_charge.api_login();
+        setTimeout(() => {
+          cls_request.show_online();
+        }, 5000);
+      }
+    }
+    var api_token = cls_charge.api_token;
+    await cls_general.async_api_request(url, method, funcion, body, api_token);
+  }
+  inspect_information(raw_data){
+    var content_command_procesed = `<div class="list-group">`;
+    var command_procesed = raw_data.commanddata;
+    var raw_price = [];
+    command_procesed.map((command) => {
+      var raw_command = command.tx_commanddata_option.split(',');
+      if (raw_command.length > 1) {
+        var option = '<ul>';
+        raw_command.map((opt) => { option += `<li>${opt}</li>` });
+        option += '</ul>';
+      } else {
+        var option = '';
+      }
+      var observation = (cls_general.is_empty_var(command.tx_command_observation) === 1) ? ', <strong>Obs.</strong> ' + command.tx_command_observation : '';
+      if (command.tx_commanddata_status === 0) {
+        var bg_status = 'text-bg-warning text-body-tertiary';
+        var btn = ``;
+      } else {
+        // [{ PRICE, discount, tax, quantity }]
+        raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
+        var bg_status = '';
+      }
+
+
+      var recipe = JSON.parse(command.tx_commanddata_recipe);
+      var content_recipe = '<ul>';
+      recipe.map((ingredient) => {
+        for (const index in ingredient) {
+          content_recipe += `<li><small>${index}</small></li>`;
+        }
+      })
+      content_recipe += `</ul>`;
+
+      content_command_procesed += `
+        <a href="#" class="list-group-item list-group-item-action ${bg_status}" aria-current="true" onclick="event.preventDefault();">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description} (${command.tx_presentation_value})</h5>
+            <br/>
+          </div>
+          ${content_recipe}
+          <p class="mb-1">${option}</p>
+          <small>Consumo: ${command.tx_request_consumption}${observation}</small><br/>
+        </a>
+      `;
+    })
+    content_command_procesed += `</div>`;
+
+    var content_command_related = `<div class="list-group">`;
+    var command_related = raw_data.localrequest;
+    command_related.map((command) => {
+      var raw_option = (cls_general.is_empty_var(command.tx_localcommanddata_option) === 0) ?
+       command.tx_localcommanddata_option.split(',') : 
+       '';
+      if (raw_option.length > 1) {
+        var option = '<ul>';
+        raw_command.map((opt) => { option += `<li>${opt}</li>` });
+        option += '</ul>';
+      } else {
+        var option = '';
+      }
+      var recipe = JSON.parse(command.tx_localcommanddata_recipe);
+      var content_recipe = '<ul>';
+      recipe.map((ingredient) => {
+        for (const index in ingredient) {
+          content_recipe += `<li><small>${index}</small></li>`;
+        }
+      })
+      content_recipe += `</ul>`;
+
+      content_command_related += `
+        <a href="#" class="list-group-item list-group-item-action" aria-current="true" onclick="event.preventDefault();">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">${command.tx_localcommanddata_quantity} - ${command.tx_localcommanddata_description} (${command.tx_localcommanddata_presentation})</h5>
+            <br/>
+          </div>
+          ${content_recipe}
+          <p class="mb-1">${option}</p>
+        </a>
+      `;
+    })
+    content_command_related += `</div>`;
+
+    var raw_total = cls_general.calculate_sale(raw_price)
+    var request_info = raw_data.request_api;
+    var btn_next = '';
+    switch (request_info.tx_request_status) {
+      case 2:
+        var btn_next = `<div class="col-6 pt-4"><button id="btn_nextstatus" type="button" class="btn btn-info btn-lg" onclick="cls_request.request_next(this,'${request_info.tx_request_slug}')">Marcar "Preparado"</button></div>`;        
+      break;
+      case 3:
+        var btn_next = `<div class="col-6 pt-4"><button id="btn_nextstatus" type="button" class="btn btn-info btn-lg" onclick="cls_request.request_next(this,'${request_info.tx_request_slug}')">Cerrar Pedido</button></div>`;
+      break;
+    }
+    // var btn_next = (request_info.tx_request_status === 2 || request_info.tx_request_status === 3) ? `<div class="col-6 pt-4"><button type="button" class="btn btn-info btn-lg" onclick="cls_request.request_next('${request_info.tx_request_slug}')">Siguiente</button></div>` : '';
+    var content = `
+          <div class="col-sm-12" style="height: 25vh;">
+            <div class="row">
+              <div class="col-md-6 col-lg-3">
+                <label class="form-label" for="">Numero</label>
+                <input type="text" id="" class="form-control" value="${request_info.tx_request_code}" readonly>
+              </div>
+              <div class="col-md-6 col-lg-3">
+                <label class="form-label" for="">Fecha</label>
+                <input type="text" id="" class="form-control" value="${cls_general.datetime_converter(request_info.created_at)} ${cls_general.time_converter(request_info.created_at,1) }" readonly>
+              </div>
+              <div class="col-md-12 col-lg-6">
+                <label class="form-label" for="">Cliente</label>
+                <input type="text" id="" class="form-control" value="${request_info.name}" readonly>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 col-lg-3">
+                <label class="form-label" for="">Total</label>
+                <input type="text" id="" class="form-control" value="B/ ${cls_general.val_price(raw_total.total)}" readonly>
+              </div>
+              ${btn_next}
+            </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <ul class="nav  nav-pills nav-justified" id="myTab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Comandas</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Pedido</button>
+                  </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                  <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+                    <div class="row">
+                      <div class="col-sm-12">
+                        <ul class="list-group">
+                          ${content_command_procesed}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+                    <div class="row">
+                      <div class="col-sm-12">
+                        <ul class="list-group">
+                          ${content_command_related}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+
+
+              </div>
+            </div>
+          </div>
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    `;
+
+    var footer = `
+      <div class="row">
+        <div class="col-sm-12">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('onlinerequestModal_content').innerHTML = content;
+    document.getElementById('onlinerequestModal_footer').innerHTML = footer;
+    document.getElementById('onlinerequestModal_title').innerHTML = 'Inspeccionar Pedido';
+
+    const modal_win = new bootstrap.Modal('#onlinerequestModal', {})
+    modal_win.show();
+  }
+  request_next(btn,request_slug){
+    cls_general.disable_submit(btn,0)
+    var url = cls_charge.api_url + 'APIrequest/next/' + request_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('btn_nextstatus').innerHTML = "Cerrar Pedido";
+        document.getElementById('btn_nextstatus').classList.remove("btn-info");
+        document.getElementById('btn_nextstatus').classList.add("btn-secondary");
+        document.getElementById('btn_filteronlinerequest').click();
+        btn.disabled = false;
+        if (obj.data.request_info.tx_request_status === 4) {
+          const modal_win = bootstrap.Modal.getInstance('#onlinerequestModal');
+          if (modal_win) {
+            modal_win.hide();
+          }
+        }
+      } else {
+        if (obj.message === 'No existe el pedido.') {
+          cls_general.shot_toast_bs(obj.message,{bg:'text-bg-warning'})
+        }else{
+          cls_general.shot_toast_bs('Hubieron problemas para conectarse al servidor, reintentando en 10 seg.', { bg: 'text-bg-secondary' })
+          cls_charge.api_login();
+          setTimeout(() => {
+            cls_request.show_online();
+          }, 5000);
+        }
+      }
+    }
+    var api_token = cls_charge.api_token;
+    cls_general.async_api_request(url, method, funcion, body, api_token);
+  }
 }
 class class_charge{
-  constructor(charge_list=''){
+  constructor(charge_list='', api_url){
     this.charge_request=[];
     this.charge_list = charge_list;
+    this.api_url = api_url;
+    this.api_token = '';
   }
   
   index(){
     var content = `    
-    <div class="col-sm-12 text-center">
-      <div class="dropdown">
-        <button class="btn btn-success dropdown-toggle btn-lg" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          Caja
-        </button>
-        <ul class="dropdown-menu fs_30">
-          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashoutput.openmodal();" >Caja Menuda</a></li>
-          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_client.index();"         >Clientes</a></li>
-          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_creditnote.index();"     >Notas de Cr&eacute;dito</a></li>
-          <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashregister.create();"  >Cierre de Caja</a></li>
-        </ul>
-        <button class="btn btn-info" type="button" id="btn_newsale" onclick="cls_request.create()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
-            <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0z"/>
-          </svg> Nueva Venta
-        </button>
-      </div>
-      <div >
-
-      </div>
-
-    </div>
-    <div class="col-md-12 col-lg-12">
-      <div class="row">
-        <div class="col-md-6 col-lg-1">
-          <h5>Pedidos</h5>
-        </div>
-        <div class="col-md-6 col-lg-11">
-          <button class="btn btn-info" type="button" id="btn_reloadrequest" onclick="cls_request.reload()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-              <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-            </svg>
+      <div class="col-sm-12 text-center">
+        <div class="dropdown">
+          <button class="btn btn-success dropdown-toggle btn-lg" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Caja
+          </button>
+          <ul class="dropdown-menu fs_30">
+            <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashoutput.openmodal();" >Caja Menuda</a></li>
+            <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_client.index();"         >Clientes</a></li>
+            <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_creditnote.index();"     >Notas de Cr&eacute;dito</a></li>
+            <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_cashregister.create();"  >Cierre de Caja</a></li>
+          </ul>
+          <button class="btn btn-info" type="button" id="btn_newsale" onclick="cls_request.create()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
+              <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0z"/>
+            </svg> Nueva Venta
           </button>
         </div>
-        <div class="col-sm-12">
-          <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#tab_closedrequest" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Cerrado</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#tab_openrequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Abierto</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#tab_canceledrequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Pagado</button>
-            </li>
-          </ul>
+        <div >
+
         </div>
-        <div class="tab-content row" id="">
-          <div class="tab-pane fade show active v_scrollable col-sm-12" id="tab_closedrequest"    role="tabpanel" aria-labelledby="home-tab" tabindex="0" style="max-height: 80vh;">
-            <div class="row">
-              <div class="col-md-12 col-lg-6">
-                <div class="input-group my-3">
-                  <input type="text" id="filter_closedrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('closed',this.value)">
-                  <button class="btn btn-outline-secondary" type="button" id="btn_filterClosedRequest" onclick="cls_request.filter('closed',document.getElementById('filter_closedrequest').value)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                    </svg>
-                  </button>
+
+      </div>
+      <div class="col-md-12 col-lg-12">
+        <div class="row">
+          <div class="col-md-6 col-lg-1">
+            <h5>Pedidos</h5>
+          </div>
+          <div class="col-md-6 col-lg-11">
+            <button class="btn btn-info" type="button" id="btn_reloadrequest" onclick="cls_request.reload()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="col-sm-12">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#tab_closedrequest" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Cerrado</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#tab_openrequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Abierto</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#tab_canceledrequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Pagado</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link position-relative" id="btn_onlinerequest" data-bs-toggle="tab" data-bs-target="#tab_onlinerequest" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">
+                  Online
+                  <span id="online_counter" class="position-absolute top-0 start-100 translate-middle px-2 bg-danger border-light rounded-circle text-bg-dark h_25 radius_10">
+                    0
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div class="tab-content row" id="">
+            <div class="tab-pane fade show active v_scrollable col-sm-12" id="tab_closedrequest"    role="tabpanel" aria-labelledby="home-tab" tabindex="0" style="max-height: 80vh;">
+              <div class="row">
+                <div class="col-md-12 col-lg-6">
+                  <div class="input-group my-3">
+                    <input type="text" id="filter_closedrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('closed',this.value)">
+                    <button class="btn btn-outline-secondary" type="button" id="btn_filterClosedRequest" onclick="cls_request.filter('closed',document.getElementById('filter_closedrequest').value)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div class="col-md-12 col-lg-6 pt-3">
-                <div class="input-group mb-3">
-                  <label class="input-group-text" for="closedrequestLimit">Mostrar</label>
-                  <select id="closedrequestLimit" class="form-select">
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                  </select>
+                <div class="col-md-12 col-lg-6 pt-3">
+                  <div class="input-group mb-3">
+                    <label class="input-group-text" for="closedrequestLimit">Mostrar</label>
+                    <select id="closedrequestLimit" class="form-select">
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-              <div id='container_closedrequest' class="col-md-12">
+                <div id='container_closedrequest' class="col-md-12">
+                </div>
               </div>
             </div>
-          </div>
-          <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_openrequest"      role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
-            <div class="row">
-              <div class="col-md-12 col-lg-6">
-                <div class="input-group my-3">
-                  <input type="text" id="filter_openrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('open',this.value)">
-                  <button class="btn btn-outline-secondary" type="button" id="btn_filterOpenedRequest" onclick="cls_request.filter('open',document.getElementById('filter_openrequest').value)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                    </svg>
-                  </button>
+            <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_openrequest"      role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
+              <div class="row">
+                <div class="col-md-12 col-lg-6">
+                  <div class="input-group my-3">
+                    <input type="text" id="filter_openrequest"  class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('open',this.value)">
+                    <button class="btn btn-outline-secondary" type="button" id="btn_filterOpenedRequest" onclick="cls_request.filter('open',document.getElementById('filter_openrequest').value)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div class="col-md-12 col-lg-6 pt-3">
-                <div class="input-group mb-3">
-                  <label class="input-group-text" for="openrequestLimit">Mostrar</label>
-                  <select id="openrequestLimit" class="form-select">
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                  </select>
+                <div class="col-md-12 col-lg-6 pt-3">
+                  <div class="input-group mb-3">
+                    <label class="input-group-text" for="openrequestLimit">Mostrar</label>
+                    <select id="openrequestLimit" class="form-select">
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-              <div id='container_openrequest' class="col-md-12">
+                <div id='container_openrequest' class="col-md-12">
 
+                </div>
               </div>
             </div>
-          </div>
-          <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_canceledrequest"  role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
-            <div class="row">
-              <div class="col-md-12 col-lg-3">
-                <div class="input-group my-3">
-                  <input type="text" id="filter_canceledrequest" class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('canceled',this.value)">
-                  <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('canceled',document.getElementById('filter_canceledrequest').value)">
+            <div class="tab-pane fade v_scrollable col-sm-12"             id="tab_canceledrequest"  role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
+              <div class="row">
+                <div class="col-md-12 col-lg-3">
+                  <div class="input-group my-3">
+                    <input type="text" id="filter_canceledrequest" class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('canceled',this.value)">
+                    <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('canceled',document.getElementById('filter_canceledrequest').value)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                  <div class="input-group my-3">
+                    <label class="input-group-text" for="canceledFromDatefilter">Desde</label>
+                    <input type="text" name="canceledFromDatefilter" id="canceledFromDatefilter" class="form-control" value="" readonly onkeyup="this.value = ''">
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                  <div class="input-group my-3">
+                    <label class="input-group-text" for="canceledToDatefilter">Hasta</label>
+                    <input type="text" name="canceledToDatefilter" id="canceledToDatefilter" class="form-control" value="" readonly onkeyup="this.value = ''">
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-3 pt-3">
+                  <div class="input-group mb-3">
+                    <label class="input-group-text" for="canceledrequestLimit">Mostrar</label>
+                    <select id="canceledrequestLimit" class="form-select">
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </div>
+                </div>
+                <div id='container_canceledrequest' class="col-md-12">
+
+                </div>
+              </div>
+
+            </div>
+
+            <div class="tab-pane fade v_scrollable col-sm-12" id="tab_onlinerequest"  role="tabpanel" aria-labelledby="profile-tab" tabindex="0"  style="max-height: 80vh;">
+              <div class="row">
+                <div class="col-md-12 col-lg-3">
+                  <div class="input-group my-3">
+                    <input type="text" id="filter_onlinerequest" class="form-control" placeholder="Buscar por C&oacute;digo, t&iacute;tulo o mesa." onkeyup="cls_request.filter('online',this.value)">
+                    <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_request.filter('online',document.getElementById('filter_onlinerequest').value)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-3 pt-3">
+                  <div class="input-group mb-3">
+                    <label class="input-group-text" for="onlinerequestLimit">Mostrar</label>
+                    <select id="onlinerequestLimit" class="form-select">
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-3 pt-3">
+                  <div class="input-group mb-3">
+                    <label class="input-group-text" for="onlinerequestStatus">Estado</label>
+                    <select id="onlinerequestStatus" class="form-select">
+                      <option value="0">Anulados</option>
+                      <option value="1" selected>Pendientes</option>
+                      <option value="2">Confirmado</option>
+                      <option value="3">Preparado</option>
+                      <option value="4">Cerrado</option>
+                      <option value="all">Todos</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-3 pt-3">
+                  <button type="button" id="btn_filteronlinerequest" class="btn btn-info">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
                     </svg>
                   </button>
                 </div>
-              </div>
-              <div class="col-md-6 col-lg-3">
-                <div class="input-group my-3">
-                  <label class="input-group-text" for="canceledFromDatefilter">Desde</label>
-                  <input type="text" name="canceledFromDatefilter" id="canceledFromDatefilter" class="form-control" value="" readonly onkeyup="this.value = ''">
+                <div id='container_onlinerequest' class="col-md-12">
                 </div>
               </div>
-              <div class="col-md-6 col-lg-3">
-                <div class="input-group my-3">
-                  <label class="input-group-text" for="canceledToDatefilter">Hasta</label>
-                  <input type="text" name="canceledToDatefilter" id="canceledToDatefilter" class="form-control" value="" readonly onkeyup="this.value = ''">
-                </div>
-              </div>
-              <div class="col-md-12 col-lg-3 pt-3">
-                <div class="input-group mb-3">
-                  <label class="input-group-text" for="canceledrequestLimit">Mostrar</label>
-                  <select id="canceledrequestLimit" class="form-select">
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                  </select>
-                </div>
-              </div>
-              <div id='container_canceledrequest' class="col-md-12">
 
-              </div>
             </div>
 
           </div>
         </div>
       </div>
-    </div>`;
-    
+    `;
     document.getElementById('container_request').innerHTML = content;
     cls_request.render('open', cls_request.open_request.slice(0, 10));
     cls_request.render('closed', cls_request.closed_request.slice(0, 10));
     cls_request.render('canceled', cls_charge.charge_list.slice(0, 10));
 
+    document.getElementById('btn_onlinerequest').addEventListener('click', () => {
+      cls_request.get_onlinependant();
+    });
+    cls_request.render('online', cls_request.online_pendant.slice(0, 20));
+
+    document.getElementById('btn_filteronlinerequest').addEventListener('click', () => {
+      cls_request.get_onlinerequest();
+    })
     $(function () {
       var dateFormat = "mm/dd/yy",
         from = $("#canceledFromDatefilter")
@@ -443,7 +938,9 @@ class class_charge{
         return date;
       }
     });
-
+    setInterval(() => {
+      cls_request.get_onlinependant()
+    }, 30000);
   }
   show(request_slug){
     document.getElementById('giftcardModal_content').innerHTML = '';
@@ -547,12 +1044,6 @@ class class_charge{
 
 
     document.getElementById('paymentAmount').focus();
-    // $(function () {
-    //   $('#paymentAmount').keyboard({ layout: 'num'});
-    // });
-    // $(function () {
-    //   $('#paymentNumber').keyboard();
-    // });
   }
   look_for(str) {
     return new Promise(resolve => {
@@ -890,6 +1381,21 @@ class class_charge{
     });
   }
 
+  async api_login(){
+    var url = cls_charge.api_url + 'APIlogin';
+    var method = 'POST';
+    var body = JSON.stringify({ email: 'apirequest@mail.com', password: 'requestable7812' });
+    // var body = JSON.stringify({ email: 'requestapi@mail.com', password: 'requestable7812' });
+    var funcion = function (obj) {
+      if (obj.data.status === 'success') {
+        cls_charge.api_token = obj.data.token;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    await cls_general.async_api_request(url, method, funcion, body);
+  }
+
 }
 class class_command{
   constructor(){
@@ -1115,7 +1621,6 @@ class class_command{
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
   }
-
   generate_articleprocesed(command_procesed) {
     var raw_price = [];
     var content_command_procesed = `<div class="list-group">`;
@@ -1145,9 +1650,6 @@ class class_command{
     content_command_procesed += `</div>`;
     return { 'content': content_command_procesed, 'price': raw_price };
   }
-
-
-
   filter_articlethumbnail(str) {
     var filtered = cls_article.look_for(str, 100);
     var content = cls_command.generate_articlethumbnail_list(filtered)
@@ -1194,7 +1696,6 @@ class class_command{
     content += '</div>';
     return content;
   }
-
   filter_article(str) {
     var filtered = cls_article.look_for(str, 100);
     var content = cls_command.generate_article_list(filtered)
@@ -1225,8 +1726,6 @@ class class_command{
     content += '</ul>';
     return content;
   }
-
-
   show_article(article_slug, description, caller) {
     var url = '/article/' + article_slug; var method = 'GET';
     var body = "";
@@ -1381,7 +1880,7 @@ class class_command{
       raw_recipe.push({ [index]: $(this).val() + ',' + show + ',' + togo })
     });
     var select_presentation = document.getElementById('articlePresentation');
-    var request_slug = document.getElementById('btn_graphicList').name;
+    var request_slug = (document.getElementById('btn_graphicList')) ? document.getElementById('btn_graphicList').name : '';
 
     if (cls_general.is_empty_var(request_slug) === 0) {
       cls_command.command_list.push({
@@ -1664,9 +2163,6 @@ class class_command{
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
 
-        // const Modal = bootstrap.Modal.getInstance('#commandModal');
-        // Modal.hide();
-
         if (obj.data.cashier === 1) {
           swal({
             title: "¿Desea cobrar este pedido?",
@@ -1687,9 +2183,7 @@ class class_command{
             .then((ans) => {
               switch (ans) {
                 case 'si':
-
                   var request_slug = document.getElementById('btn_commandprocess').name;
-                  // console.log(request_slug);
                   var url = '/request/' + request_slug + '/close';
                   var method = 'PUT';
                   var body = JSON.stringify({ a: 1 });;
@@ -1881,6 +2375,466 @@ class class_command{
         }
       });
   }
+
+
+  // API
+  create_request(raw_data) {
+    var onlinerequest_info = raw_data.request_api;
+    var onlinerequest_slug = onlinerequest_info.tx_request_slug
+
+    var table_slug = '';
+    var opt_tablelist = '';
+    cls_table.table_list.map((table) => {
+      if (table.tx_table_active === 1) {
+        if (table.tx_table_value === onlinerequest_info.tx_table_value) {
+          opt_tablelist += `<option value="${table.ai_table_id}" selected>${table.tx_table_code} - ${table.tx_table_value}</option>`;
+          table_slug = table.tx_table_slug;
+        }else{
+          opt_tablelist += `<option value="${table.ai_table_id}">${table.tx_table_code} - ${table.tx_table_value}</option>`;
+        }
+        // opt_tablelist += (table.tx_table_value === onlinerequest_info.tx_table_value) ? `<option value="${table.ai_table_id}" selected>${table.tx_table_code} - ${table.tx_table_value}</option>` : `<option value="${table.ai_table_id}">${table.tx_table_code} - ${table.tx_table_value}</option>`;
+      }
+    })
+
+    var request_code = 'Sin c&oacute;digo';
+    var client_name = 'Contado';
+    var client_slug = '001';
+    var exempt = 0;
+
+    if (cls_general.is_empty_var(table_slug) === 0) {
+      cls_table.table_list.map((table) => {
+        if (table.tx_table_active === 1 && table.tx_table_type === 1) {
+          table_slug = table.tx_table_slug;
+        }
+      })
+    }
+
+    if (table_slug === '') {
+      cls_general.shot_toast_bs('No existe alguna barra activa.', { bg: 'text-bg-warning' });
+    }
+
+    var content_command_procesed = `<div class="list-group">`;
+    var command_procesed = raw_data.commanddata;
+    var raw_price = [];
+    command_procesed.map((command) => {
+      var raw_command = command.tx_commanddata_option.split(',');
+      if (raw_command.length > 1) {
+        var option = '<ul>';
+        raw_command.map((opt) => { option += `<li>${opt}</li>` });
+        option += '</ul>';
+      } else {
+        var option = '';
+      }
+      var observation = (cls_general.is_empty_var(command.tx_command_observation) === 1) ? ', <strong>Obs.</strong> ' + command.tx_command_observation : '';
+      if (command.tx_commanddata_status === 0) {
+        var bg_status = 'text-bg-warning text-body-tertiary';
+        var btn = ``;
+      } else {
+        // [{ PRICE, discount, tax, quantity }]
+        raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
+        var bg_status = '';
+      }
+
+
+      var recipe = JSON.parse(command.tx_commanddata_recipe);
+      var content_recipe = '<ul class="fs_14">';
+      recipe.map((ingredient) => {
+        for (const index in ingredient) {
+          content_recipe += `<li><small  class="fs_14">${index}</small></li>`;
+        }
+      })
+      content_recipe += `</ul>`;
+
+      content_command_procesed += `
+        <a href="#" class="list-group-item list-group-item-action ${bg_status}" data-bs-toggle="modal" data-bs-target="#modalArticleList" aria-current="true" onclick="event.preventDefault(); cls_command.filter_articlethumbnail('')">
+          <div class="d-flex w-100 justify-content-between">
+            <span class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description} (${command.tx_presentation_value})</h5>
+            <br/>
+          </div>
+          ${content_recipe}
+          <p class="mb-1">${option}</p>
+          <small>Consumo: ${command.tx_request_consumption}${observation}</small><br/>
+        </a>
+      `;
+    })
+    content_command_procesed += `</div>`;
+
+
+    var raw_total = cls_general.calculate_sale(raw_price);
+    var raw_category = [];
+    cls_article.article_list.map((article) => {
+      var cat = raw_category.find((category) => { return category === article.tx_category_value })
+      if (cls_general.is_empty_var(cat) === 0) {
+        raw_category.push(article.tx_category_value);
+      }
+    })
+    var content_categorythumbnail = '';
+    raw_category.map((category) => {
+      content_categorythumbnail += `<button class="btn btn-primary fs_20" style="height: 8vh;" onclick="cls_command.filter_articlethumbnail_category('${category}');">${category}</button>&nbsp;`;
+    })
+    document.getElementById('container_articlethumbnail_categories').innerHTML = content_categorythumbnail;
+    switch (onlinerequest_info.tx_request_paymentmethod) {
+      case 'yappy':
+        var payment = 'Pagado por Yappy'
+        break;
+      case 'creditcard':
+        var payment = 'Pagado TDC';
+        break
+      default:
+        var payment = 'Pago en caja'
+        break;
+    }
+
+    var content = `
+      <div class="row">
+        <div class="col-12 col-lg-3">
+          <div class="row">
+            <div class="col-sm-12">
+              <p class="mb-0">Pedido En linea</p>
+              <p class="mb-0 font_bolder">${payment}</p>
+              <p class="mb-0 fst-italic">Observacion. ${(cls_general.is_empty_var(onlinerequest_info.tx_request_observation) === 0) ? '' : onlinerequest_info.tx_request_observation}</p>
+            </div>
+            <div id="article_online" class="col-xs-12 v_scrollable" style="height: 80vh; transition: all ease 1s;">
+              ${content_command_procesed}
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-4">
+          <div class="row">
+            <div class="col-sm-6">
+              <span>Art&iacute;culos Seleccionados</span>
+            </div>
+            <div class="col-sm-6 bs_1 border_gray radius_10 text-bg-success text-truncate text-right">
+              <span id="span_commandTotal"><h5>Total: B/ 0.00</h5></span>
+            </div>
+            <div id="article_selected" class="col-xs-12 v_scrollable" style="height: 90vh; transition: all ease 1s;">
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-1 text-center d-none d-lg-block d-xxl-block">
+          <div class="row">
+            <div class="col-md-12 text-center" style="height:20vh;display: flex;align-items: top;">
+              <button class="btn btn-warning btn-lg h_50" data-bs-toggle="tooltip" data-bs-title="Cerrar Pedido" onclick="cls_request.close_inaction(this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" fill="currentColor" class="bi bi-door-closed-fill" viewBox="0 0 16 16">
+                  <path d="M12 1a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V2a1 1 0 0 1 1-1h8zm-2 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="col-md-12 text-center" style="height:60vh;display: flex;align-items: center;">
+              <button id="btn_commandprocess" class="btn tmgreen_bg btn-lg h_150" name="" onclick="cls_command.save_online(this.name,'${table_slug}','${onlinerequest_slug}');" data-bs-toggle="tooltip" data-bs-title="Procesar Comanda">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="col-md-12 text-center" style="height:10vh;display: flex;align-items: top;">
+              <button class="btn btn-danger btn-lg h_50" data-bs-toggle="tooltip" data-bs-title="Cerrar Pedido Online" onclick="cls_command.close_online(document.getElementById('btn_commandprocess'),'${onlinerequest_slug}')">
+                <svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="28" width="30" viewBox="0 0 980.029 980.029" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M980.029,144.398H0v691.233h980.029V144.398z M915.029,770.631H65V209.398h850.029V770.631z"></path> <polygon points="887.334,561.987 821.303,561.987 821.303,537.022 887.334,537.022 887.334,472.022 821.303,472.022 821.303,448.988 887.334,448.988 887.334,383.988 756.303,383.988 756.303,626.987 887.334,626.987 "></polygon> <polygon points="220.225,561.987 154.195,561.987 154.195,448.988 220.225,448.988 220.225,383.988 89.195,383.988 89.195,626.987 220.225,626.987 "></polygon> <path d="M570.568,383.988H407.038v242.998h163.531V383.988z M505.568,561.987h-33.531V448.988h33.531V561.987z"></path> <polygon points="379.841,561.987 313.81,561.987 313.81,385.544 248.81,385.544 248.81,626.987 379.841,626.987 "></polygon> <polygon points="728.504,472.022 662.867,472.022 662.867,448.994 728.898,448.994 728.898,383.994 597.867,383.994 597.867,537.022 663.504,537.022 663.504,560.051 597.473,560.051 597.473,625.051 728.504,625.051 "></polygon> </g> </g> </g></svg>
+              </button>
+            </div>
+            <div class="col-md-12 text-center" style="height:10vh;display: flex;align-items: bottom;">
+              <button class="btn btn-secondary btn-lg h_50" onclick="window.location.href = '/paydesk';" data-bs-toggle="tooltip" data-bs-title="Salir">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12 text-center d-md-block d-lg-none">
+          <div class="row">
+            <div class="col-md-4 text-center">
+              <button class="btn btn-warning btn-lg h_50" onclick="cls_request.close_inaction(this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" fill="currentColor" class="bi bi-door-closed-fill" viewBox="0 0 16 16">
+                  <path d="M12 1a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V2a1 1 0 0 1 1-1h8zm-2 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                </svg>
+                Cerrar Pedido
+              </button>
+            </div>
+
+            <div class="col-md-4 text-center">
+              <button id="btn_commandprocess" class="btn tmgreen_bg btn-lg h_50" name="" onclick="cls_command.save_online(this.name,'${table_slug}','${onlinerequest_slug}');">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+                </svg>
+                Procesar Comanda
+              </button>
+            </div>
+            <div class="col-md-2 text-center pb-1">
+              <button class="btn btn-danger btn-lg h_50" data-bs-toggle="tooltip" data-bs-title="Cerrar Pedido Online" onclick="cls_command.close_online(document.getElementById('btn_commandprocess'),'${onlinerequest_slug}')">
+                <svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="28" width="30" viewBox="0 0 980.029 980.029" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path d="M980.029,144.398H0v691.233h980.029V144.398z M915.029,770.631H65V209.398h850.029V770.631z"></path> <polygon points="887.334,561.987 821.303,561.987 821.303,537.022 887.334,537.022 887.334,472.022 821.303,472.022 821.303,448.988 887.334,448.988 887.334,383.988 756.303,383.988 756.303,626.987 887.334,626.987 "></polygon> <polygon points="220.225,561.987 154.195,561.987 154.195,448.988 220.225,448.988 220.225,383.988 89.195,383.988 89.195,626.987 220.225,626.987 "></polygon> <path d="M570.568,383.988H407.038v242.998h163.531V383.988z M505.568,561.987h-33.531V448.988h33.531V561.987z"></path> <polygon points="379.841,561.987 313.81,561.987 313.81,385.544 248.81,385.544 248.81,626.987 379.841,626.987 "></polygon> <polygon points="728.504,472.022 662.867,472.022 662.867,448.994 728.898,448.994 728.898,383.994 597.867,383.994 597.867,537.022 663.504,537.022 663.504,560.051 597.473,560.051 597.473,625.051 728.504,625.051 "></polygon> </g> </g> </g></svg>
+              </button>
+            </div>
+            <div class="col-md-2 text-center">
+              <button class="btn btn-secondary btn-lg h_50" onclick="window.location.href = '/paydesk';">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+                </svg>
+                Volver
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+
+
+        <div class="col-md-12 col-lg-4">
+          <div class="row">
+            <span>Listado de Comandas</span>
+            <div id="commandList" class="col-sm-12 v_scrollable" style="height: 70vh">
+            </div>
+            <div class="col-sm-12 bt_1 border_gray">
+              <div class="row">
+                <label for="requestClient">Cliente</label>
+                <div class="col-md-12 col-lg-6">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="requestClient" alt="${exempt}" name="${client_slug}" value="${client_name}" readonly onfocus="cls_client.render_modal()">
+                    <button class="btn btn-outline-secondary" type="button" onclick="cls_client.render_modal()">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+                        <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-6 fs_30 bs_1 border_gray radius_10 text-bg-success text-truncate">
+                  <label class="fs_10">Total</label>
+                  <span id="requestTotal">B/ ${cls_general.val_price(raw_total.total)} </span>
+                </div>
+                <div class="col-md-12 col-lg-4">
+                  <label for="requestCode">C&oacute;digo</label>
+                  <input type="text" class="form-control" id="requestCode" placeholder="${request_code}" readonly>
+                </div>
+                <div class="col-md-12 col-lg-4">
+                  <label for="requestTable">Mesa</label>
+                  <select class="form-select" id="requestTable"><option>Seleccione</option>${opt_tablelist}</select>
+                </div>
+                <div id="container_buttonUpdateInfo" class="col-md-12 col-lg-4 pt-2 text-center">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('container_request').innerHTML = content;
+
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+  }
+  save_online(request_slug, table_slug, onlinerequest_slug) { //ESTA FUNCION SOLO ABRE EL MODAL
+    var command_list = cls_command.command_list;
+    if (command_list < 1) {
+      cls_general.shot_toast_bs('Seleccione los art&iacute;culos.', { bg: 'text-bg-warning' });
+      return false;
+    }
+    var content = `
+      <div class="row">
+        <div class="col-md-12">
+          <label for="commandConsumption">Consumo</label>
+          <select id="commandConsumption" class="form-select">
+            <option value="Local">Local</option>
+            <option value="Retira">Retira</option>
+            <option value="Llevar">Llevar</option>
+          </select>
+        </div>  
+        <div class="col-md-12">
+          <label for="commandObservation">Observaciones</label>
+          <textarea id="commandObservation" class="form-control" onfocus="cls_general.franz_textarea(this,this.value)" onkeyup="cls_general.limitText(this,120,1)" onblur="cls_general.limitText(this,120,1)"></textarea>
+        </div>
+      </div>
+    `;
+    var footer = `
+      <div class="row">
+        <div class="col-sm-12">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-primary" onclick="cls_general.disable_submit(this,0); cls_command.process_online('${request_slug}','${table_slug}','${onlinerequest_slug}')">Guardar</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('commandModal_title').innerHTML = 'Despacho';
+    document.getElementById('commandModal_content').innerHTML = content;
+    document.getElementById('commandModal_footer').innerHTML = footer;
+
+    const modal = new bootstrap.Modal('#commandModal', {})
+    modal.show();
+  }
+  process_online(request_slug, table_slug, onlinerequest_slug) {
+    if (cls_general.is_empty_var(request_slug) === 0) {
+      const Modal = bootstrap.Modal.getInstance('#commandModal');
+      Modal.hide();
+      cls_general.disable_submit(document.getElementById('commandModal'));
+      swal({
+        title: 'Titulo',
+        text: "Puede ingresar un nombre para este pedido o dejarlo en blanco.",
+
+        content: {
+          element: "input",
+          attributes: {
+            placeholder: "Solo letras",
+            type: "text",
+          },
+        },
+      })
+        .then((title) => {
+          if (cls_general.is_empty_var(title) === 0) {
+            title = 'Contado';
+          }
+          cls_command.store_online(table_slug, title.replace(/[^a-zA-Z]/g, ""), onlinerequest_slug);
+        });
+    } else {
+      cls_command.update_online(request_slug, onlinerequest_slug);
+    }
+  }
+  store_online(table_slug, title, onlinerequest_slug) {
+    cls_general.disable_submit(document.getElementById('btn_commandprocess'),0);
+    var command_list = cls_command.command_list;
+    var client = document.getElementById('requestClient');
+    var consumption = document.getElementById('commandConsumption').value;
+    var observation = document.getElementById('commandObservation').value;
+
+    var url = '/command/'; var method = 'POST';
+    var body = JSON.stringify({ a: command_list, b: table_slug, c: client.name, d: 'Ped.' + title, e: consumption, f: observation, g: onlinerequest_slug, h: cls_charge.api_token });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
+        document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
+        cls_command.command_procesed = obj.data.command_procesed;
+        cls_command.command_list = [];
+        var content_command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
+        cls_command.render_articleselected();
+        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+
+        document.getElementById('commandList').innerHTML = content_command_procesed.content;
+        document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
+
+        document.getElementById('btn_commandprocess').disabled = false; 
+
+        if (obj.data.cashier === 1) {
+          swal({
+            title: "¿Desea cobrar este pedido?",
+            icon: "info",
+
+            buttons: {
+              si: {
+                text: "Si, cobrarlo",
+                className: "btn btn-success btn-lg"
+              },
+              no: {
+                text: "No",
+                className: "btn btn-warning btn-lg",
+              },
+            },
+            dangerMode: true,
+          })
+          .then((ans) => {
+            switch (ans) {
+              case 'si':
+                var request_slug = document.getElementById('btn_commandprocess').name;
+                var url = '/request/' + request_slug + '/close';
+                var method = 'PUT';
+                var body = JSON.stringify({ a: 1 });;
+                var funcion = function (obj) {
+                  if (obj.status === 'success') {
+                    window.location = "/paydesk";
+                  } else {
+                    cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+                  }
+                }
+                cls_general.async_laravel_request(url, method, funcion, body);
+
+                break;
+              case 'no':
+
+                break;
+            }
+          });
+
+        }
+      } else {
+        if (obj.message === 'La mesa esta ocupada.') {
+          cls_command.update_online(obj.data.tx_request_slug, onlinerequest_slug);
+        }else{
+          document.getElementById('btn_commandprocess').disabled = false;
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  update_online(request_slug, onlinerequest_slug) {
+    var command_list = cls_command.command_list;
+    var consumption = document.getElementById('commandConsumption').value;
+    var observation = document.getElementById('commandObservation').value;
+
+    var url = '/command/' + request_slug; var method = 'PUT';
+    var body = JSON.stringify({ a: command_list, e: consumption, f: observation, g: onlinerequest_slug, h: cls_charge.api_token });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_command.command_procesed = obj.data.command_procesed;
+        cls_command.command_list = [];
+        var content_command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
+        cls_command.render_articleselected();
+        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+
+        document.getElementById('commandList').innerHTML = content_command_procesed.content;
+        document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
+
+        const Modal = bootstrap.Modal.getInstance('#commandModal');
+        if (Modal) {
+          Modal.hide();
+        }
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  close_online(btn, onlinerequest_slug) {
+    swal({
+      title: "¿Se cerrará el pedido online?",
+      text: "¿Le informó al cliente?.",
+      icon: "info",
+
+      buttons: {
+        si: {
+          text: "Si, cerrarlo",
+          className: "btn btn-success btn-lg"
+        },
+        no: {
+          text: "No",
+          className: "btn btn-warning btn-lg",
+        },
+      },
+      dangerMode: true,
+    })
+      .then((ans) => {
+        switch (ans) {
+          case 'si':
+            cls_general.disable_submit(btn);
+            var url = cls_charge.api_url + 'APIrequest/' + onlinerequest_slug + '/closeit'; var method = 'PUT';
+            var body = '';
+            var funcion = function (obj) {
+              if (obj.status === 'success') {
+                window.location.href = '/paydesk'
+              } else {
+                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+              }
+            }
+            var api_token = cls_charge.api_token;
+            cls_general.async_api_request(url, method, funcion, body, api_token);
+            // cls_general.async_laravel_request(url, method, funcion, body);
+            break;
+          case 'no':
+
+            break;
+        }
+      });
+  }
+
 }
 class class_article{
   constructor(article_list) {
@@ -3473,25 +4427,6 @@ class class_client{
     cls_general.async_laravel_request(url, method, funcion, body);
   }
 
-
-  // look_for(str, limit = 50) {
-  //   var haystack = cls_client.client_list;
-  //   var needles = str.split(' ');
-  //   var raw_filtered = [];
-  //   var counter = 0;
-  //   for (var i in haystack) {
-  //     if (counter >= limit) { break; }
-  //     var ocurrencys = 0;
-  //     for (const a in needles) {
-  //       if (haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
-  //     }
-  //     if (ocurrencys === needles.length) {
-  //       raw_filtered.push(haystack[i]);
-  //       counter++;
-  //     }
-  //   }
-  //   return raw_filtered;
-  // }
   generate_modal_clientlist(filtered) {
     var content = '<ul class="list-group">';
     filtered.map((client) => {
@@ -3626,68 +4561,6 @@ class class_client{
     cls_general.async_laravel_request(url, method, funcion, body);
 
   }
-  // save() {
-  //   var name = cls_general.set_name(document.getElementById('clientName').value);
-  //   var cif = document.getElementById('clientCIF').value;
-  //   var dv = document.getElementById('clientDV').value;
-  //   var telephone = document.getElementById('clientTelephone').value;
-  //   var email = document.getElementById('clientEmail').value;
-  //   var direction = document.getElementById('clientDirection').value;
-  //   var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
-  //   var taxpayer = document.getElementById('clientTaxpayer').value;
-  //   var status = (document.getElementById('clientStatus').checked) ? 1 : 0;
-
-  //   if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(cif) === 0) {
-  //     cls_general.shot_toast_bs('El campo nombre y C&eacute;dula no pueden estar vac&iacute;os', { bg: 'text-bg-warning' });
-  //     return false;
-  //   }
-  //   if (isNaN(dv)) {
-  //     cls_general.shot_toast_bs('D&iacute;gito verificador deben ser numeros', { bg: 'text-bg-warning' });
-  //     return false;
-  //   }
-  //   if (cls_general.is_empty_var(email) === 1 && cls_general.isEmail(email) != true) {
-  //     cls_general.shot_toast_bs('Verifique el Email', { bg: 'text-bg-warning' });
-  //     return false;
-  //   }
-  //   if (taxpayer != "102") {
-  //     var pattern = /\d/
-  //     if (cls_general.is_empty_var(dv) === 0) {
-  //       cls_general.shot_toast_bs('Falta ingresar el DV.', { bg: 'text-bg-warning' });
-  //       return false;
-  //     }
-  //     if (cls_general.is_empty_var(email) === 0) {
-  //       cls_general.shot_toast_bs('Debe ingresar el Email', { bg: 'text-bg-warning' });
-  //       return false;
-  //     }
-  //   } else {
-  //     var pattern = /^[1-9]-?\d{2,}-?\d{2,}$/
-  //   }
-  //   if (pattern.test(cif) != true) {
-  //     cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
-  //     return false;
-  //   }
-  //   var request_client = document.getElementById('requestClient').name;
-  //   if (cls_general.is_empty_var(request_client) === 0 || request_client == "001") {
-  //     var method = 'POST';
-  //     var url = '/client/';
-  //   } else {
-  //     var method = 'PUT';
-  //     var url = '/client/' + request_client;
-  //   }
-  //   var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
-  //   var funcion = function (obj) {
-  //     if (obj.status === 'success') {
-  //       cls_client.client_list = obj.data.client_list;
-  //       cls_command.set_client(obj.data.client.tx_client_slug, obj.data.client.tx_client_name, obj.data.client.tx_client_exempt)
-  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-  //     } else {
-  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-  //     }
-  //   }
-  //   cls_general.async_laravel_request(url, method, funcion, body);
-  // }
-
-
 }
 class class_giftcard {
   constructor() {

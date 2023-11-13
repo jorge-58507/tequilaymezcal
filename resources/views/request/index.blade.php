@@ -113,6 +113,26 @@
       </div>
     </div>
   </div>
+  <!-- Modal ONLINEREQUEST -->
+  <div class="modal fade" id="onlinerequestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="onlinerequestModal_title">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="onlinerequestModal_content" class="modal-body">
+          <div class="row">
+            <div class="col-12">
+
+            </div>
+          </div>
+        </div>
+        <div id="onlinerequestModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
 
 	<div id="container_request" class="row"></div>
 
@@ -131,7 +151,8 @@
 		var open_request = JSON.parse('<?php echo json_encode($data['open_request']) ?>');
 		var closed_request = JSON.parse('<?php echo json_encode($data['closed_request']) ?>');
 		var canceled_request = JSON.parse('<?php echo json_encode($data['canceled_request']) ?>');
-		var cls_request = new class_request(open_request,closed_request,canceled_request);
+		var api_url = <?php echo json_encode($data['api_url']); ?>;
+		var cls_request = new class_request(open_request,closed_request,canceled_request,api_url);
 
 
 		var raw_table = JSON.parse('<?php echo json_encode($data['table_list']) ?>');
@@ -157,6 +178,7 @@
           cls_request.filter(document.getElementById('requestFilter').value)
         }
       }, 60000);
+      cls_request.api_login();
 		});
 
     document.getElementById('btn_loginuser_cancel').addEventListener('click',() => { cls_command.checklogin_cancel(); });

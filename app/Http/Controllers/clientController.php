@@ -59,6 +59,7 @@ class clientController extends Controller
         $tm_client->tx_client_cif = trim($request->input('b'));
         $tm_client->tx_client_dv = trim($request->input('c'));
         $tm_client->tx_client_direction = $request->input('f');
+        $tm_client->tx_client_birthday = date('Y-m-d', strtotime($request->input('j')));
         $tm_client->tx_client_telephone = $request->input('d');
         $tm_client->tx_client_exempt = $request->input('g');
         $tm_client->tx_client_taxpayer = $taxpayer;
@@ -137,6 +138,7 @@ class clientController extends Controller
             'tx_client_cif' => trim($request->input('b')),
             'tx_client_dv' => trim($request->input('c')),
             'tx_client_direction' => $request->input('f'),
+            'tx_client_birthday' => date('Y-m-d', strtotime($request->input('j'))),
             'tx_client_telephone' => $request->input('d'),
             'tx_client_exempt' => $request->input('g'),
             'tx_client_taxpayer' => $taxpayer,

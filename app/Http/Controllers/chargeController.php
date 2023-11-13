@@ -13,6 +13,7 @@ use App\tm_cashregister;
 use App\tm_client;
 use App\tm_giftcard;
 use App\tm_article;
+use App\tm_option;
 
 require '../vendor/autoload.php';
 
@@ -46,7 +47,7 @@ class chargeController extends Controller
         $rs_creditnote =        $creditnoteController->getAll();
         $rs_article =           tm_article::select('tm_articles.ai_article_id','tm_articles.tx_article_thumbnail','tm_articles.tx_article_code', 'tm_articles.tx_article_value', 'tm_articles.tx_article_promotion','tm_articles.tx_article_slug','tm_categories.ai_category_id','tm_categories.tx_category_value')->join('tm_categories','tm_categories.ai_category_id','tm_articles.article_ai_category_id')->where('tx_article_status',1)->orderby('tx_article_promotion','DESC')->orderby('tx_article_value','ASC')->get();
         $rs_table =             $tableController->getAll();
-
+        $url =                  tm_option::select('tx_option_value')->where('tx_option_title','API_URL')->first();
         $data = [
             'open_request'      => $rs_openrequest,
             'closed_request'    => $rs_closedrequest,
@@ -55,7 +56,8 @@ class chargeController extends Controller
             'client_list'       => $rs_client,
             'article_list'      => $rs_article,
             'creditnote_list'   => $rs_creditnote,
-            'table_list'        => $rs_table['list']
+            'table_list'        => $rs_table['list'],
+            'api_url'           => $url['tx_option_value']
         ];
         return view('charge.index', compact('data'));
     }
@@ -148,13 +150,18 @@ class chargeController extends Controller
             $qry_giftcard->update(['tx_giftcard_amount' => ($rs_giftcard['tx_giftcard_amount'] - $payment['amount'])]);
         }
         $charge_data = $this->showIt($charge_slug);
-        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'] );
-        // $this->print_receipt($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change']);
+
+        if ($charge_data['charge']['tx_client_birthday'] != '1970-01-01') {
+            $birthday_congrats = (date('d-m', strtotime($charge_data['charge']['tx_client_birthday'])) == date('d-m')) ? 1:0;
+        }else{
+            $birthday_congrats = 0;
+        }
+        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats);
 
         return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
 
-    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name){
+    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats){
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
@@ -242,23 +249,6 @@ class chargeController extends Controller
                 }else{
                     $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
                 }
-                
-
-                // if (strlen($content_observation) > 0) {
-                //     $position = strpos($content_observation,$item['tx_command_observation']);
-                //     if ($position === false) {
-                //         $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
-                //         $content_observation .= $item['tx_command_observation']."\n";
-                //     }
-                //     $last_observation = "";
-                // }else{
-                //     $last_observation = $item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n";
-                //     $content_observation .= $item['tx_command_observation']."\n";
-                // }
-                // if ($command_id != $item['ai_command_id']) {
-                //     // $printer -> text("OBS. ".$last_observation."\n");
-                //     $command_id = $item['ai_command_id'];
-                // }
             }
         }
 
@@ -358,9 +348,17 @@ class chargeController extends Controller
         $printer -> text("Cambio: ".number_format($change,2)."\n");
         $printer -> text("Cajera: ".$user_name."\n");
 
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        if ($birthday_congrats === 1) {
+            $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+            $printer -> text("FELICIDADES\n");
+            $printer -> text("EN TU CUMPLEAÑOS"."\n");
+            $printer -> selectPrintMode();
+            $printer -> text("De parte de Jade Café"."\n");
+            $printer -> text("le obsequiamos un Café."."\n");
+        }
         /* Footer */
         $printer -> feed(2);
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
@@ -375,7 +373,7 @@ class chargeController extends Controller
         $printer -> close();
     }
 
-    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name){
+    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats){
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
@@ -424,7 +422,7 @@ class chargeController extends Controller
         $printer -> setJustification(Printer::JUSTIFY_LEFT);
         $printer -> text("Articulos Relacionados.\n");
 
-        foreach ($raw_item as $item) {
+        foreach ($raw_item as $key => $item) {
             if ($item['tx_commanddata_status'] === 1) {  
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
@@ -470,10 +468,18 @@ class chargeController extends Controller
         }
         $printer -> text("Cambio: ".number_format($change,2)."\n");
         $printer -> text("Cajera: ".$user_name."\n");
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        if ($birthday_congrats === 1) {
+            $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+            $printer -> text("FELICIDADES\n");
+            $printer -> text("EN TU CUMPLEAÑOS"."\n");
+            $printer -> selectPrintMode();
+            $printer -> text("De parte de Jade Café"."\n");
+            $printer -> text("le obsequiamos un Café."."\n");
+        }
 
         /* Footer */
         $printer -> feed(2);
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
@@ -482,9 +488,7 @@ class chargeController extends Controller
         $printer -> feed(2);
         
         /* Cut the receipt and open the cash drawer */
-        $printer -> cut();
-        $printer -> pulse();
-        
+        $printer -> cut();        
         $printer -> close();
     }
 
@@ -522,7 +526,7 @@ class chargeController extends Controller
     }
 
     public function showIt($slug){
-        $qry = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_clients.tx_client_direction','tm_clients.tx_client_telephone','tm_clients.tx_client_email',
+        $qry = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_clients.tx_client_direction','tm_clients.tx_client_telephone','tm_clients.tx_client_email','tm_clients.tx_client_birthday',
         'tm_tables.tx_table_value',
         'users.name as user_name',
         'tm_charges.ai_charge_id','tm_charges.charge_ai_user_id','tm_charges.charge_ai_cashregister_id','tm_charges.charge_ai_paydesk_id','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable',

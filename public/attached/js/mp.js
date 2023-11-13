@@ -25,7 +25,9 @@
 // <input type="text" class="form-control" id="roleValue" onfocus="cls_general.validFranz(this.id, ['word'])" onkeyup="cls_general.limitText(this, 20, toast = 0)" onblur="cls_general.limitText(this, 20, toast = 0)">
 
 // const modal_win = bootstrap.Modal.getInstance('#inspectModal');
-// modal_win.hide();
+// if (modal_win) {
+  // modal_win.hide();
+// }
 
 // const modal_win = new bootstrap.Modal('#inspectModal', {})
 // modal_win.show();
@@ -191,7 +193,29 @@ class general_funct {
       document.getElementById(raw_field[a]).value = '';
     }
   }
-
+  // #########        ASYNC-AWAIT LARAVEL API REQUEST
+  async async_api_request(url = "", method, funcion, body_json, api_token) {
+    // Default options are marked with *
+    var myHeaders = new Headers({
+      "Content-Type": "application/json",
+      'Authorization': `Bearer ` + api_token,
+    });
+    var myInit = {
+      method: method, 
+      mode: 'cors', 
+      cache: 'no-cache', 
+      credentials: "same-origin", 
+      headers: myHeaders, 
+      redirect: "follow", // manual, *follow, error
+      referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+    };
+    if (body_json != '') {
+      myInit['body'] = body_json
+    }
+    const response = await fetch(url, myInit);
+    let json_obj = await response.json();
+    if (json_obj) { funcion(json_obj); }
+  }
   // #########        LARAVEL REQUEST-fetch
   laravel_request(url, method, funcion, body_json = '') //method es un string
   {
@@ -220,7 +244,7 @@ class general_funct {
     /* Creado por: Jorge Saldaña, jorgesaldar@gmail.com */
     // var myHeaders = new Headers({ "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content'), "Content-Type": "application/json" });
     var element = document.getElementsByName('csrf-token')
-    var myHeaders = new Headers({ "X-CSRF-TOKEN": element[0].getAttribute("content"), "Content-Type": "application/json" });
+    var myHeaders = new Headers({ "X-CSRF-TOKEN": element[0].getAttribute("content"), "Content-Type": "application/json", });
 
     var myInit = { method: method, headers: myHeaders, mode: 'cors', cache: 'default' };
     if (body_json != '') {
@@ -481,6 +505,11 @@ class general_funct {
     return str;
   }
   val_dec(str,decimal,refill,split){
+    str = str.toFixed(decimal + 1);
+    var pow = Math.pow(10, decimal);
+    str *= pow;
+    str = Math.round(str);
+    var str = str / pow;
     //decimal = cantidad de decimales permitidos
     //refill  = rellenar la cantidad de decimales con ceros
     //split   = hay que cortar el string al limite indicado
@@ -493,9 +522,11 @@ class general_funct {
       if(!pat.test(str)) { return false; }
     }
     var str_splited = (str.toString()).split('.');
+
     var decimal_part = '';
-    for (var i = 0; i < decimal; i++) { 	decimal_part+='0';	}
-    if(str_splited.length > 1) {        //SI STRING TIENE PARTE DECIMAL
+    for (var i = 0; i < decimal; i++) { 	decimal_part+='0';	} // <- Relleno Decimal
+
+    if(str_splited.length > 1) {            //SI STRING TIENE PARTE DECIMAL
       if(str_splited.length > 2) {          //SI TIENE DOBLE PUNTO CORREGIR
         str_splited.splice(2);
       }
@@ -510,7 +541,6 @@ class general_funct {
         str_splited[1] = str_splited[1].toString();                           //TRANSFORMAR EN STRING
         var raw_split = str_splited[1].split('.');                            //CORTAR
         str_splited[1] = raw_split[1];
-        // str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
       }
       str = (decimal > 0) ? str_splited[0] + '.' + str_splited[1] : str_splited[0];
     } else {
@@ -520,6 +550,46 @@ class general_funct {
     }
     return str;
   }
+  // val_dec(str, decimal, refill, split) {
+  //   //decimal = cantidad de decimales permitidos
+  //   //refill  = rellenar la cantidad de decimales con ceros
+  //   //split   = hay que cortar el string al limite indicado
+  //   var ans = isNaN(str)
+  //   str = (ans) ? '' : str;
+  //   if (str === '') { return ''; }
+  //   str = parseFloat(str);          //convertirlo a decimal
+  //   if (decimal > 0) {
+  //     var pat = new RegExp('(^[-][0-9]{1}|^[0-9]+|[0-9]+)([.][0-9]{1,' + decimal + '})?$');
+  //     if (!pat.test(str)) { return false; }
+  //   }
+  //   var str_splited = (str.toString()).split('.');
+  //   var decimal_part = '';
+  //   for (var i = 0; i < decimal; i++) { decimal_part += '0'; }
+  //   if (str_splited.length > 1) {        //SI STRING TIENE PARTE DECIMAL
+  //     if (str_splited.length > 2) {          //SI TIENE DOBLE PUNTO CORREGIR
+  //       str_splited.splice(2);
+  //     }
+  //     if (str_splited[0].length === 0) {    //SI NO TIENE NUMERO ENTERO, AGREGAR CERO
+  //       str_splited[0] = '0';
+  //     }
+  //     if (refill === 1) {                   //SI RELLENAR ES 1, AGREGARLE CEROS ALFINAL
+  //       str_splited[1] += decimal_part;       // REFILL
+  //     }
+  //     if (split === 1) {                    //SI RECORTAR EL STRING ES 1, REALIZAR EL CORTE
+  //       str_splited[1] = parseFloat('0.' + str_splited[1]).toFixed(decimal)  // REDONDEO
+  //       str_splited[1] = str_splited[1].toString();                           //TRANSFORMAR EN STRING
+  //       var raw_split = str_splited[1].split('.');                            //CORTAR
+  //       str_splited[1] = raw_split[1];
+  //       // str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
+  //     }
+  //     str = (decimal > 0) ? str_splited[0] + '.' + str_splited[1] : str_splited[0];
+  //   } else {
+  //     if (refill === 1) { // REFILL
+  //       str = (decimal > 0) ? str_splited[0] + '.' + decimal_part : str_splited[0];
+  //     }
+  //   }
+  //   return str;
+  // }
   print_html(url) {
     if (!win_children) {
       var win_children = window.open(url);
@@ -593,7 +663,7 @@ class general_funct {
     var total = 0;
     raw_price.map((article) => {
       var discount = (article.price * article.discount)/100;
-      discount = cls_general.val_dec(discount,2,1,1);
+      discount = cls_general.val_dec(discount, 2, 1, 1);
       var price_discount = parseFloat(article.price) - parseFloat(discount);
       var tax = (price_discount*article.tax)/100
       tax = cls_general.val_dec(tax, 2, 1, 1);
@@ -604,20 +674,22 @@ class general_funct {
       }else{
         ttl_nontaxable += article.quantity * article.price;
       }
-      ttl_gross += article.quantity * article.price;
-      subtotal += article.quantity * price_discount;
-      total += article.quantity * price_tax;
-      ttl_discount += article.quantity * discount;
-      ttl_tax += article.quantity * tax;
+
+      ttl_gross     += article.quantity * article.price;
+      subtotal      += article.quantity * price_discount;
+      total         += article.quantity * price_tax;
+      ttl_discount  += article.quantity * discount;
+      ttl_tax       += article.quantity * tax;
     })
     return { 
-      taxable: cls_general.val_dec(ttl_taxable, 2, 1, 1),
-      nontaxable: cls_general.val_dec(ttl_nontaxable, 2, 1, 1),
-      gross_total: cls_general.val_dec(ttl_gross, 2, 1, 1), 
-      subtotal: cls_general.val_dec(subtotal, 2, 1, 1), 
-      total: cls_general.val_dec(total, 2, 1, 1),
-      discount: cls_general.val_dec(ttl_discount, 2, 1, 1), 
-      tax: cls_general.val_dec(ttl_tax, 2, 1, 1)
+      taxable:      cls_general.val_dec(ttl_taxable, 2, 1, 1),
+      nontaxable:   cls_general.val_dec(ttl_nontaxable, 2, 1, 1),
+      gross_total:  cls_general.val_dec(ttl_gross, 2, 1, 1), 
+      subtotal:     cls_general.val_dec(subtotal, 2, 1, 1), 
+      // total: total,
+      total:        cls_general.val_dec(total, 2, 1, 1),
+      discount:     cls_general.val_dec(ttl_discount, 2, 1, 1), 
+      tax:          cls_general.val_dec(ttl_tax, 2, 1, 1)
     }
   }
 

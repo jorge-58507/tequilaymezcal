@@ -10,7 +10,7 @@ use App\tm_article;
 use App\tm_client;
 use App\tm_command;
 use App\tm_product;
-
+use App\tm_option;
 
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\EscposImage;
@@ -39,6 +39,7 @@ class requestController extends Controller
         }else{
             $chk_low_inventory = tm_product::where('tx_product_status',1)->where('tx_product_quantity','<','tx_product_minimum')->where('tx_product_alarm',1)->count();
         }
+        $url = tm_option::select('tx_option_value')->where('tx_option_title','API_URL')->first();
 
         $data = [
             'table_list' => $rs_ubication,
@@ -47,7 +48,8 @@ class requestController extends Controller
             'canceled_request' => $raw_request['canceled_request'],
             'article_list' => $rs_article,
             'client_list' => $rs_client,
-            'low_inventory' => $chk_low_inventory
+            'low_inventory' => $chk_low_inventory,
+            'api_url' => $url['tx_option_value']
         ];
         return view('request.index', compact('data'));
     }
@@ -83,13 +85,14 @@ class requestController extends Controller
     public function save($table_id, $client_id, $code, $title){
         $rs_table = tm_table::where('ai_table_id',$table_id)->first();
         if ($rs_table['tx_table_type'] === 2) {
-            $check_table = tm_request::where('tx_request_status',0)->where('request_ai_table_id',$table_id)->count();
-            if ($check_table > 0) {
-                return response()->json(['status'=>'failed','message'=>'La mesa esta ocupada.']);
+            $check_table = tm_request::where('tx_request_status',0)->where('request_ai_table_id',$table_id);
+            if ($check_table->count() > 0) {
+                $rs_request = $check_table->first();
+                return ['status'=>'failed','message'=>'La mesa esta ocupada.', 'data' => $rs_request];
             }
         }
         if ($rs_table['tx_table_type'] > 2) {
-            return response()->json(['status'=>'failed','message'=>'No es una mesa.']);
+            return ['status'=>'failed','message'=>'No es una mesa.'];
         }
         $tm_request = new tm_request;
 
@@ -101,7 +104,7 @@ class requestController extends Controller
         $tm_request->tx_request_slug = time().$title;
         $tm_request->save();
 
-        return $tm_request->ai_request_id;
+        return ['status'=>'success','message'=>'', 'data' => ['id' => $tm_request->ai_request_id]];
     }
 
     /**
@@ -261,7 +264,7 @@ class requestController extends Controller
 
 
 
-    // public function print_receipt($raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name){
+        // public function print_receipt($raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name){
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
