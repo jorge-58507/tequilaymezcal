@@ -442,8 +442,10 @@ class class_product{
       if (counter >= limit) {  break; }
       var ocurrencys = 0;
       for (const a in needles) {
-        if (haystack[i]['tx_product_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }else{
-          if (haystack[i]['tx_product_reference'] != null && haystack[i]['tx_product_reference'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+        if (haystack[i]['tx_product_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { 
+          ocurrencys++ 
+        }else{
+          if (haystack[i]['tx_product_reference'] != null && haystack[i]['tx_product_reference'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_product_code'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
         }
       }
       if (ocurrencys === needles.length) {

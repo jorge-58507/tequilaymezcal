@@ -706,9 +706,11 @@ class chargeController extends Controller
 
         foreach ($raw_price as $key => $article) {
             $discount = ($article['price'] * $article['discount'])/100;
+            $discount = round($discount,3);
             $discount = round($discount,2);
             $price_discount = $article['price'] - $discount;
             $tax = ($price_discount*$article['tax'])/100;
+            $tax = round($tax,3);
             $tax = round($tax,2);
             $price_tax = $price_discount+$tax;
 
@@ -872,5 +874,6 @@ class chargeController extends Controller
             return response()->json(['status'=>'failed','message'=>'Los datos no coinciden.']);
         }
     }
+
 
 }

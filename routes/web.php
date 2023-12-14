@@ -27,8 +27,7 @@ Route::get('/report', function () {
     return view('report.index');
 })->middleware('auth');
 
-Route::get('test/{param_a}', 'datacreditnoteController@getIt');
-
+Route::get('test/printcreditnote', 'chargeController@test_calc');
 
 Route::get('configuration', 'configurationController@index')->middleware('auth');
 Route::get('product/{param}/count', 'productController@show_quantity')->middleware('auth');
