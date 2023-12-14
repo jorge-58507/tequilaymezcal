@@ -5,9 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Jade Café</title>
+        <title>Tequila & Mezcal</title>
 
         <!-- Fonts -->
+        <link rel="icon" href="{{ asset('/attached/image/favicon.ico') }}">
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
         <link rel="stylesheet" href="{{ asset('attached/css/bootstrap.css') }}">
         <link rel="stylesheet" href="{{ asset('attached/css/mp.css') }}">

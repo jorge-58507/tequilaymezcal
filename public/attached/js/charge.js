@@ -3088,7 +3088,7 @@ class class_creditnote{
     this.selected = [];
     this.active_list = active;
     this.inactive_list = inactive;
-    this.pass = 'jadecafe2023';
+    this.pass = 'tequilaymezcal2023';
   }
   index(){
     var content = `

@@ -162,7 +162,7 @@ class chargeController extends Controller
     }
 
     public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats){
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.100", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -182,10 +182,10 @@ class chargeController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        $printer -> text("Cancino Nuñez, S.A.\n");
-        $printer -> text("155732387-2-2023 DV 14.\n");
-        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> text("Cancino, S.A.\n");
+        $printer -> text("155732394-2-2023 DV 25.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #46\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7780\n");
         $printer -> feed();
         
         /* Title of receipt */
@@ -270,10 +270,10 @@ class chargeController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        $printer -> text("Cancino Nuñez, S.A.\n");
-        $printer -> text("155732387-2-2023 DV 14.\n");
-        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> text("Cancino, S.A.\n");
+        $printer -> text("155732394-2-2023 DV 25.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #46\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7780\n");
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
@@ -354,15 +354,15 @@ class chargeController extends Controller
             $printer -> text("FELICIDADES\n");
             $printer -> text("EN TU CUMPLEAÑOS"."\n");
             $printer -> selectPrintMode();
-            $printer -> text("De parte de Jade Café"."\n");
-            $printer -> text("le obsequiamos un Café."."\n");
+            // $printer -> text("De parte de Jade Café"."\n");
+            // $printer -> text("le obsequiamos un Café."."\n");
         }
         /* Footer */
         $printer -> feed(2);
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
-        $printer -> text("Gracias por su compra en Jade Café\n");
+        $printer -> text("Gracias por su compra en Tequila & Mezcal\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
         
@@ -374,7 +374,7 @@ class chargeController extends Controller
     }
 
     public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats){
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.100", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -392,10 +392,10 @@ class chargeController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        $printer -> text("Cancino Nuñez, S.A.\n");
-        $printer -> text("155732387-2-2023 DV 14.\n");
-        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> text("Cancino, S.A.\n");
+        $printer -> text("155732394-2-2023 DV 25.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #46\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7780\n");
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
@@ -474,8 +474,8 @@ class chargeController extends Controller
             $printer -> text("FELICIDADES\n");
             $printer -> text("EN TU CUMPLEAÑOS"."\n");
             $printer -> selectPrintMode();
-            $printer -> text("De parte de Jade Café"."\n");
-            $printer -> text("le obsequiamos un Café."."\n");
+            // $printer -> text("De parte de Jade Café"."\n");
+            // $printer -> text("le obsequiamos un Café."."\n");
         }
 
         /* Footer */
@@ -483,7 +483,7 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
-        $printer -> text("Gracias por su compra en Jade Café\n");
+        $printer -> text("Gracias por su compra en Tequila & Mezcal\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
         
@@ -744,24 +744,8 @@ class chargeController extends Controller
 
 
     public function print_test(){
-            // Enter the share name for your USB printer here
-            // $connector = new WindowsPrintConnector("recibo");
-            // $printer = new Printer($connector);
         
-            // /* Print a "Hello world" receipt" */
-            // $printer -> text("Hello World!\n");
-            // $printer -> cut();
-            
-            // /* Close printer */
-            // $printer -> close();
-
-
-                    // $connector = new WindowsPrintConnector("recibo");
-        // $connector = new WindowsPrintConnector("printreceipt");
-        
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
-        //$connector = new WindowsPrintConnector("smb://POSPAYDESK/recibo");
-        // $connector = new WindowsPrintConnector("recibo");
+        $connector = new NetworkPrintConnector("192.168.3.100", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -779,10 +763,10 @@ class chargeController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        $printer -> text("Cancino Nuñez, S.A.\n");
-        $printer -> text("155732387-2-2023 DV 14.\n");
-        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> text("Cancino, S.A.\n");
+        $printer -> text("155732394-2-2023 DV 25.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #46\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7780\n");
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
@@ -840,7 +824,7 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
-        $printer -> text("Gracias por su compra en Jade Café\n");
+        $printer -> text("Gracias por su compra en Tequila & Mezcal\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
         
