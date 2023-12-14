@@ -3,6 +3,8 @@ cohorte de inventario 100/200 => se debe crear la interfaz donde se realiza un c
 REGISTRO DE ASISTENCIA 200/400 => crear interfaz parra marcaciones, interfaz para obtener reportes, 
 Login de usuario 100 => crear tabla donde se almacena el codigo con el usuario y la contraseña en texto plano
 
+CAMBIO DE PENDIENTE A verificar
+
 
 Las felicitaciones en la pantalla al seleccionar el cliente en la comanda y en el tickete
 boton para anular pedidos online
