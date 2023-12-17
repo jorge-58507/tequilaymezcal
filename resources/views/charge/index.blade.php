@@ -193,7 +193,7 @@
                     </tbody>
                     <tfoot>
                       <tr class="table-success">
-                        <td>Propinas:  <span id="span_totaltip"></span></td>
+                        <td>Propinas:  <span id="span_totaltip"></span>Propinas:  <span id="span_totaltip"></span></td>
                         <td>Descuentos:  <span id="span_totaldiscount"></span></td>
                         <td>Devoluciones:  <span id="span_totalcashback"></span></td>
                         <td>Anulaciones:  <span id="span_totalnull"></span></td>
@@ -731,90 +731,6 @@
     document.getElementById('btn_loginuser_reprint').addEventListener('click',() => { cls_charge.checklogin_reprint(); });
     document.getElementById('btn_loginuser_creditnote').addEventListener('click',() => { cls_charge.checklogin_creditnote(); });
     document.getElementById('btn_loginuser_cancel').addEventListener('click',() => { cls_command.checklogin_cancel(); });
-
-    // ###### LOGI PARA NOTAS DE CREDITO
-    document.getElementById('form_logincode').addEventListener("submit", (e) => {
-      e.preventDefault();
-      var url = '/logincode/'+document.getElementById('logincode').value;
-      var method = 'GET';
-      var body = '';
-      var funcion = function (obj) {
-        if (obj.status === 'success') {
-          document.getElementById('useremailCreditnote').value = obj.data.email;
-          document.getElementById('userpasswordCreditnote').value = obj.data.password;
-          document.getElementById('logincode').value = '';
-          cls_charge.checklogin_creditnote();
-        } else {
-          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-        }
-      }
-      cls_general.async_laravel_request(url, method, funcion, body);
-
-    });
-
-    document.getElementById('bn_toggle_formlogin').addEventListener("click", () => {
-      $("#container_loginform").toggle();
-      $("#container_form_logincode").toggle();
-      if (document.getElementById('container_form_logincode').style.display === 'block') {
-        document.getElementById('logincode').focus();
-      }
-    });
-
-    // ##### LOGIN PARA ANULAR COMANDAS DESDE CAJA
-    document.getElementById('form_logincode_nullcommand').addEventListener("submit", (e) => {
-      e.preventDefault();
-      var url = '/logincode/'+document.getElementById('logincode_nullcommand').value;
-      var method = 'GET';
-      var body = '';
-      var funcion = function (obj) {
-        if (obj.status === 'success') {
-          document.getElementById('useremailCancel').value = obj.data.email;
-          document.getElementById('userpasswordCancel').value = obj.data.password;
-          document.getElementById('logincode_nullcommand').value = '';
-          cls_command.checklogin_cancel();
-        } else {
-          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-        }
-      }
-      cls_general.async_laravel_request(url, method, funcion, body);
-
-    });
-
-    document.getElementById('btn_toggle_formlogin_nullcommand').addEventListener("click", () => {
-      $("#container_loginform_nullcommand").toggle();
-      $("#container_form_logincode_nullcommand").toggle();
-      if (document.getElementById('container_form_logincode_nullcommand').style.display === 'block') {
-        document.getElementById('logincode_nullcommand').focus();
-      }
-    });
-
-    // ##### LOGIN PARA REIMPRIMIR FACTURAS DESDE CAJA
-    document.getElementById('form_logincode_reprint').addEventListener("submit", (e) => {
-      e.preventDefault();
-      var url = '/logincode/'+document.getElementById('logincode_reprint').value;
-      var method = 'GET';
-      var body = '';
-      var funcion = function (obj) {
-        if (obj.status === 'success') {
-          document.getElementById('useremailReprint').value = obj.data.email;
-          document.getElementById('userpasswordReprint').value = obj.data.password;
-          document.getElementById('logincode_reprint').value = '';
-          cls_charge.checklogin_reprint();
-        } else {
-          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-        }
-      }
-      cls_general.async_laravel_request(url, method, funcion, body);
-
-    });
-
-    document.getElementById('btn_toggle_formlogin_reprint').addEventListener("click", () => {
-      $("#container_loginform_reprint").toggle();
-      $("#container_form_logincode_reprint").toggle();
-      if (document.getElementById('container_form_logincode_reprint').style.display === 'block') {
-        document.getElementById('logincode_reprint').focus();
-      }
-    });
 
 	</script>
 	{{-- ##############    JQUERY   ############### --}}
