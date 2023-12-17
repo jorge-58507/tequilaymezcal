@@ -1409,7 +1409,7 @@ class class_charge{
       tip = cls_general.val_price(tip);
     }
     tip = parseFloat(tip);
-    cls_charge.charge_request.total = parseFloat(cls_charge.charge_request.gross_total) + tip
+    cls_charge.charge_request.total = parseFloat(cls_charge.charge_request.subtotal) + tip + parseFloat(cls_charge.charge_request.tax)
     cls_charge.tip = tip;
     document.getElementById('sp_tip').innerHTML = 'B/. ' + cls_general.val_price(tip);
     document.getElementById('sp_total').innerHTML = 'B/. ' + cls_general.val_price(cls_charge.charge_request.total);
