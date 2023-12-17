@@ -54,12 +54,5 @@ class paymentmethodSeeder extends Seeder
         $tm->tx_paymentmethod_status = 1;
         $tm->save();
 
-        $tm = new tm_paymentmethod;
-        $tm->paymentmethod_ai_user_id = 1;
-        $tm->tx_paymentmethod_value	= 'Cupon';
-        $tm->tx_paymentmethod_status = 1;
-        $tm->save();
-
-
     }
 }

@@ -27,7 +27,7 @@ Route::get('/report', function () {
     return view('report.index');
 })->middleware('auth');
 
-Route::get('test/printcreditnote', 'chargeController@test_calc');
+Route::get('test/{paramA}', 'userController@test_clutterin');
 
 Route::get('configuration', 'configurationController@index')->middleware('auth');
 Route::get('product/{param}/count', 'productController@show_quantity')->middleware('auth');
@@ -38,7 +38,6 @@ Route::get('recipe/{param_a}/{param_b}', 'articleproductController@showRecipe')-
 Route::get('request/{param}/table', 'requestController@showByTable')->middleware('auth');
 Route::get('request/{param}/bar', 'requestController@showByBar')->middleware('auth');
 Route::get('request/reload', 'requestController@reload');
-Route::get('request/{param}/print', 'requestController@print')->middleware('auth');
 Route::get('command/{param}/byrequest', 'commandController@getByRequest_json')->middleware('auth');
 Route::get('paydesk/{param}/creditnote', 'creditnoteController@getByCharge_json')->middleware('auth');
 Route::get('depletion/{param}/article', 'depletionController@getByArticle')->middleware('auth');
@@ -49,6 +48,7 @@ Route::get('provider/{param}/requisition', 'requisitionController@get_requisitio
 Route::get('userlog/{param}', 'articleController@get_user');
 Route::get('kitchen/reload', 'kitchenController@reload');
 Route::get('productcode/{param_a}/show/{param_b}', 'productcodeController@show_code');
+Route::get('logincode/{param_a}', 'userController@check_logincode');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
 // Route::post('article/product', 'measureproductController@save')->middleware('auth');
@@ -62,6 +62,7 @@ Route::post('/report/show', 'reportController@show');
 Route::post('/article/product', 'articleproductController@save');
 Route::post('/articleproduct/', 'articleproductController@store');
 Route::post('/request/{param}/open', 'requestController@reopen');
+Route::post('request/{param}/print', 'requestController@print')->middleware('auth');
 Route::post('/checklogin_reprint/', 'chargeController@checklogin_reprint');
 Route::post('/checklogin_creditnote/', 'chargeController@checklogin_creditnote');
 Route::post('/checklogin_cancel/', 'commanddataController@checklogin_cancel');

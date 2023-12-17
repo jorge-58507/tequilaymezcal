@@ -249,7 +249,7 @@ class requestController extends Controller
         $raw_request = $this->getAll();
         return response()->json(['status'=>'success','message'=>'','data'=>['open_request'=>$raw_request['open_request'], 'closed_request'=>$raw_request['closed_request'], 'canceled_request'=>$raw_request['canceled_request']]]);
     }
-    public function print($request_slug){
+    public function print(Request $request, $request_slug){
         $qry = tm_request::where('tx_request_slug',$request_slug);
         if ($qry->count() === 0) {
             return response()->json(['status'=>'failed','message'=>'No existe.']);
@@ -259,12 +259,10 @@ class requestController extends Controller
         $commandController = new commandController;
         $raw_item = $commandController->getByRequest($rs_request['ai_request_id']);
 
+        $suggested_tip = $request->input('a');
+        $user = Auth()->user();
 
 
-
-
-
-        // public function print_receipt($raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name){
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
@@ -315,16 +313,16 @@ class requestController extends Controller
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
 
-                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
-                foreach ($raw_recipe as $ingredient) {
-                    foreach ($ingredient as $k => $formule) {
-                        $splited_formule = explode(",",$formule);
-                        if ($splited_formule[3] === 'show') {
-                            $ing = explode(")",$k,2);
-                            $printer -> text('   -'.$ing[1]."\n");
-                        }
-                    }
-                }
+                // $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+                // foreach ($raw_recipe as $ingredient) {
+                //     foreach ($ingredient as $k => $formule) {
+                //         $splited_formule = explode(",",$formule);
+                //         if ($splited_formule[3] === 'show') {
+                //             $ing = explode(")",$k,2);
+                //             $printer -> text('   -'.$ing[1]."\n");
+                //         }
+                //     }
+                // }
 
                 if (!empty($raw_item[$key+1])) {
                     if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
@@ -348,6 +346,9 @@ class requestController extends Controller
         $chargeController = new chargeController;
         $raw_total = $chargeController->calculate_sale($raw_price);
 
+        $tip = ($raw_total['gross_total'] * $suggested_tip)/100;
+
+
         $printer -> feed(2);
         $printer -> setJustification(Printer::JUSTIFY_RIGHT);
         $printer -> setEmphasis(true);
@@ -357,10 +358,13 @@ class requestController extends Controller
         /* Tax and total */
         $printer -> text("Descuento. B/ ".number_format($raw_total['discount'],2)."\n");
         $printer -> text("ITBMS. B/ ".number_format($raw_total['tax'],2)."\n");
+        $printer -> text("Propina B/ ".number_format($tip,2)."\n");
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer -> text("TOTAL. B/ ".number_format($raw_total['total'],2)."\n");
+        $printer -> text("TOTAL. B/ ".number_format($raw_total['total']+$tip,2)."\n");
         $printer -> selectPrintMode();
         $printer -> feed(1);
+        $printer -> text("Elaborador(a): ".$user['name']."\n");
+
 
         /* Footer */
         $printer -> feed(2);

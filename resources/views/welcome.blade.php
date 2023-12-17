@@ -73,41 +73,64 @@
                 <div class="title m-b-md tmred_text">
                     <img src="{{ asset('attached/image/logo.png') }}" alt="" height="300">
                 </div>
-                <div class="row">
-                    <div id="container_userlist" class="col-sm-12 py-3"></div>
-                </div>
-                <form method="POST" action="{{ route('login') }}">
+                <form method="POST" action="" id="form_logincode">
                     @csrf
                     <div class="form-group row">
-                        <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('Correo E.') }}</label>
+                        <label for="logincode" class="col-md-4 col-form-label text-md-right">{{ __('Acceso') }}</label>
                         <div class="col-md-6 mb-3">
-                            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-                            @error('email')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="password" class="col-md-4 col-form-label text-md-right">{{ __('Contraseña') }}</label>
-                        <div class="col-md-6 mb-3">
-                            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
-                            @error('password')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
+                            <input id="logincode" type="password" class="form-control" name="logincode" value="" required autofocus>
                         </div>
                     </div>
                     <div class="form-group row mb-0">
                         <div class="col-md-12 text-center">
-                            <button type="submit" id="submit_login" class="btn tmgreen_bg">
+                            <button type="submit" id="submit_login" class="btn tmgreen_bg" style="display: none">
                                 {{ __('Ingresar') }}
                             </button>
                         </div>
                     </div>
                 </form>
+                <div class="form-group row mb-3">
+                    <div class="col-md-12 text-center">
+                        <button type="button" id="bn_toggle_formlogin" class="btn btn-secondary">
+                            {{ __('Ingreso Manual') }}
+                        </button>
+                    </div>
+                </div>
+                <div class="row" id="container_loginform" style="display: none">
+                    <div id="container_userlist" class="col-sm-12 py-3"></div>
+                    <form id="login_form" method="POST" action="{{ route('login') }}" >
+                        @csrf
+                        <div class="form-group row">
+                            <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('Correo E.') }}</label>
+                            <div class="col-md-6 mb-3">
+                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+                                @error('email')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="password" class="col-md-4 col-form-label text-md-right">{{ __('Contraseña') }}</label>
+                            <div class="col-md-6 mb-3">
+                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+                                @error('password')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="form-group row mb-0">
+                            <div class="col-md-12 text-center">
+                                <button type="submit" id="submit_login" class="btn tmgreen_bg">
+                                    {{ __('login') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div id="toast_container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
@@ -123,6 +146,27 @@
         <script type="text/javascript">
 
             const cls_general = new general_funct();
+            document.getElementById('form_logincode').addEventListener("submit", (e) => {
+                e.preventDefault();
+                var url = '/logincode/'+document.getElementById('logincode').value;
+                var method = 'GET';
+                var body = '';
+                var funcion = function (obj) {
+                  if (obj.status === 'success') {
+                    document.getElementById('email').value = obj.data.email;
+                    document.getElementById('password').value = obj.data.password;
+                    document.getElementById('login_form').submit();
+                  } else {
+                    cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+                  }
+                }
+                cls_general.async_laravel_request(url, method, funcion, body);
+
+            });
+            document.getElementById('bn_toggle_formlogin').addEventListener("click", () => {
+                $("#container_loginform").toggle();
+                $("#form_logincode").toggle();
+            });
             var user_list = JSON.parse('<?php echo json_encode($data['user_list']) ?>');
             var content = '';
             user_list.map((user)=> {

@@ -119,12 +119,18 @@ class commandController extends Controller
     public function show($id)
     {
         $rs_command = tm_command::where('ai_command_id',$id)->first();
-        $rs_request = tm_command::select('tm_commands.ai_command_id','tm_requests.ai_request_id','tm_requests.tx_request_code','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.ai_request_id')
+        $rs_request = tm_command::select('tm_commands.ai_command_id','tm_requests.ai_request_id','tm_requests.tx_request_code','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.ai_request_id','users.name as waiter')
         ->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')
         ->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')
+        ->join('users','users.id','tm_commands.command_ai_user_id')
         ->where('ai_command_id',$id)->first();
-        $rs_commanddata = tm_command::select('tm_commands.ai_command_id','tm_commands.created_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option','tm_commanddatas.tx_commanddata_recipe','tm_presentations.tx_presentation_value')
-        ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')
+
+        $rs_commanddata = tm_command::select('tm_commands.ai_command_id','tm_commands.created_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option','tm_commanddatas.tx_commanddata_recipe','tm_commanddatas.tx_commanddata_status','tm_presentations.tx_presentation_value','tm_categories.tx_category_value')
+        ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
+        ->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')
+        ->join('tm_categories','tm_categories.ai_category_id','tm_articles.article_ai_category_id')
+        ->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')
+        ->join('tm_presentations','tm_presentations.ai_presentation_id','tm_commanddatas.commanddata_ai_presentation_id')
         ->where('ai_command_id',$id)->get();
 
         return response()->json(['status'=>'success','message'=>'','data'=>['info'=>$rs_command, 'request_info'=>$rs_request, 'commanddata'=>$rs_commanddata]]);
@@ -236,7 +242,6 @@ class commandController extends Controller
         $kitchenController = new kitchenController;
         $data = $kitchenController->all();
         return response()->json(['status'=>'success','message'=>'Comanda Preparada.','data'=>$data]);
-
     }
     /**
      * Remove the specified resource from storage.

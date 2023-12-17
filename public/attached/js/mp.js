@@ -552,46 +552,6 @@ class general_funct {
     }
     return str;
   }
-  // val_dec(str, decimal, refill, split) {
-  //   //decimal = cantidad de decimales permitidos
-  //   //refill  = rellenar la cantidad de decimales con ceros
-  //   //split   = hay que cortar el string al limite indicado
-  //   var ans = isNaN(str)
-  //   str = (ans) ? '' : str;
-  //   if (str === '') { return ''; }
-  //   str = parseFloat(str);          //convertirlo a decimal
-  //   if (decimal > 0) {
-  //     var pat = new RegExp('(^[-][0-9]{1}|^[0-9]+|[0-9]+)([.][0-9]{1,' + decimal + '})?$');
-  //     if (!pat.test(str)) { return false; }
-  //   }
-  //   var str_splited = (str.toString()).split('.');
-  //   var decimal_part = '';
-  //   for (var i = 0; i < decimal; i++) { decimal_part += '0'; }
-  //   if (str_splited.length > 1) {        //SI STRING TIENE PARTE DECIMAL
-  //     if (str_splited.length > 2) {          //SI TIENE DOBLE PUNTO CORREGIR
-  //       str_splited.splice(2);
-  //     }
-  //     if (str_splited[0].length === 0) {    //SI NO TIENE NUMERO ENTERO, AGREGAR CERO
-  //       str_splited[0] = '0';
-  //     }
-  //     if (refill === 1) {                   //SI RELLENAR ES 1, AGREGARLE CEROS ALFINAL
-  //       str_splited[1] += decimal_part;       // REFILL
-  //     }
-  //     if (split === 1) {                    //SI RECORTAR EL STRING ES 1, REALIZAR EL CORTE
-  //       str_splited[1] = parseFloat('0.' + str_splited[1]).toFixed(decimal)  // REDONDEO
-  //       str_splited[1] = str_splited[1].toString();                           //TRANSFORMAR EN STRING
-  //       var raw_split = str_splited[1].split('.');                            //CORTAR
-  //       str_splited[1] = raw_split[1];
-  //       // str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
-  //     }
-  //     str = (decimal > 0) ? str_splited[0] + '.' + str_splited[1] : str_splited[0];
-  //   } else {
-  //     if (refill === 1) { // REFILL
-  //       str = (decimal > 0) ? str_splited[0] + '.' + decimal_part : str_splited[0];
-  //     }
-  //   }
-  //   return str;
-  // }
   print_html(url) {
     if (!win_children) {
       var win_children = window.open(url);

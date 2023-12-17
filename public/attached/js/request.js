@@ -386,55 +386,6 @@ class class_request {
     });
 
   }
-  // close_inaction(btn) {
-  //   var request_slug = document.getElementById('btn_commandprocess').name;
-  //   if (cls_general.is_empty_var(request_slug) === 0) {
-  //     cls_general.shot_toast_bs('No hay elementos para cerrar.', { bg: 'text-bg-warning' }); return false;
-  //   }
-  //   swal({
-  //     title: "¿Desea cerrar este pedido?",
-  //     text: "Ya no podrán agregarle comandas.",
-  //     icon: "info",
-
-  //     buttons: {
-  //       si: {
-  //         text: "Si, cerrarlo",
-  //         className: "btn btn-success btn-lg"
-  //       },
-  //       no: {
-  //         text: "No",
-  //         className: "btn btn-warning btn-lg",
-  //       },
-  //     },
-  //     dangerMode: true,
-  //   })
-  //     .then((ans) => {
-  //       switch (ans) {
-  //         case 'si':
-  //           cls_general.disable_submit(btn);
-  //           var url = '/request/' + request_slug + '/close';
-  //           var method = 'PUT';
-  //           var body = JSON.stringify({ a: 1 });;
-  //           var funcion = function (obj) {
-  //             if (obj.status === 'success') {
-  //               cls_request.open_request = obj.data.open_request;
-  //               cls_request.closed_request = obj.data.closed_request;
-
-  //               cls_request.show(request_slug)
-  //             } else {
-  //               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-  //             }
-  //           }
-  //           cls_general.async_laravel_request(url, method, funcion, body);
-  //           break;
-  //         case 'no':
-
-  //           break;
-  //       }
-  //     });
-
-  // }
-
   reload(){
     var url = '/request/reload';
     var method = 'GET';
@@ -456,17 +407,39 @@ class class_request {
     if (cls_general.is_empty_var(request_slug) === 0) {
       cls_general.shot_toast_bs('No hay artículos agregados.');
     }
-    var url = '/request/'+request_slug+'/print';
-    var method = 'GET';
-    var body = '';
-    var funcion = function (obj) {
-      if (obj.status === 'success') {
-        cls_general.shot_toast_bs(obj.message);
-      } else {
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+    swal({
+      title: 'Porcentaje de Propina',
+      text: "Ingrese el porcentaje que desea agregar sobre la base.",
+
+      content: {
+        element: "input",
+        attributes: {
+          placeholder: "porcentaje",
+          type: "text"
+        },
+      },
+    })
+    .then((quantity) => {
+      if (cls_general.is_empty_var(quantity) === 0) {
+        console.log('quan: ' +quantity +' ** '+cls_general.is_empty_var(quantity));
+        return swal("Debe ingresar un numero.");
       }
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
+      if (isNaN(quantity)) {
+        return swal("Debe ingresar un numero entero.");
+      }
+      var url = '/request/'+request_slug+'/print';
+      var method = 'POST';
+      var body = JSON.stringify({a: quantity});
+      var funcion = function (obj) {
+        if (obj.status === 'success') {
+          cls_general.shot_toast_bs(obj.message);
+        } else {
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+      cls_general.async_laravel_request(url, method, funcion, body);
+    });
+
   }
 
   // API METHODS

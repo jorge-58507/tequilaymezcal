@@ -76,7 +76,7 @@ class class_request{
         </div>
         <span class="badge bg-secondary fs_20">B/ ${cls_general.val_price(charge.tx_charge_total, 2, 1, 1) }</span>
         &nbsp;&nbsp;&nbsp;
-        <span>${cls_general.datetime_converter(charge.updated_at)} ${cls_general.time_converter(charge.updated_at,1)}</span>    
+        <span>${cls_general.datetime_converter(charge.created_at)} ${cls_general.time_converter(charge.created_at,1)}</span>    
       </li>`;
     })
     content += '</ul>';
@@ -681,6 +681,7 @@ class class_request{
 class class_charge{
   constructor(charge_list='', api_url){
     this.charge_request=[];
+    this.tip = 0.00;
     this.charge_list = charge_list;
     this.api_url = api_url;
     this.api_token = '';
@@ -990,9 +991,28 @@ class class_charge{
               <div class="col-md-12 col-lg-6 text-truncate" onclick=cls_charge.create_discount('${request_slug}')><span>Descuento</span><span id="sp_discount" class="float_right fs_20"></span></div>
               <div class="col-md-12 col-lg-6 text-truncate"><span>Subtotal</span><span id="sp_subtotal" class="float_right fs_20"></span></div>
               <div class="col-md-12 col-lg-6 text-truncate"><span>Impuesto</span><span id="sp_tax" class="float_right fs_20"></span></div>          
+              <div class="col-md-12 col-lg-6">
+                <div class="input-group mb-3">
+                  <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">% Propina</button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_charge.set_tip(0,0)">Propina 0%</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_charge.set_tip(10,0)">Propina 10%</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_charge.set_tip(15,0)">Propina 15%</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); cls_charge.set_tip(20,0)">Propina 20%</a></li>
+                  </ul>
+                  <input type="text" id="txt_suggestedtip" class="form-control" aria-label="Text input with dropdown button" onfocus="cls_general.validFranz(this.id, ['number'], '.')" onblur="cls_charge.set_tip(0,this.value)" placeholder="Propina Neta">
+                </div>
+              </div>
+              <div class="col-md-12 col-lg-6 text-truncate"><span>Propina</span><span id="sp_tip" class="float_right fs_20"></span></div>          
             </div>
             <div class="row bs_1 border_gray radius_5 tmgreen_bg f_white">
-              <div class="col-md-12"><h5>Total</h5><span id="sp_total" class="font_bolder fs_30"></span></div>
+              <div class="col-6">
+                <span><h5>Total</h5></span>
+              </div>
+              <div class="col-6">
+                <span id="sp_total" class="font_bolder fs_30"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -1108,7 +1128,7 @@ class class_charge{
         var raw_payment = obj.data.payment;
         var raw_article = obj.data.article;
 
-        cls_charge.render_inspect(charge.tx_charge_number, cls_general.datetime_converter(charge.created_at), charge.tx_client_name, charge.tx_charge_total, charge.tx_charge_change, raw_payment, raw_article,charge_slug);
+        cls_charge.render_inspect(charge.tx_charge_number, cls_general.datetime_converter(charge.created_at), charge.tx_client_name, charge.tx_charge_total, charge.tx_charge_change, raw_payment, raw_article, charge_slug, charge.tx_charge_tip);
 
         const modal = new bootstrap.Modal('#inspectModal', {})
         modal.show();
@@ -1120,7 +1140,7 @@ class class_charge{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  render_inspect(number,date,client,total,change,raw_payment,raw_article, charge_slug){
+  render_inspect(number,date,client,total,change,raw_payment,raw_article, charge_slug,tip){
     var payment_list = '';
     raw_payment.map((payment) => { 
       var payment_number = (cls_general.is_empty_var(payment.tx_payment_number) === 0) ? '' : '- (' + payment.tx_payment_number + ')';
@@ -1152,21 +1172,21 @@ class class_charge{
     	<div class="col-sm-12" style="height: 60vh;">
         <div class="row">
           <div class="col-md-6 col-lg-3">
-            <label class="form-label" for="">Numero</label>
-            <input type="text" id="" class="form-control" value="${number}" readonly>
-          </div>
-          <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">Fecha</label>
             <input type="text" id="" class="form-control" value="${date}" readonly>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="">Total</label>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(total, 2, 1, 1)}" readonly>
           </div>
           <div class="col-md-12 col-lg-6">
             <label class="form-label" for="">Cliente</label>
             <input type="text" id="" class="form-control" value="${client}" readonly>
           </div>
           <div class="col-md-6 col-lg-3">
-            <label class="form-label" for="">Total</label>
-            <input type="text" id="" class="form-control" value="${cls_general.val_price(total, 2, 1, 1)}" readonly>
-          </div>
+            <label class="form-label" for="">Propina</label>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(tip)}" readonly>
+          </div>          
           <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">Cambio</label>
             <input type="text" id="" class="form-control" value="${cls_general.val_price(change, 2, 1, 1)}" readonly>
@@ -1217,7 +1237,7 @@ class class_charge{
 
     document.getElementById('inspectModal_content').innerHTML = content;
     document.getElementById('inspectModal_footer').innerHTML = footer;
-    document.getElementById('inspectModal_title').innerHTML = 'Inspeccionar Venta';
+    document.getElementById('inspectModal_title').innerHTML = 'Inspeccionar Venta ' + number;
 
     document.getElementById('btn_chargeCreditnote').addEventListener('click', () => { cls_charge.loginuser_creditnote(charge_slug); });
     document.getElementById('btn_chargePrint').addEventListener('click', () => { cls_charge.loginuser_reprint(charge_slug); });
@@ -1230,7 +1250,7 @@ class class_charge{
     const modal = new bootstrap.Modal('#login_creditnoteModal', {})
     modal.show();
     setTimeout(() => {
-      document.getElementById('useremailCreditnote').focus();
+      document.getElementById('logincode').focus();
     }, 1000);
   }
   checklogin_creditnote() {
@@ -1304,7 +1324,7 @@ class class_charge{
     const modal = new bootstrap.Modal('#print_chargeModal', {})
     modal.show();
     setTimeout(() => {
-      document.getElementById('useremailReprint').focus();
+      document.getElementById('logincode_reprint').focus();
     }, 1000);
   }
   checklogin_reprint() {
@@ -1380,6 +1400,25 @@ class class_charge{
       cls_general.async_laravel_request(url, method, funcion, body);
     });
   }
+  set_tip(suggested_tip,tip) {
+    if (tip === 0) {
+      if (isNaN(suggested_tip) || suggested_tip > 99) {
+        cls_general.shot_toast_bs('Debe ingresar una tasa valida.'); return false;
+      }
+      tip = (suggested_tip * cls_charge.charge_request.gross_total) / 100;
+      tip = cls_general.val_price(tip);
+    }
+    tip = parseFloat(tip);
+    cls_charge.charge_request.total = parseFloat(cls_charge.charge_request.gross_total) + tip
+    cls_charge.tip = tip;
+    document.getElementById('sp_tip').innerHTML = 'B/. ' + cls_general.val_price(tip);
+    document.getElementById('sp_total').innerHTML = 'B/. ' + cls_general.val_price(cls_charge.charge_request.total);
+
+    cls_payment.payment = [];
+    cls_payment.giftcard = [];
+    cls_payment.render();
+  }
+
 
   async api_login(){
     var url = cls_charge.api_url + 'APIlogin';
@@ -1947,12 +1986,8 @@ class class_command{
   }
 
 
-
   generate_articleselected(command_list) {
-    // var content = '<ul class="list-group">';
     var content = '<div class="accordion" id="">';
-    
-
     var raw_price = [];
     command_list.map((article, index) => {
       var splited_option = article.option.split(',');
@@ -1975,43 +2010,28 @@ class class_command{
       content_recipe += '</ul>';
 
       content += `
-      <div class="accordion-item" >
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${index}">
-            ${article.quantity} - ${article.article_description} ${article.presentation_value}<br/> ${option} <span style="float: right; width: 30%" class="text-truncate">B/ ${cls_general.val_price(article.price, 2, 1, 1)}</span>
-          </button>
-        </h2>
-        <div id="${index}" class="accordion-collapse collapse">
-          <div class="accordion-body">
-            ${content_recipe}
+        <div class="accordion-item" >
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${index}">
+              ${article.quantity} - ${article.article_description} ${article.presentation_value}<br/> ${option} <span style="float: right; width: 30%" class="text-truncate">B/ ${cls_general.val_price(article.price, 2, 1, 1)}</span>
+            </button>
+          </h2>
+          <div id="${index}" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              ${content_recipe}
+            </div>
           </div>
-        </div>
-        <br/>
-        <div class="text-center">
-          <button class="btn btn-warning" type="button" onclick="cls_command.delete_articleselected(${index})">
-            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
-              <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"/>
-            </svg>
-          </button>
-        </div>
-      </li>
+          <br/>
+          <div class="text-center">
+            <button class="btn btn-warning" type="button" onclick="cls_command.delete_articleselected(${index})">
+              <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"/>
+              </svg>
+            </button>
+          </div>
+        </li>
       `;
 
-
-      // content += `
-      // <li class="list-group-item cursor_pointer text-truncate">
-      //   ${article.quantity} - ${article.article_description} ${article.presentation_value}<br/> ${option} <span style="float: right; width: 30%" class="text-truncate">B/ ${cls_general.val_price(article.price, 2, 1, 1)}</span>
-      //   <br/>
-      //   ${content_recipe}
-      //   <div class="text-center">
-      //     <button class="btn btn-warning" type="button" onclick="cls_command.delete_articleselected(${index})">
-      //       <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
-      //         <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"/>
-      //       </svg>
-      //     </button>
-      //   </div>
-      // </li>
-      // `;
       //[{PRICE,discount,tax, quantity}]
       raw_price.push({ price: article.price, discount: article.discount_rate, tax: article.tax_rate, quantity: article.quantity })
 
@@ -2254,7 +2274,7 @@ class class_command{
     const modal = new bootstrap.Modal('#login_cancelModal', {})
     modal.show();
     setTimeout(() => {
-      document.getElementById('useremailCancel').focus();
+      document.getElementById('logincode_nullcommand').focus();
     }, 1000);
   }
   checklogin_cancel() {
@@ -2305,75 +2325,56 @@ class class_command{
       },
       dangerMode: true,
     })
-      .then((ans) => {
-        switch (ans) {
-          case 'si':
-            var url = '/command/' + commanddata_id + '/cancel';
-            var method = 'PUT';
-            var body = JSON.stringify({ a: 1 });;
-            var funcion = function (obj) {
-              if (obj.status === 'success') {
+    .then((ans) => {
+      switch (ans) {
+        case 'si':
+          var url = '/command/' + commanddata_id + '/cancel';
+          var method = 'PUT';
+          var body = JSON.stringify({ a: 1 });;
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              var content_command = cls_command.generate_articleprocesed(obj.data.command_procesed)
+              document.getElementById('container_commandlist').innerHTML = content_command.content;
+              let price = cls_general.calculate_sale(content_command.price)
+              document.getElementById('sp_gross').innerHTML = 'B/. ' + cls_general.val_price(price.gross_total, 2, 1, 1);
+              document.getElementById('sp_discount').innerHTML = 'B/. ' + cls_general.val_price(price.discount, 2, 1, 1);
+              document.getElementById('sp_subtotal').innerHTML = 'B/. ' + cls_general.val_price(price.subtotal, 2, 1, 1);
+              document.getElementById('sp_tax').innerHTML = 'B/. ' + cls_general.val_price(price.tax, 2, 1, 1);
+              document.getElementById('sp_total').innerHTML = 'B/. ' + cls_general.val_price(price.total, 2, 1, 1);
 
-                
-
-                var content_command = cls_command.generate_articleprocesed(obj.data.command_procesed)
-                document.getElementById('container_commandlist').innerHTML = content_command.content;
-                let price = cls_general.calculate_sale(content_command.price)
-                document.getElementById('sp_gross').innerHTML = 'B/. ' + cls_general.val_price(price.gross_total, 2, 1, 1);
-                document.getElementById('sp_discount').innerHTML = 'B/. ' + cls_general.val_price(price.discount, 2, 1, 1);
-                document.getElementById('sp_subtotal').innerHTML = 'B/. ' + cls_general.val_price(price.subtotal, 2, 1, 1);
-                document.getElementById('sp_tax').innerHTML = 'B/. ' + cls_general.val_price(price.tax, 2, 1, 1);
-                document.getElementById('sp_total').innerHTML = 'B/. ' + cls_general.val_price(price.total, 2, 1, 1);
-
-                cls_charge.charge_request = { request_id: obj.data.request_info.ai_request_id, gross_total: price.gross_total, subtotal: price.subtotal, total: price.total, discount: price.discount, tax: price.tax };
-
-
-
-
-
-
-              } else {
-                // document.getElementById('commandList').innerHTML = content_commandList;
-                // document.getElementById('requestTotal').innerHTML = content_requestTotal;
-
-                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-              }
+              cls_charge.charge_request = { request_id: obj.data.request_info.ai_request_id, gross_total: price.gross_total, subtotal: price.subtotal, total: price.total, discount: price.discount, tax: price.tax };
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
             }
-            cls_general.async_laravel_request(url, method, funcion, body);
-            break;
-          case 'solo':
-            // var content_commandList = document.getElementById('commandList').innerHTML;
-            // var content_requestTotal = document.getElementById('requestTotal').innerHTML;
-
-            // document.getElementById('commandList').innerHTML = '<img src="attached/image/loading.gif" width="30px"></img>';
-            // document.getElementById('requestTotal').innerHTML = '<img src="attached/image/loading.gif" width="10px"></img>';
-
-            var url = '/command/' + commanddata_id + '/cancel';
-            var method = 'PUT';
-            var body = JSON.stringify({ a: 0 });;
-            var funcion = function (obj) {
-              if (obj.status === 'success') {
-
-                cls_command.command_procesed = obj.data.command_procesed;
-                var command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
-                var total_sale = cls_general.calculate_sale(command_procesed.price);
-
-                document.getElementById('commandList').innerHTML = command_procesed.content;
-                document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
-              } else {
-                document.getElementById('commandList').innerHTML = content_commandList;
-                document.getElementById('requestTotal').innerHTML = content_requestTotal;
-
-                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-              }
+          }
+          cls_general.async_laravel_request(url, method, funcion, body);
+        break;
+        case 'solo':
+          var url = '/command/' + commanddata_id + '/cancel';
+          var method = 'PUT';
+          var body = JSON.stringify({ a: 0 });;
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              var content_command = cls_command.generate_articleprocesed(obj.data.command_procesed)
+              document.getElementById('container_commandlist').innerHTML = content_command.content;
+              let price = cls_general.calculate_sale(content_command.price)
+              document.getElementById('sp_gross').innerHTML = 'B/. ' + cls_general.val_price(price.gross_total, 2, 1, 1);
+              document.getElementById('sp_discount').innerHTML = 'B/. ' + cls_general.val_price(price.discount, 2, 1, 1);
+              document.getElementById('sp_subtotal').innerHTML = 'B/. ' + cls_general.val_price(price.subtotal, 2, 1, 1);
+              document.getElementById('sp_tax').innerHTML = 'B/. ' + cls_general.val_price(price.tax, 2, 1, 1);
+              document.getElementById('sp_total').innerHTML = 'B/. ' + cls_general.val_price(price.total, 2, 1, 1);
+              cls_charge.charge_request = { request_id: obj.data.request_info.ai_request_id, gross_total: price.gross_total, subtotal: price.subtotal, total: price.total, discount: price.discount, tax: price.tax };
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
             }
-            cls_general.async_laravel_request(url, method, funcion, body);
-            break;
-          case 'no':
+          }
+          cls_general.async_laravel_request(url, method, funcion, body);
+          break;
+        case 'no':
 
-            break;
-        }
-      });
+          break;
+      }
+    });
   }
 
 
@@ -3011,7 +3012,7 @@ class class_payment{
     })
 
     if (parseFloat(cls_charge.charge_request.total) > received) {
-      var diference = (parseFloat(cls_charge.charge_request.total) - parseFloat(received)).toFixed(2);
+      var diference = cls_general.val_price(parseFloat(cls_charge.charge_request.total) - parseFloat(received));
       var change = 0;
     }else{
       if (parseFloat(cls_charge.charge_request.total) === received) {
@@ -3019,7 +3020,7 @@ class class_payment{
         var diference = 0;
       }else{
         var diference = 0;
-        var change = (parseFloat(received) - parseFloat(cls_charge.charge_request.total)).toFixed(2);
+        var change = cls_general.val_price(parseFloat(received) - parseFloat(cls_charge.charge_request.total));
       }
     }
     var content = `
@@ -3067,7 +3068,7 @@ class class_payment{
     }
     var url = '/paydesk/';
     var method = 'POST';
-    var body = JSON.stringify({ a: request_slug, b: raw_payment, c: cls_payment.giftcard });
+    var body = JSON.stringify({ a: request_slug, b: raw_payment, c: cls_payment.giftcard, d: cls_charge.tip });
     var funcion = function (obj) {
       if (obj.status === 'success') {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
@@ -3769,7 +3770,8 @@ class class_cashregister{
         document.getElementById('span_giftcardactive').innerHTML    = '<p>Cupones Activos</p>B/ ' + cls_general.val_price(activeGiftcard, 2, 1, 1);
         document.getElementById('span_giftcardinactive').innerHTML  = '<p>Cupones inactivos</p>B/ ' + cls_general.val_price(inactiveGiftcard, 2, 1, 1);
 
-        document.getElementById('span_totaldiscount').innerHTML   = 'B/ ' + cls_general.val_price(obj.data.cashregister.discount, 2, 1, 1);
+        document.getElementById('span_totaltip').innerHTML = 'B/ ' + cls_general.val_price(obj.data.cashregister.tip, 2, 1, 1);
+        document.getElementById('span_totaldiscount').innerHTML = 'B/ ' + cls_general.val_price(obj.data.cashregister.discount, 2, 1, 1);
         document.getElementById('span_totalnull').innerHTML       = 'B/ ' + cls_general.val_price(obj.data.cashregister.canceled, 2, 1, 1);
         document.getElementById('span_totalcashback').innerHTML   = 'B/ ' + cls_general.val_price(obj.data.cashregister.cashback, 2, 1, 1);
         document.getElementById('span_grosssale').innerHTML = 'B/ ' + cls_general.val_price(obj.data.cashregister.grosssale, 2, 1, 1);
@@ -3903,6 +3905,10 @@ class class_cashregister{
             <tr>
               <th>Anulado</th>
               <td>${cls_general.val_price(cashregister.tx_cashregister_canceled, 2, 1, 1) }</td>
+            </tr>
+            <tr>
+              <th>Propina</th>
+              <td>${cls_general.val_price(cashregister.tx_cashregister_tip, 2, 1, 1) }</td>
             </tr>
             <tr>
               <th colspan="2">DESGLOSE ITBMS</th>
