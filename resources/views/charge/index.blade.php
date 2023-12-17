@@ -193,7 +193,7 @@
                     </tbody>
                     <tfoot>
                       <tr class="table-success">
-                        <td>Propinas:  <span id="span_totaltip"></span>Propinas:  <span id="span_totaltip"></span></td>
+                        <td>Propinas:  <span id="span_totaltip"></span></td>
                         <td>Descuentos:  <span id="span_totaldiscount"></span></td>
                         <td>Devoluciones:  <span id="span_totalcashback"></span></td>
                         <td>Anulaciones:  <span id="span_totalnull"></span></td>
