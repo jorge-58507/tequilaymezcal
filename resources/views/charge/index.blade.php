@@ -742,6 +742,7 @@
         if (obj.status === 'success') {
           document.getElementById('useremailCreditnote').value = obj.data.email;
           document.getElementById('userpasswordCreditnote').value = obj.data.password;
+          document.getElementById('logincode').value = '';
           cls_charge.checklogin_creditnote();
         } else {
           cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });

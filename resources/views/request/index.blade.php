@@ -216,8 +216,8 @@
       var body = '';
       var funcion = function (obj) {
         if (obj.status === 'success') {
-          document.getElementById('useremailCreditnote').value = obj.data.email;
-          document.getElementById('userpasswordCreditnote').value = obj.data.password;
+          document.getElementById('useremailCancel').value = obj.data.email;
+          document.getElementById('userpasswordCancel').value = obj.data.password;
           cls_command.checklogin_cancel();
         } else {
           cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });

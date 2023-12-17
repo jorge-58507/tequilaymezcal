@@ -163,8 +163,8 @@ class chargeController extends Controller
         return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
 
-    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats){
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats,$tip){
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -376,8 +376,8 @@ class chargeController extends Controller
         $printer -> close();
     }
 
-    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats){
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats, $tip){
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -648,9 +648,9 @@ class chargeController extends Controller
         return [
             'payment' => $raw_payment, //array
             'returnpayment' => $raw_canceled, //array
-            'grosssale'=> $gross_sale - tip,
-            'netsale' => round($gross_sale - $ttl_discount - $cashback - $canceled - tip,2),
-            'realsale' => $gross_sale - $ttl_discount - tip,
+            'grosssale'=> $gross_sale - $ttl_tip,
+            'netsale' => round($gross_sale - $ttl_discount - $cashback - $canceled - $ttl_tip,2),
+            'realsale' => $gross_sale - $ttl_discount - $ttl_tip,
             'nontaxable' => $nontaxable,
             'returnnontaxable' => $nc_nontaxable,
             'taxable' => $taxable,
@@ -750,7 +750,7 @@ class chargeController extends Controller
 
     public function print_test(){
         
-        $connector = new NetworkPrintConnector("192.168.3.100", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */

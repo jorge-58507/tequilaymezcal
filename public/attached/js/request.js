@@ -1328,7 +1328,7 @@ class class_command{
     const modal = new bootstrap.Modal('#login_cancelModal', {})
     modal.show();
     setTimeout(() => {
-      document.getElementById('useremailCancel').focus();
+      document.getElementById('logincode').focus();
     }, 1000);
   }
   checklogin_cancel() {

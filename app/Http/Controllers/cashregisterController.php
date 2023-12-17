@@ -261,7 +261,7 @@ class cashregisterController extends Controller
 			}
 		}
 
-        $connector = new NetworkPrintConnector("192.168.3.100", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
         
         /* Start the printer */
@@ -327,6 +327,7 @@ class cashregisterController extends Controller
         $printer -> text("Devolucion: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_returntaxable'] + $rs_cashregister['cashregister']['tx_cashregister_returnnontaxable'],2)."\n");
         $printer -> text("Venta Neta: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_netsale'],2)."\n");
         $printer -> text("Anulado: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_canceled'],2)."\n");
+        $printer -> text("Propina: B/ ".number_format($rs_cashregister['cashregister']['tx_cashregister_tip'],2)."\n");
         
         $printer -> feed(1);
 
@@ -356,7 +357,7 @@ class cashregisterController extends Controller
         $cashregisterController = new cashregisterController;
 		$rs_cashregister = $cashregisterController->getit($cashregister_id);
 
-        $connector = new NetworkPrintConnector("192.168.3.100", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
         
         /* Start the printer */
