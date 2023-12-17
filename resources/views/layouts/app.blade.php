@@ -8,7 +8,7 @@
         <title>@yield('title') - Tequila y Mezcal</title>
 
         <!-- Fonts -->
-        <link rel="icon" href="{{ asset('images/favicon.ico') }}">
+        <link rel="icon" href="{{ asset('/attached/image/favicon.ico') }}">
         <link rel="stylesheet" href="https://fonts.bunny.net/css2?family=Nunito:wght@400;600;700&display=swap">
         <link rel="stylesheet" href="{{ asset('attached/css/bootstrap.css') }}">
         <link rel="stylesheet" href="{{ asset('attached/css/mp.css') }}">
