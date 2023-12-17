@@ -86,27 +86,54 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div id="" class="modal-body">
-          <p>Ingrese una contrase&ntilde;a de administrador o supervisor.</p>
-          <div class="form-group row">
-              <label for="useremailCancel" class="col-md-4 col-form-label text-md-right">{{ __('Correo E.') }}</label>
-              <div class="col-md-6 mb-3">
-                  <input id="hd_command_cancel" type="hidden" class="form-control" required autocomplete="email" autofocus>
-                  <input id="useremailCancel" type="email" class="form-control" name="useremailCancel" required autocomplete="email" autofocus>
+          <div id="container_form_logincode">
+            <form method="POST" action="" id="form_logincode">
+              @csrf
+              <div class="form-group row">
+                <label for="logincode" class="col-md-4 col-form-label text-md-right">{{ __('Acceso') }}</label>
+                <div class="col-md-6 mb-3">
+                  <input id="logincode" type="password" class="form-control" name="logincode" value="" required autofocus>
+                </div>
               </div>
-          </div>
-          <div class="form-group row">
-              <label for="userpasswordCancel" class="col-md-4 col-form-label text-md-right">{{ __('Contraseña') }}</label>
-              <div class="col-md-6 mb-3">
-                  <input id="userpasswordCancel" type="password" class="form-control" name="userpasswordCancel" required autocomplete="current-password">
-              </div>
-          </div>
-          <div class="form-group row mb-0">
-              <div class="col-md-12 text-center">
-                  <button type="button" id="btn_loginuser_cancel" class="btn tmgreen_bg">
-                      {{ __('Ingresar') }}
+              <div class="form-group row mb-0">
+                <div class="col-md-12 text-center">
+                  <button type="submit" id="submit_login" class="btn tmgreen_bg" style="display: none">
+                    {{ __('Ingresar') }}
                   </button>
+                </div>
               </div>
+            </form>
           </div>
+          <div class="form-group row mb-3">
+            <div class="col-md-12 text-center">
+              <button type="button" id="bn_toggle_formlogin" class="btn btn-secondary">
+                {{ __('Ingreso Manual') }}
+              </button>
+            </div>
+          </div>
+          <form id="container_loginform" onsubmit="event.preventDefault();" style="display: none">
+            <p>Ingrese una contrase&ntilde;a de administrador o supervisor.</p>
+            <div class="form-group row">
+                <label for="useremailCancel" class="col-md-4 col-form-label text-md-right">{{ __('Correo E.') }}</label>
+                <div class="col-md-6 mb-3">
+                    <input id="hd_command_cancel" type="hidden" class="form-control" required autocomplete="email" autofocus>
+                    <input id="useremailCancel" type="email" class="form-control" name="useremailCancel" required autocomplete="email" autofocus>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="userpasswordCancel" class="col-md-4 col-form-label text-md-right">{{ __('Contraseña') }}</label>
+                <div class="col-md-6 mb-3">
+                    <input id="userpasswordCancel" type="password" class="form-control" name="userpasswordCancel" required autocomplete="current-password">
+                </div>
+            </div>
+            <div class="form-group row mb-0">
+                <div class="col-md-12 text-center">
+                    <button type="button" id="btn_loginuser_cancel" class="btn tmgreen_bg">
+                        {{ __('Ingresar') }}
+                    </button>
+                </div>
+            </div>
+          </form>
         </div>
         <div id="" class="modal-footer">
         </div>
@@ -182,6 +209,31 @@
 		});
 
     document.getElementById('btn_loginuser_cancel').addEventListener('click',() => { cls_command.checklogin_cancel(); });
+    document.getElementById('form_logincode').addEventListener("submit", (e) => {
+      e.preventDefault();
+      var url = '/logincode/'+document.getElementById('logincode').value;
+      var method = 'GET';
+      var body = '';
+      var funcion = function (obj) {
+        if (obj.status === 'success') {
+          document.getElementById('useremailCreditnote').value = obj.data.email;
+          document.getElementById('userpasswordCreditnote').value = obj.data.password;
+          cls_command.checklogin_cancel();
+        } else {
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+      cls_general.async_laravel_request(url, method, funcion, body);
+
+    });
+
+    document.getElementById('bn_toggle_formlogin').addEventListener("click", () => {
+      $("#container_loginform").toggle();
+      $("#container_form_logincode").toggle();
+      if (document.getElementById('container_form_logincode').style.display === 'block') {
+        document.getElementById('logincode').focus();
+      }
+    });
 
 	</script>
 	{{-- ##############    JQUERY   ############### --}}

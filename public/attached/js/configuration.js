@@ -2650,6 +2650,11 @@ class class_user {
               ${option_role}
             </select>
           </div>
+          <div class="col-12  col-sm-6">
+            <label for="userLogincode" class="form-label">Tarjeta</label>
+            <input type="password" class="form-control" id="userLogincode" value="">
+          </div>
+
         </div>
       `;
     var content_bottom = `          
@@ -2672,6 +2677,7 @@ class class_user {
     var pass1 = document.getElementById('userPassword1').value;
     var pass2 = document.getElementById('userPassword2').value;
     var role = document.getElementById('userRole').value;
+    var logincode = document.getElementById('userLogincode').value;
 
     if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(email) === 0 || cls_general.is_empty_var(pass1) === 0 || cls_general.is_empty_var(pass2) === 0 || cls_general.is_empty_var(role) === 0) {
       cls_general.shot_toast_bs("Debe ingresar todos los campos.", { bg: 'text-bg-warning' }); return false;
@@ -2682,10 +2688,13 @@ class class_user {
     if (pass1 != pass2) {
       cls_general.shot_toast_bs("Debe repetir la contrase&ntilde;a.", { bg: 'text-bg-warning' }); return false;
     }
-
+    
+    if (cls_general.is_empty_var(logincode) === 0 || logincode.length != 10) {
+      cls_general.shot_toast_bs("Debe un codigo de acceso valido.", { bg: 'text-bg-warning' }); return false;
+    }
     var url = '/user/';
     var method = 'POST';
-    var body = JSON.stringify({ a: name, b: email, c: pass1, d: role  });
+    var body = JSON.stringify({ a: name, b: email, c: pass1, d: role, e: logincode  });
     var funcion = function (obj) {
       if (obj.status === 'success') {
         cls_user.render();
@@ -2740,6 +2749,7 @@ class class_user {
     var role_list = cls_role.role_active
     role_list.map(x => option_role += `<option value="${x.id}">${x.description} </option>`)
 
+    var logincode = (cls_general.is_empty_var(user_info.data.logincode) === 1) ? user_info.data.logincode : '';
     var content = `
       <div class="row">
         <div class="col-sm-12">
@@ -2750,7 +2760,7 @@ class class_user {
             </div>
             <div class="col-sm-6">
               <label for="userEmail" class="form-label">Correo E.</label>
-              <input type="text" class="form-control" id="userEmail" value="${user_info.data.email}" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 150, toast = 0)" onkeyup="cls_general.limitText(this, 150, toast = 0)">
+              <input type="text" class="form-control" id="userEmail" value="${user_info.data.email}" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 150, toast = 0)" onblur="cls_general.limitText(this, 150, toast = 0)">
             </div>
             <div class="col-sm-6">
               <div class="form-check form-switch py-3">
@@ -2768,7 +2778,11 @@ class class_user {
               <label for="userPasswordS" class="form-label">Repetir Contrase&ntilde;a</label>
               <input type="text" class="form-control" id="userPasswordS" value="">
             </div>
-            <div class="col-sm-4 pt-2">
+            <div class="col-sm-4">
+              <label for="userLogincode" class="form-label">C&oacute;digo</label>
+              <input type="text" class="form-control" id="userLogincode" placeholder="${logincode}" onkeyup="cls_general.limitText(this, 10, toast = 0)">
+            </div>
+            <div class="col-12 pt-2 text-center">
               <button type="button" class="btn btn-primary" id="upd_password">Cambiar Contrase&ntilde;a</button>              
             </div>
           </div>
@@ -2816,7 +2830,6 @@ class class_user {
     var email = document.getElementById('userEmail').value;
     var status = (document.getElementById('userStatus').checked === true) ? 1 : 0;
 
-
     if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(email) === 0) {
       cls_general.shot_toast_bs("Debe ingresar todos los campos.", { bg: 'text-bg-warning' }); return false;
     }
@@ -2825,7 +2838,7 @@ class class_user {
     }
 
     var url = '/user/' + user_id; var method = 'PUT';
-    var body = JSON.stringify({ a: name, b: email, c: status });
+    var body = JSON.stringify({ a: name, b: email, c: status});
     var funcion = function (obj) {
       if (obj.status != 'failed') {
         cls_user.render();
@@ -2842,6 +2855,7 @@ class class_user {
 
     var pass1 = document.getElementById('userPasswordF').value;
     var pass2 = document.getElementById('userPasswordS').value;
+    var logincode = document.getElementById('userLogincode').value;
 
     if (cls_general.is_empty_var(pass1) === 0 || cls_general.is_empty_var(pass2) === 0) {
       cls_general.shot_toast_bs("Debe ingresar la contrase&ntilde;a dos veces.", { bg: 'text-bg-warning' }); return false;
@@ -2850,12 +2864,23 @@ class class_user {
       cls_general.shot_toast_bs("Debe repetir la contrase&ntilde;a.", { bg: 'text-bg-warning' }); return false;
     }
 
+    if (cls_general.is_empty_var(logincode) === 1) {
+      if (logincode.length != 10) {
+        cls_general.shot_toast_bs("Debe ingresar un codigo de acceso valido.", { bg: 'text-bg-warning' }); return false;
+      }
+    }
+
 
     var url = '/user_password/' + user_id; var method = 'PUT';
-    var body = JSON.stringify({ a: pass1 });
+    var body = JSON.stringify({ a: pass1, b: logincode });
     var funcion = function (obj) {
       if (obj.status != 'failed') {
         cls_general.shot_toast_bs(obj.message);
+
+        const modal_win = bootstrap.Modal.getInstance('#userModal');
+        if (modal_win) {
+          modal_win.hide();
+        }
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }

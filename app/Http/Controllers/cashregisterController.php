@@ -68,6 +68,7 @@ class cashregisterController extends Controller
         $tm_cashregister->tx_cashregister_tax = $cashregister['tax'];
         $tm_cashregister->tx_cashregister_returntax = $cashregister['returntax'];
         $tm_cashregister->tx_cashregister_discount = $cashregister['discount'];
+        $tm_cashregister->tx_cashregister_tip = $cashregister['tip'];
         $tm_cashregister->tx_cashregister_cashback = $cashregister['cashback'];
         $tm_cashregister->tx_cashregister_canceled = $cashregister['canceled'];
         $tm_cashregister->tx_cashregister_cashoutputin = $cashregister['cashoutput']['in'];
@@ -172,7 +173,6 @@ class cashregisterController extends Controller
 
         $rs_giftcard = tm_giftcard::where('giftcard_ai_cashregister_id',$cashregister_id)->get();
 
-        // $rs_charge = tm_charge::select()->where('charge_ai_cashregister_id',$cashregister_id)->get();
         $rs_charge = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable','tm_charges.tx_charge_taxable','tm_charges.tx_charge_discount','tm_charges.tx_charge_tax','tm_charges.tx_charge_total','tm_charges.tx_charge_change','tm_charges.created_at')->join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('charge_ai_cashregister_id',$cashregister_id)
         ->orderby('tm_charges.created_at')->get();
 

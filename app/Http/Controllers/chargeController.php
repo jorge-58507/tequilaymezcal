@@ -81,12 +81,13 @@ class chargeController extends Controller
     public function store(Request $request)
     {
         if ( auth()->user()->hasAnyRole(['admin','super','cashier']) != true){ 
-            return redirect() -> route('request.index');
+            return response()->json(['status'=>'failed','message'=>'Usuario no autorizado.']);
         }
 
         $request_slug = $request->input('a');
         $raw_payment = $request->input('b');
         $raw_giftcard = $request->input('c');
+        $tip = $request->input('d');
 
         $qry_request = tm_request::where('tx_request_slug',$request_slug);
         if ($qry_request->count() < 1) {
@@ -119,7 +120,7 @@ class chargeController extends Controller
             return response()->json(['status'=>'failed','message'=>'Faltan pagos.']);
         }
 
-        $change = ($price_sale['total'] === $received) ? 0.00 : $received - $price_sale['total'];
+        $change = ($price_sale['total'] === $received) ? 0.00 : $received - $price_sale['total'] - $tip;
 
         $number = tm_charge::count() + 55;
         $user = $request->user();
@@ -134,6 +135,7 @@ class chargeController extends Controller
         $tm_charge->tx_charge_tax           = $price_sale['tax'];
         $tm_charge->tx_charge_total         = $price_sale['total'];
         $tm_charge->tx_charge_change        = $change;
+        $tm_charge->tx_charge_tip           = $tip;
         $tm_charge->tx_charge_status        = 1;
         $tm_charge->tx_charge_slug          = $charge_slug;
         $tm_charge->save();
@@ -156,13 +158,13 @@ class chargeController extends Controller
         }else{
             $birthday_congrats = 0;
         }
-        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats);
+        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip']);
 
         return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
 
     public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats){
-        $connector = new NetworkPrintConnector("192.168.3.100", 9100);
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -255,7 +257,7 @@ class chargeController extends Controller
         /* Cut the receipt */
         $printer -> cut();
 
-        // ############ RECIBO  ############
+                                                // ############ RECIBO  ############
 
         /* Start the printer */
         $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
@@ -308,16 +310,16 @@ class chargeController extends Controller
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
 
-                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
-                foreach ($raw_recipe as $ingredient) {
-                    foreach ($ingredient as $k => $formule) {
-                        $splited_formule = explode(",",$formule);
-                        if ($splited_formule[3] === 'show') {
-                            $ing = explode(")",$k,2);
-                            $printer -> text('   -'.$ing[1]."\n");
-                        }
-                    }
-                }
+                // $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+                // foreach ($raw_recipe as $ingredient) {
+                //     foreach ($ingredient as $k => $formule) {
+                //         $splited_formule = explode(",",$formule);
+                //         if ($splited_formule[3] === 'show') {
+                //             $ing = explode(")",$k,2);
+                //             $printer -> text('   -'.$ing[1]."\n");
+                //         }
+                //     }
+                // }
                 if (!empty($raw_item[$key+1])) {
                     if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
                         $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
@@ -337,6 +339,7 @@ class chargeController extends Controller
         /* Tax and total */
         $printer -> text("Descuento. B/ ".number_format($discount,2)."\n");
         $printer -> text("ITBMS. B/ ".number_format($tax,2)."\n");
+        $printer -> text("Propina B/ ".number_format($tip,2)."\n");
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("TOTAL. B/ ".number_format($total,2)."\n");
         $printer -> selectPrintMode();
@@ -374,7 +377,7 @@ class chargeController extends Controller
     }
 
     public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats){
-        $connector = new NetworkPrintConnector("192.168.3.100", 9100);
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -427,16 +430,16 @@ class chargeController extends Controller
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
 
-                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
-                foreach ($raw_recipe as $ingredient) {
-                    foreach ($ingredient as $k => $formule) {
-                        $splited_formule = explode(",",$formule);
-                        if ($splited_formule[3] === 'show') {
-                            $ing = explode(")",$k,2);
-                            $printer -> text('   -'.$ing[1]."\n");
-                        }
-                    }
-                }
+                // $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+                // foreach ($raw_recipe as $ingredient) {
+                //     foreach ($ingredient as $k => $formule) {
+                //         $splited_formule = explode(",",$formule);
+                //         if ($splited_formule[3] === 'show') {
+                //             $ing = explode(")",$k,2);
+                //             $printer -> text('   -'.$ing[1]."\n");
+                //         }
+                //     }
+                // }
                 if (!empty($raw_item[$key+1])) {
                     if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
                         $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
@@ -458,6 +461,7 @@ class chargeController extends Controller
         /* Tax and total */
         $printer -> text("Descuento. B/ ".number_format($discount,2)."\n");
         $printer -> text("ITBMS. B/ ".number_format($tax,2)."\n");
+        $printer -> text("Propina B/ ".number_format($tip,2)."\n");
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("TOTAL. B/ ".number_format($total,2)."\n");
         $printer -> selectPrintMode();
@@ -511,16 +515,14 @@ class chargeController extends Controller
         return response()->json(['status'=>'success','message'=>'','data'=>['charge'=>$rs['charge'], 'payment'=>$rs['payment'], 'article'=>$rs['article']]]);
     }
     public function filter(Request $request, $from,$to,$limit){
-        // $str = $request->input('a');
-        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.updated_at','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at')
+        $rs_canceledrequest =   tm_request::select('users.name as user_name','tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.updated_at','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at')
         ->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')
         ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
         ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)
+        ->join('users','users.id','tm_charges.charge_ai_user_id')
         ->where('tm_charges.created_at','>=',date('Y-m-d H:i:s',strtotime($from." 00:00:01")))
         ->where('tm_charges.created_at','<=',date('Y-m-d H:i:s',strtotime($to." 23:59:00")))
-        // ->where('tm_requests.tx_request_title','LIKE',"%{$str}%")
         ->orderby('tm_charges.created_at','DESC')
-        // ->limit($limit)
         ->get();
         return response()->json(['status'=>'success','message'=>'','data'=>['canceled'=>$rs_canceledrequest]]);
     }
@@ -531,7 +533,7 @@ class chargeController extends Controller
         'users.name as user_name',
         'tm_charges.ai_charge_id','tm_charges.charge_ai_user_id','tm_charges.charge_ai_cashregister_id','tm_charges.charge_ai_paydesk_id','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable',
         'tm_charges.tx_charge_taxable','tm_charges.tx_charge_discount','tm_charges.tx_charge_tax','tm_charges.tx_charge_total','tm_charges.tx_charge_change',
-        'tm_charges.tx_charge_status','tm_charges.tx_charge_ticket','tm_charges.tx_charge_note','tm_charges.tx_charge_slug','tm_charges.created_at')
+        'tm_charges.tx_charge_status','tm_charges.tx_charge_ticket','tm_charges.tx_charge_note','tm_charges.tx_charge_slug','tm_charges.created_at','tm_charges.tx_charge_tip')
         ->join('tm_requests','tm_requests.request_ai_charge_id','tm_charges.ai_charge_id')
         ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')
         ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
@@ -562,6 +564,7 @@ class chargeController extends Controller
         $taxable = 0;
         $tax = 0;
         $ttl_discount=0; 
+        $ttl_tip = 0;
         $i=0;
         $raw_ffid = [];
         foreach ($rs_charge as $charge) {
@@ -581,6 +584,7 @@ class chargeController extends Controller
                 $gross_sale += $charge['tx_payment_amount'];
             }
             if (!in_array($charge['ai_charge_id'],$raw_ffid)) {
+                $ttl_tip += $charge['tx_charge_tip'];
                 $ttl_discount += $charge['tx_charge_discount'];
                 $nontaxable += $charge['tx_charge_nontaxable'];
                 $taxable += $charge['tx_charge_taxable'];
@@ -644,15 +648,16 @@ class chargeController extends Controller
         return [
             'payment' => $raw_payment, //array
             'returnpayment' => $raw_canceled, //array
-            'grosssale'=> $gross_sale,
-            'netsale' => round($gross_sale - $ttl_discount - $cashback - $canceled,2),
-            'realsale' => $gross_sale - $ttl_discount,
+            'grosssale'=> $gross_sale - tip,
+            'netsale' => round($gross_sale - $ttl_discount - $cashback - $canceled - tip,2),
+            'realsale' => $gross_sale - $ttl_discount - tip,
             'nontaxable' => $nontaxable,
             'returnnontaxable' => $nc_nontaxable,
             'taxable' => $taxable,
             'returntaxable' => $nc_taxable,
             'tax' => $tax,
             'returntax' => $nc_tax,
+            'tip' => $ttl_tip,
             'discount' => $ttl_discount,
             'quantitydoc' => $i,
             'returnquantitydoc' => $ite,

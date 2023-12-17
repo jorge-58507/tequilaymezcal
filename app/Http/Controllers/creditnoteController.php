@@ -320,9 +320,9 @@ class creditnoteController extends Controller
     }
 
     public function nullify(Request $request, $charge_slug){
-        if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
-            return redirect() -> route('request.index');
-        }
+        // if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
+        //     return redirect() -> route('request.index');
+        // }
         $charge_slug = $request->input('a');
         $qry_charge = tm_charge::where('tx_charge_slug',$charge_slug);
         if ($qry_charge->count() < 1) {

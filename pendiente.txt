@@ -4,7 +4,6 @@ REGISTRO DE ASISTENCIA 200/400 => crear interfaz parra marcaciones, interfaz par
 Login de usuario 100 => crear tabla donde se almacena el codigo con el usuario y la contraseña en texto plano
 
 
-
 Las felicitaciones en la pantalla al seleccionar el cliente en la comanda y en el tickete
 boton para anular pedidos online
 mostrar los pedidos online en la àntalla de request
