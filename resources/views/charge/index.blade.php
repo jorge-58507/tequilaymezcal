@@ -732,7 +732,7 @@
     document.getElementById('btn_loginuser_creditnote').addEventListener('click',() => { cls_charge.checklogin_creditnote(); });
     document.getElementById('btn_loginuser_cancel').addEventListener('click',() => { cls_command.checklogin_cancel(); });
 
-    // ###### LOGI PARA NOTAS DE CREDITO
+    // ###### LOGIN PARA NOTAS DE CREDITO
     document.getElementById('form_logincode').addEventListener("submit", (e) => {
       e.preventDefault();
       var url = '/logincode/'+document.getElementById('logincode').value;
