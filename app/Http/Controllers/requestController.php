@@ -365,11 +365,15 @@ class requestController extends Controller
         $printer -> feed(1);
         $printer -> text("Elaborador(a): ".$user['name']."\n");
 
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("PROPINA SUGERIDA. \n");
+        $printer -> text("10% -> B/ ".number_format((10*$raw_total['gross_total'])/100,2)."\n");
+        $printer -> text("15% -> B/ ".number_format((15*$raw_total['gross_total'])/100,2)."\n");
+        $printer -> text("20% -> B/ ".number_format((20*$raw_total['gross_total'])/100,2)."\n");
 
         /* Footer */
         $printer -> feed(2);
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("PRECUENTA\n");
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();

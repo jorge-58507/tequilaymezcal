@@ -407,39 +407,17 @@ class class_request {
     if (cls_general.is_empty_var(request_slug) === 0) {
       cls_general.shot_toast_bs('No hay artículos agregados.');
     }
-    swal({
-      title: 'Porcentaje de Propina',
-      text: "Ingrese el porcentaje que desea agregar sobre la base.",
-
-      content: {
-        element: "input",
-        attributes: {
-          placeholder: "porcentaje",
-          type: "text"
-        },
-      },
-    })
-    .then((quantity) => {
-      if (cls_general.is_empty_var(quantity) === 0) {
-        console.log('quan: ' +quantity +' ** '+cls_general.is_empty_var(quantity));
-        return swal("Debe ingresar un numero.");
+    var url = '/request/'+request_slug+'/print';
+    var method = 'POST';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_general.shot_toast_bs(obj.message);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
-      if (isNaN(quantity)) {
-        return swal("Debe ingresar un numero entero.");
-      }
-      var url = '/request/'+request_slug+'/print';
-      var method = 'POST';
-      var body = JSON.stringify({a: quantity});
-      var funcion = function (obj) {
-        if (obj.status === 'success') {
-          cls_general.shot_toast_bs(obj.message);
-        } else {
-          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-        }
-      }
-      cls_general.async_laravel_request(url, method, funcion, body);
-    });
-
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
   }
 
   // API METHODS
