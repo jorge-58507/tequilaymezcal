@@ -1409,7 +1409,9 @@ class class_charge{
       tip = cls_general.val_price(tip);
     }
     tip = parseFloat(tip);
-    cls_charge.charge_request.total = parseFloat(cls_charge.charge_request.subtotal) + tip + parseFloat(cls_charge.charge_request.tax)
+    var new_total = parseFloat(cls_charge.charge_request.subtotal) + tip + parseFloat(cls_charge.charge_request.tax);
+    new_total = cls_general.val_price(new_total),
+    cls_charge.charge_request.total = parseFloat(new_total);
     cls_charge.tip = tip;
     document.getElementById('sp_tip').innerHTML = 'B/. ' + cls_general.val_price(tip);
     document.getElementById('sp_total').innerHTML = 'B/. ' + cls_general.val_price(cls_charge.charge_request.total);
@@ -2978,6 +2980,7 @@ class class_payment{
     document.getElementById('paymentAmount').focus();
     document.getElementById('paymentNumber').value = '';
   }
+
   generate_payment_list(raw_payment,raw_giftcard){
     var payment_list = '';
     let received = 0;
