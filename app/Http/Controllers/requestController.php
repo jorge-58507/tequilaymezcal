@@ -312,18 +312,6 @@ class requestController extends Controller
             if ($item['tx_commanddata_status'] === 1) {  
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
-
-                // $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
-                // foreach ($raw_recipe as $ingredient) {
-                //     foreach ($ingredient as $k => $formule) {
-                //         $splited_formule = explode(",",$formule);
-                //         if ($splited_formule[3] === 'show') {
-                //             $ing = explode(")",$k,2);
-                //             $printer -> text('   -'.$ing[1]."\n");
-                //         }
-                //     }
-                // }
-
                 if (!empty($raw_item[$key+1])) {
                     if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
                         $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
@@ -358,12 +346,12 @@ class requestController extends Controller
         /* Tax and total */
         $printer -> text("Descuento. B/ ".number_format($raw_total['discount'],2)."\n");
         $printer -> text("ITBMS. B/ ".number_format($raw_total['tax'],2)."\n");
-        $printer -> text("Propina B/ ".number_format($tip,2)."\n");
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("TOTAL. B/ ".number_format($raw_total['total']+$tip,2)."\n");
         $printer -> selectPrintMode();
         $printer -> feed(1);
         $printer -> text("Elaborador(a): ".$user['name']."\n");
+        $printer -> feed(1);
 
         $printer -> setJustification(Printer::JUSTIFY_CENTER);
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
