@@ -84,6 +84,7 @@ Route::put('command/{param}/cancel', 'commanddataController@cancel')->middleware
 Route::put('depletion/{param}/aprove', 'depletionController@aprove')->middleware('auth');
 Route::put('depletion/approve_all', 'depletionController@approve_all')->middleware('auth');
 Route::put('command/{param}/setready', 'commandController@set_ready')->middleware('auth');
+Route::put('commanddata/{param}/setready', 'commanddataController@set_ready')->middleware('auth');
 Route::put('requisition/{param}/provider', 'requisitionController@upd_provider')->middleware('auth');
 Route::put('dataproductinput/{param}', 'productinputController@update_data')->middleware('auth');
 Route::put('command/{param}/discount', 'commandController@discount')->middleware('auth');
