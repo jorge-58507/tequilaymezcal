@@ -250,7 +250,7 @@ class requestController extends Controller
         return response()->json(['status'=>'success','message'=>'','data'=>['open_request'=>$raw_request['open_request'], 'closed_request'=>$raw_request['closed_request'], 'canceled_request'=>$raw_request['canceled_request']]]);
     }
     public function print(Request $request, $request_slug){
-        $qry = tm_request::where('tx_request_slug',$request_slug);
+        $qry = tm_request::join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_slug',$request_slug);
         if ($qry->count() === 0) {
             return response()->json(['status'=>'failed','message'=>'No existe.']);
         }
@@ -294,7 +294,7 @@ class requestController extends Controller
         /* Title of receipt */
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
         $printer -> setEmphasis(true);
-        $printer -> text("PRECUENTA PEDIDO #".$rs_request['tx_request_code']."\n");
+        $printer -> text("PRECUENTA PEDIDO #".$rs_request['tx_table_value']."\n");
         $printer -> setEmphasis(false);
         $printer -> feed(2);
         
