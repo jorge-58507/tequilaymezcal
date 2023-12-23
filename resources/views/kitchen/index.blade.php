@@ -64,6 +64,7 @@
     var not_ready = JSON.parse('<?php echo json_encode($data['notready']) ?>');
     var ready = JSON.parse('<?php echo json_encode($data['ready']) ?>');
     const cls_kitchen = new class_kitchen(not_ready,ready);
+    const cls_commanddata = new class_commanddata;
 
     const cls_command = new class_command;
 		document.addEventListener('DOMContentLoaded', function() {

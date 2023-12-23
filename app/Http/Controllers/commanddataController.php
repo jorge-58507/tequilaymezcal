@@ -182,5 +182,21 @@ class commanddataController extends Controller
         $rs_command = $commandController->getByRequest($rs_request['ai_request_id']);
         return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command, 'request_info'=>$rs_request ]]);
     }
+    public function set_ready($id)
+    {
+        $qry = tm_commanddata::where('ai_commanddata_id',$id);
+        $qry->update(['tx_commanddata_delivered' => 1]);
+        $rs = $qry->first();
+
+        $check_commanddata = tm_commanddata::where('commanddata_ai_command_id',$rs['commanddata_ai_command_id'])->where('tx_commanddata_delivered',0)->count();
+        if ($check_commanddata === 0) {
+            tm_command::where('ai_command_id',$rs['commanddata_ai_command_id'])->update(['tx_command_delivered' => 1]);
+        }
+
+
+        $kitchenController = new kitchenController;
+        $data = $kitchenController->all();
+        return response()->json(['status'=>'success','message'=>'Comanda Preparada.','data'=>$data]);
+    }
     
 }

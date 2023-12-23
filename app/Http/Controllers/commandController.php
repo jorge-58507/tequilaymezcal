@@ -125,7 +125,7 @@ class commandController extends Controller
         ->join('users','users.id','tm_commands.command_ai_user_id')
         ->where('ai_command_id',$id)->first();
 
-        $rs_commanddata = tm_command::select('tm_commands.ai_command_id','tm_commands.created_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option','tm_commanddatas.tx_commanddata_recipe','tm_commanddatas.tx_commanddata_status','tm_presentations.tx_presentation_value','tm_categories.tx_category_value')
+        $rs_commanddata = tm_command::select('tm_commands.ai_command_id','tm_commands.created_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.ai_commanddata_id','tm_commanddatas.tx_commanddata_option','tm_commanddatas.tx_commanddata_delivered','tm_commanddatas.tx_commanddata_recipe','tm_commanddatas.tx_commanddata_status','tm_presentations.tx_presentation_value','tm_categories.tx_category_value')
         ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
         ->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')
         ->join('tm_categories','tm_categories.ai_category_id','tm_articles.article_ai_category_id')
@@ -238,6 +238,7 @@ class commandController extends Controller
     public function set_ready($id)
     {
         tm_command::where('ai_command_id',$id)->update(['tx_command_delivered' => 1]);
+        tm_commanddata::where('commanddata_ai_command_id',$id)->update(['tx_commanddata_delivered'=>1]);
 
         $kitchenController = new kitchenController;
         $data = $kitchenController->all();

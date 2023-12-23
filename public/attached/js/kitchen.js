@@ -134,14 +134,13 @@ class class_command
       if (command_text.length > 0) {
         content += `
           <div class="col-sm-3 pt-3">
-            <div class="card">
-              <h5 class="card-header cursor_pointer text-bg-dark" onclick="cls_command.show_command(${command_id});">${title}</h5>
+            <div class="card" onclick="cls_command.show_command(${command_id});">
+              <h5 class="card-header cursor_pointer text-bg-dark">${title}</h5>
               <div class="card-body">
-                <div class="cursor_pointer" onclick="cls_command.show_command(${command_id});">
+                <div class="cursor_pointer">
                   ${observation}
                   ${command_text}
                 </div>
-                <button class="btn btn-warning btn-lg" onclick="cls_general.disable_submit(this,0); cls_command.set_ready(${command_id},this)">Listo</button>
               </div>
             </div>
           </div>
@@ -160,8 +159,12 @@ class class_command
         
         var command_list = '';
         obj.data.commanddata.map((command) => {
+          console.log(command);
           if (command.tx_commanddata_status === 1) {
-            command_list += `<p class="mb-0 fs-4">-${command.tx_commanddata_description} (${command.tx_presentation_value})</p>`;
+            var btn_ready = (command.tx_commanddata_delivered === 0) ? `<a href="#" class="btn btn-info btn-lg" onclick="cls_general.disable_submit(this,0); cls_commanddata.set_ready(${command.ai_commanddata_id},this)">Listo</a>` : '';
+
+
+            command_list += `<p class="mb-2 fs-4">-${command.tx_commanddata_description} (${command.tx_presentation_value}) ${btn_ready}</p>`;
             if (cls_general.is_empty_var(command.tx_commanddata_option) === 1) {
               command_list += `Opciones<ul>`;
               var split_option = command.tx_commanddata_option.split(',');
@@ -321,5 +324,58 @@ class class_command
     });
   }
 
+
+}
+
+class class_commanddata{
+  set_ready(command_id, btn) {
+    swal({
+      title: "¿Confirma?",
+      icon: "info",
+
+      buttons: {
+        si: {
+          text: "Si, confirmado",
+          className: "btn btn-success btn-lg"
+        },
+        no: {
+          text: "Volver",
+          className: "btn btn-warning btn-lg",
+        },
+      },
+      dangerMode: true,
+    })
+
+    .then((ans) => {
+      switch (ans) {
+        case 'si':
+          var url = '/commanddata/' + command_id + '/setready';
+          var method = 'PUT';
+          var body = '';
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              cls_kitchen.notready = obj.data.notready;
+              cls_kitchen.ready = obj.data.ready;
+
+              cls_kitchen.render_notready();
+              cls_kitchen.render_ready();
+
+              const Modal = bootstrap.Modal.getInstance('#inspectCommandModal');
+              if (Modal != null) {
+                Modal.hide();
+              }
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+            }
+          }
+          cls_general.async_laravel_request(url, method, funcion, body);
+          break;
+        case 'no':
+          btn.disabled = false;
+          break;
+      }
+    });
+  }
 
 }
