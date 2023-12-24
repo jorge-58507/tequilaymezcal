@@ -1223,10 +1223,17 @@ class class_article {
                 </div>
               </div>
               <div class="row">
-                <div class="col-xs-12">
+                <div class="col-9">
                   <label for="articleValue" class="form-label">Descripci&oacute;n</label>
                   <input type="text" class="form-control" id="articleValue" name="articleValue" value="${article.tx_article_value}" onfocus="cls_general.validFranz(this.id, ['word','number','symbol'])" onkeyup="cls_general.limitText(this, 100, toast = 0)" onblur="cls_general.limitText(this, 100, toast = 0)">
                   <input type="hidden" class="form-control" id="articleId" name="articleId" value="${article.ai_article_id}">
+                </div>
+                <div class="col-3">
+                  <label for="articleKitchen" class="form-label">Zona</label>
+                  <select id="articleKitchen" name="articleKitchen" class="form-select">
+                    <option value="0">Cocina</option>
+                    <option value="1">Bar</option>
+                  </select>
                 </div>
               </div>
               <div class="row">
@@ -1301,6 +1308,8 @@ class class_article {
         </form>
       `;
       document.getElementById('container').innerHTML = content + content_bottom;
+
+      document.getElementById('articleKitchen').value = article.tx_article_kitchen;
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
@@ -1408,6 +1417,7 @@ class class_article {
     })
     .done(function (obj) {
       if (obj.status != 'failed') {
+        cls_article.articleList = obj['data']['all'];
         var raw_list = obj['data']['all'];
         var list = cls_article.generate_list(raw_list)
         var content = `

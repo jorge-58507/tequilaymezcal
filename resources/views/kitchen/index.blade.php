@@ -38,13 +38,31 @@
       <div class="tab-content" id="nav-tabContent">
         <div class="tab-pane fade show active" id="tab_ready" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
           <div id="container_notready" class="row">
-              READY
+              <div class="col-12">
+                <nav>
+                  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <button class="nav-link active" id="btn_tab_kitchen" data-bs-toggle="tab" data-bs-target="#tab_notready_kitchen" type="button" role="tab" aria-controls="nav-home" aria-selected="true">COCINA</button>
+                    <button class="nav-link" id="btn_tab_bar" data-bs-toggle="tab" data-bs-target="#tab_notready_bar" type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">BAR</button>
+                  </div>
+                </nav>
+                <div class="tab-content" id="nav-tabContent">
+                  <div class="tab-pane fade show active" id="tab_notready_kitchen" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+                    <div id="container_notready_kitchen" class="row">
+                        COCINA
+                    </div>
+                  </div>
+                  <div class="tab-pane fade" id="tab_notready_bar" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+                    <div id="container_notready_bar" class="row">        
+                        BAR
+                    </div>
+                  </div>
+                </div>
+              </div>
           </div>
         </div>
               
         <div class="tab-pane fade" id="tab_notready" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
           <div id="container_ready" class="row">        
-              NOT READY
           </div>
         </div>
       </div>
@@ -73,11 +91,16 @@
       cls_kitchen.render_ready();
 
       setInterval(() => {
-          cls_kitchen.reload();
+          // cls_kitchen.reload();
       }, 15000);
 
 		});
-	</script>
+
+    document.getElementById('btn_tab_kitchen').addEventListener("click", () => {
+       cls_kitchen.reload();
+    });
+
+</script>
 	{{-- ##############    JQUERY   ############### --}}
 	<script type="text/javascript">
 	</script>

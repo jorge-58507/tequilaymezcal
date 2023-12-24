@@ -159,8 +159,7 @@ class articleController extends Controller
         $option = $this->encode_articleoption($request->input('articleOption'));
         $status = ($request->input('articleStatus') === 'on') ? 1 : 0;
         $imagePlaceholder = $request->input('articleImagePlaceholder');
-
-        // $product = $request->input('g');
+        $kitchen = $request->input('articleKitchen');
 
         $check_description = tm_article::where('tx_article_value',$description)->where('article_ai_category_id',$category)->where('ai_article_id','!=',$article_id)->count();
         if ($check_description > 0) {
@@ -179,7 +178,7 @@ class articleController extends Controller
 
         if ($request->hasFile('articleImage')) {
             $validator = Validator::make($request->all(),['articleImage' => 'mimes:jpg,png,jpeg,gif,svg|max:2048|dimensions:min_width=100,min_height=100,max_width=1000,max_height=1000']);
-            if ($validator->fails()) {  return response()->json(['status'=>'fail', 'message'=>'La imagen no tiene el formato adecuado.']); }
+            if ($validator->fails()) {  return response()->json(['status'=>'failed', 'message'=>'La imagen no tiene el formato adecuado.']); }
             $avatar = $request->file('articleImage');
             $filename = time().$avatar->getClientOriginalName();      
             $avatar->move(public_path().'/attached/image/article/',$filename);
@@ -199,16 +198,13 @@ class articleController extends Controller
                 'tx_article_promotion' => $promotion,
                 'tx_article_option' => json_encode($option), // opcion tiene que ser un json [{titulo: ['opcion1','opcion2','opcion3']}]
                 'tx_article_status' => $status,
+                'tx_article_kitchen' => $kitchen,
                 'tx_article_taxrate' => $request->input('articleTaxrate'),
                 'tx_article_discountrate' => $request->input('articleDiscountrate'),
                 'tx_article_thumbnail' => $filename
             ]);
         }
-        // if (sizeOf($product) > 0) {
-        //     $articlepoductController = new articleproductController;
-        //     $ans = $articlepoductController->save($product);
-        // }
-        
+
         // ANSWER
         $rs_article = $this->getAll();
         return response()->json(['status'=>'success','data'=>['all'=>$rs_article]]);
@@ -306,23 +302,23 @@ class articleController extends Controller
 
     // public function get_user($email)
     // {
-    //     $qry = User::select('name','password','email')->where('email',$email);
-    //     if ($qry->count() === 0) {
-    //         return response()->json(['status'=>'failed','message'=>'No Existe el usuario.']);
-    //     }
-    //     $rs_user = $qry->first();
-    //     $rs = User::select('roles.name','users.email','users.password')->join('role_users','role_users.user_id','users.id')->join('roles','roles.id','role_users.role_id')->where('email',$email)->get();
-    //     $autorized = 1;
-    //     foreach ($rs as $key => $user) {
-    //         if ($user['name'] === 'cashier' || $user['name'] === 'user' || $user['name'] === 'admin') {
-    //             $autorized = 0;
-    //         }
-    //     }
-    //     // if ($autorized = 0) {
-    //     //     $rs_user['password'] = '';
-    //     // }
-    //     $data = ['user' => $rs_user];
-    //     return response()->json(['status'=>'success','message'=>'', 'data'=>$data]);
+        //     $qry = User::select('name','password','email')->where('email',$email);
+        //     if ($qry->count() === 0) {
+        //         return response()->json(['status'=>'failed','message'=>'No Existe el usuario.']);
+        //     }
+        //     $rs_user = $qry->first();
+        //     $rs = User::select('roles.name','users.email','users.password')->join('role_users','role_users.user_id','users.id')->join('roles','roles.id','role_users.role_id')->where('email',$email)->get();
+        //     $autorized = 1;
+        //     foreach ($rs as $key => $user) {
+        //         if ($user['name'] === 'cashier' || $user['name'] === 'user' || $user['name'] === 'admin') {
+        //             $autorized = 0;
+        //         }
+        //     }
+        //     // if ($autorized = 0) {
+        //     //     $rs_user['password'] = '';
+        //     // }
+        //     $data = ['user' => $rs_user];
+        //     return response()->json(['status'=>'success','message'=>'', 'data'=>$data]);
     // }
 
 }

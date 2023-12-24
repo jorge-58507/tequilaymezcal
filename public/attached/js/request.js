@@ -174,7 +174,7 @@ class class_request {
   generate_openrequest(open){
     var content = '<ul class="list-group">';
     open.map((request) => {
-      content += `<li class="list-group-item cursor_pointer" onclick="cls_request.showByRequest('${request.tx_request_slug}')"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5><small>${request.tx_request_title} - ${request.tx_table_value} (${cls_general.time_converter(request.created_at)})</small></li>`;
+      content += `<li class="list-group-item cursor_pointer" onclick="cls_request.showByRequest('${request.tx_request_slug}')"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5><small>${request.tx_request_title} (${request.user_name.substr(0,15)}) - ${request.tx_table_value} (${cls_general.time_converter(request.created_at)})</small></li>`;
     })
     content += '</ul>';
     return content;
