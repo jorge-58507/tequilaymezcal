@@ -53,13 +53,13 @@ class class_request{
     var content = '<ul class="list-group">';
     closed.map((request) => {
       content += `<li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_charge.show('${request.tx_request_slug}')">
-          <div class="ms-2 me-auto">
-            <div class="fw-bold"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5></div>
-            <small>${request.tx_request_title} - ${request.tx_table_value}, Elaborador: ${request.user_name}</small>
-          </div>
-          <span class="badge bg-primary fs_20">B/ ${cls_general.val_price(request.total,2,1,1)}</span>
-          &nbsp;&nbsp;&nbsp;
-          <span>${cls_general.datetime_converter(request.updated_at)} ${cls_general.time_converter(request.updated_at,1)}</span>
+        <div class="ms-2 me-auto">
+          <div class="fw-bold"><h5>${request.tx_request_code} - ${request.tx_client_name}</h5></div>
+          <small>${request.tx_request_title} - <strong>${request.tx_table_value}</strong>, Elaborador: ${request.user_name}</small>
+        </div>
+        <span class="badge bg-primary fs_20">B/ ${cls_general.val_price(request.total,2,1,1)}</span>
+        &nbsp;&nbsp;&nbsp;
+        <span>${cls_general.datetime_converter(request.updated_at)} ${cls_general.time_converter(request.updated_at,1)}</span>
       </li>`;
     })
     content += '</ul>';
@@ -140,6 +140,10 @@ class class_request{
       icon: "info",
 
       buttons: {
+        print: {
+          text: "Precuenta",
+          className: "btn btn-info btn-lg"
+        },
         si: {
           text: "Si, cerrarlo",
           className: "btn btn-success btn-lg"
@@ -168,6 +172,20 @@ class class_request{
             }
           }
           cls_general.async_laravel_request(url, method, funcion, body);
+        break;
+        case 'print':
+          var url = '/request/' + request_slug + '/print';
+          var method = 'POST';
+          var body = '';
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              cls_general.shot_toast_bs(obj.message);
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+            }
+          }
+          cls_general.async_laravel_request(url, method, funcion, body);
+
         break;
         case 'no':
 
@@ -266,7 +284,7 @@ class class_request{
           if (i == limit) {  break;  }
           var ocurrencys = 0;
           for (const a in needles) {
-            haystack[i]['tx_table_value'] = (cls_general.is_empty_var(haystack[i]['tx_table_value'] === 0)) ? '' : haystack[i]['tx_table_value'];
+            haystack[i]['tx_table_value'] = (cls_general.is_empty_var(haystack[i]['tx_table_value']) === 0) ? '' : haystack[i]['tx_table_value'];
             if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_code'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_request_title'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_table_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
           }
           if (ocurrencys === needles.length) {
@@ -688,6 +706,8 @@ class class_charge{
   }
   
   index(){
+    var raw_today = cls_general.getDate();
+    var today = cls_general.date_converter('ymd', 'dmy', raw_today[0])
     var content = `    
       <div class="col-sm-12 text-center">
         <div class="dropdown">
@@ -814,13 +834,13 @@ class class_charge{
                 <div class="col-md-6 col-lg-3">
                   <div class="input-group my-3">
                     <label class="input-group-text" for="canceledFromDatefilter">Desde</label>
-                    <input type="text" name="canceledFromDatefilter" id="canceledFromDatefilter" class="form-control" value="" readonly onkeyup="this.value = ''">
+                    <input type="text" name="canceledFromDatefilter" id="canceledFromDatefilter" class="form-control" value="${today}" readonly onkeyup="this.value = ''">
                   </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
                   <div class="input-group my-3">
                     <label class="input-group-text" for="canceledToDatefilter">Hasta</label>
-                    <input type="text" name="canceledToDatefilter" id="canceledToDatefilter" class="form-control" value="" readonly onkeyup="this.value = ''">
+                    <input type="text" name="canceledToDatefilter" id="canceledToDatefilter" class="form-control" value="${today}" readonly onkeyup="this.value = ''">
                   </div>
                 </div>
                 <div class="col-md-12 col-lg-3 pt-3">
@@ -2998,7 +3018,7 @@ class class_payment{
       `
       received += parseFloat(payment.amount);
     })
-
+                                                                        console.log(received);
     raw_giftcard.map((giftcard, index) => {
       var number = (cls_general.is_empty_var(giftcard.giftcard_number) === 0) ? '' : '(' + giftcard.giftcard_number + ')';
       payment_list += `
@@ -3015,7 +3035,11 @@ class class_payment{
     })
 
     if (parseFloat(cls_charge.charge_request.total) > received) {
-      var diference = cls_general.val_price(parseFloat(cls_charge.charge_request.total) - parseFloat(received));
+
+      var diference = parseFloat(cls_charge.charge_request.total) - parseFloat(received);
+      diference = parseFloat(diference.toFixed(3));
+      diference = parseFloat(diference.toFixed(2));
+      // var diference = cls_general.val_price(parseFloat(cls_charge.charge_request.total) - parseFloat(received));
       var change = 0;
     }else{
       if (parseFloat(cls_charge.charge_request.total) === received) {
@@ -3023,7 +3047,10 @@ class class_payment{
         var diference = 0;
       }else{
         var diference = 0;
-        var change = cls_general.val_price(parseFloat(received) - parseFloat(cls_charge.charge_request.total));
+        var change = parseFloat(received) - parseFloat(cls_charge.charge_request.total);
+        change = parseFloat(change.toFixed(3))
+        change = parseFloat(change.toFixed(2))
+        // var change = cls_general.val_price(parseFloat(received) - parseFloat(cls_charge.charge_request.total));
       }
     }
     var content = `
