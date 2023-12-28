@@ -122,6 +122,7 @@ class class_command
       var command_text = '';
       var observation = '';
       var kitchen_id = 0;
+      var pending = 0;
       notready.map((command) => {
         title = command.tx_table_value + ' H ' + cls_general.time_converter(command.created_at, 1);
         command_id = command.ai_command_id;
@@ -139,9 +140,12 @@ class class_command
             command_text += `</ul>`;
           }
           kitchen_id = command.tx_article_kitchen;
+          if (command.tx_commanddata_delivered === 0) {
+            pending = 1;
+          }
         }
       })
-      if (command_text.length > 0) {
+      if (pending === 1 && command_text.length > 0) {
         content += `
           <div class="col-sm-3 pt-3">
             <div class="card" onclick="cls_command.show_command(${command_id},${kitchen_id});">
@@ -167,16 +171,11 @@ class class_command
     var funcion = function (obj) {
       if (obj.status === 'success') {
         document.getElementById('inspectCommandModal_title').innerHTML = obj.data.request_info.tx_table_value + ' (' + obj.data.request_info.waiter + ')';
-        
         var command_list = '';
         obj.data.commanddata.map((command) => {
-          console.log(command);
           if (command.tx_commanddata_status === 1) {
             var btn_ready = (command.tx_commanddata_delivered === 0) ? `<a href="#" class="btn btn-info btn-lg" onclick="cls_general.disable_submit(this,0); cls_commanddata.set_ready(${command.ai_commanddata_id},this)">Listo</a>` : '';
-
-
             if (command.tx_article_kitchen === kitchen_id) {
-              
               command_list += `<p class="mb-2 fs-4">-${command.tx_commanddata_description} (${command.tx_presentation_value}) ${btn_ready}</p>`;
               if (cls_general.is_empty_var(command.tx_commanddata_option) === 1) {
                 command_list += `Opciones<ul>`;
@@ -204,11 +203,6 @@ class class_command
               }
               command_list += (recipe_list.length > 17) ? recipe_list : '';
             }
-
-
-
-
-
           }
         })
         document.getElementById('inspectCommandModal_content').innerHTML = `
@@ -233,7 +227,7 @@ class class_command
             </div>
           </div>
         `;
-        document.getElementById('inspectCommandModal_footer').innerHTML = `<a href="#" class="btn btn-warning btn-lg" onclick="cls_general.disable_submit(this,0); cls_command.set_ready(${obj.data.info.ai_command_id},this)">Listo</a>`;
+        // document.getElementById('inspectCommandModal_footer').innerHTML = `<a href="#" class="btn btn-warning btn-lg" onclick="cls_general.disable_submit(this,0); cls_command.set_ready(${obj.data.info.ai_command_id},this)">Listo</a>`;
         const modal = new bootstrap.Modal('#inspectCommandModal', {})
         modal.show();
       } else {
@@ -378,11 +372,11 @@ class class_commanddata{
 
               cls_kitchen.render_notready();
               cls_kitchen.render_ready();
-
-              const Modal = bootstrap.Modal.getInstance('#inspectCommandModal');
-              if (Modal != null) {
-                Modal.hide();
-              }
+              btn.style.display = 'none';
+              // const Modal = bootstrap.Modal.getInstance('#inspectCommandModal');
+              // if (Modal != null) {
+                // Modal.hide();
+              // }
               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
             } else {
               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
