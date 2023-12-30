@@ -172,7 +172,7 @@ class class_command
       if (obj.status === 'success') {
         document.getElementById('inspectCommandModal_title').innerHTML = obj.data.request_info.tx_table_value + ' (' + obj.data.request_info.waiter + ')';
         var command_list = '';
-        obj.data.commanddata.map((command) => {
+        obj.data.commanddata.map((command,index) => {
           if (command.tx_commanddata_status === 1) {
             var btn_ready = (command.tx_commanddata_delivered === 0) ? `<a href="#" class="btn btn-info btn-lg" onclick="cls_general.disable_submit(this,0); cls_commanddata.set_ready(${command.ai_commanddata_id},this)">Listo</a>` : '';
             if (command.tx_article_kitchen === kitchen_id) {
@@ -189,7 +189,16 @@ class class_command
               if (cls_general.is_empty_var(command.tx_commanddata_recipe) === 1) {
                 var raw_recipe = JSON.parse(command.tx_commanddata_recipe);
                 if (raw_recipe.length > 0) {
-                  recipe_list += `-Receta <ul>`;
+                  // recipe_list += `-Receta <ul>`;
+                  recipe_list += `
+                    <span class="d-inline-flex gap-1">
+                      <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample${index}" aria-expanded="false" aria-controls="collapseExample">
+                        -Ver Receta
+                      </button>
+                    </span>
+                    <ul>
+                  `;
+
                   raw_recipe.map((ingredient) => {
                     for (const x in ingredient) {
                       var raw_ingredient = ingredient[x].split(',');
@@ -198,7 +207,26 @@ class class_command
                       }
                     }
                   })
-                  recipe_list += `</ul>`;
+                  recipe_list += `</ul></div></div>`;
+
+                  recipe_list += `
+
+                    <div class="collapse" id="collapseExample${index}">
+                      <div class="card card-body">
+                        <ul>
+                  `;
+
+                  raw_recipe.map((ingredient) => {
+                    for (const x in ingredient) {
+                      var raw_ingredient = ingredient[x].split(',');
+                      if (raw_ingredient[3] === 'noshow') {
+                      recipe_list += `<li class="card-text">${x}</li>`;
+                      }
+                    }
+                  })
+                  recipe_list += `</ul></div></div>`;
+
+
                 }
               }
               command_list += (recipe_list.length > 17) ? recipe_list : '';

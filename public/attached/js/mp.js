@@ -470,32 +470,34 @@ class general_funct {
     var ans = isNaN(str)
     str = (ans) ? '' : str;
     if (str === '') { return ''; }
-    str = parseFloat(str);
+    str = parseFloat(str);  //Convertir a float
     if (decimal > 0) {
       var pat = new RegExp('(^[-][0-9]{1}|^[0-9]+|[0-9]+)([.][0-9]{1,' + decimal + '})?$');
       if (!pat.test(str)) { return false; }
     }
-    var str_splited = (str.toString()).split('.');
+    var str_splited = (str.toString()).split('.');  //Dividir la parte entera de la decimal
+
     var decimal_part = '';
     for (var i = 0; i < decimal; i++) { decimal_part += '0'; }
     if (str_splited.length > 1) {
-      if (str_splited.length > 2) {
+      if (str_splited.length > 2) {   //Si esta mal escrito y tiene 2 puntos es decir 2 grupos decimales -> reducir a 1 grupo decimal
         str_splited.splice(2);
       }
-      if (str_splited[0].length === 0) {
+      if (str_splited[0].length === 0) {  //Si en cambio no tiene ni decimal ni entero igualar a cero
         str_splited[0] = '0';
       }
       if (refill === 1) {
         str_splited[1] += decimal_part;  // REFILL
       }
       if (split === 1) {
-        str_splited[1] = parseFloat('0.' + str_splited[1]).toFixed(decimal)  // REDONDEO
-        str_splited[1] = str_splited[1].toString();                           //TRANSFORMAR EN STRING
-        var raw_split = str_splited[1].split('.');                            //CORTAR
+        var pre_round = '0.' + str_splited[1];
+        str_splited[1] = parseFloat(pre_round).toFixed(decimal)  // REDONDEO
+        str_splited[1] = str_splited[1].toString();              //TRANSFORMAR EN STRING
+        var raw_split = str_splited[1].split('.');               //CORTAR
         str_splited[1] = raw_split[1];
-
-        // str_splited[1] = str_splited[1].substr(0, decimal)  // SPLIT
+        str_splited[0] = parseFloat(str_splited[0]) + parseFloat(raw_split[0]);
       }
+      str_splited[0] = str_splited[0].toString();
       str = (decimal > 0) ? str_splited[0].replace(/(.)(?=(\d{3})+$)/g, '$1,') + '.' + str_splited[1] : str_splited[0];
     } else {
       if (refill === 1) { // REFILL

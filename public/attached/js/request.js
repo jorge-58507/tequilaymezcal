@@ -885,6 +885,7 @@ class class_command{
           content_option += `</select></div>`;
         }
       }
+      content_option = (content_option.length > 0) ? '<h5>Opciones</h5>' + content_option : '';
       var option_presentation = ``; //OPTION PARA LAS PRESENTACIONES DEL ARTICULO, AL CAMBIAR CAMBIAR LOS PRECIOS
       obj.data.price.map((price) => {
         option_presentation += `<option alt="${price.tx_price_three},${price.tx_price_two},${price.tx_price_one}" value="${price.ai_presentation_id}">${price.tx_presentation_value}</option>`;
@@ -893,21 +894,30 @@ class class_command{
       var tax_rate = (document.getElementById('requestClient').getAttribute('alt') == 1) ? 0 : obj.data.article.tx_article_taxrate;
       
       var content_recipe = cls_command.generate_recipe_option(obj.data.articleproduct);
-
+      
       var content = `
         <div class="row">
-          <div class="col-md-12 col-lg-4">
+          <div class="col-md-12 col-lg-3">
             <label for="articleQuantity">Cantidad</label>
             <input type="number" class="form-control" id="articleQuantity" value="1" onfocus="cls_general.validFranz(this.id, ['number'])" >
           </div>
-          <div class="col-md-12 col-lg-4">
+          <div class="col-md-12 col-lg-3">
             <label for="articlePresentation">Presentation</label>
             <select class="form-select" id="articlePresentation" onchange="cls_command.modal_set_price(this.options[this.selectedIndex].getAttribute('alt'), this.value, '${article_slug}')">
               ${option_presentation}
             </select>
           </div>
-          <div id="container_price" class="col-md-12 col-lg-4">
+          <div id="container_price" class="col-md-12 col-lg-3">
           </div>
+          <div class="col-md-12 col-lg-3">
+            <label for="articleClientdiscount">Descuento</label>
+            <select class="form-select" id="articleClientdiscount" onchange="document.getElementById('articleDiscountrate').value = this.value">
+              <option value="0">0%</option>
+              <option value="15">15%</option>
+              <option value="25">25%</option>
+            </select>
+          </div>
+          <hr/>
           <div class="col-sm-12">
             <div id="container_recipe" class="row">
               ${content_recipe}
@@ -918,7 +928,6 @@ class class_command{
             <input type="hidden" class="form-control" id="articleTaxrate" value="${tax_rate}" onfocus="cls_general.validFranz(this.id, ['number'])" required>
           </div>
           <hr/>
-          <h5>Opciones</h5>
           <div id="articleOption" class="row">
             ${content_option}
           </div>
@@ -1042,7 +1051,14 @@ class class_command{
       <li class="list-group-item cursor_pointer text-truncate">
         ${article.quantity} - ${article.article_description} ${article.presentation_value}<br/> ${option} <span style="float: right; width: 30%" class="text-truncate">B/ ${cls_general.val_price(article.price,2,1,1)}</span>
         <br/>
-        ${content_recipe}
+        <p class="d-inline-flex gap-1">
+          <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="collapse" href="#collapseRecipe${index}">Receta</button>
+        </p>
+        <div class="collapse" id="collapseRecipe${index}">
+          <div class="card card-body text-truncate">
+            ${content_recipe}
+          </div>
+        </div>
         <div class="text-center">
           <button class="btn btn-warning" type="button" onclick="cls_command.delete_articleselected(${index})">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
