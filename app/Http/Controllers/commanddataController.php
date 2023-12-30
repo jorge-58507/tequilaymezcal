@@ -199,4 +199,22 @@ class commanddataController extends Controller
         return response()->json(['status'=>'success','message'=>'Comanda Preparada.','data'=>$data]);
     }
     
+    public function discount (Request $request, $commanddata_id){
+        $user = $request->user();
+        if( $user->hasAnyRole(['admin','super','cashier']) != true){
+            return response()->json(['status'=>'failed','message'=>'Debe ingresar como supervisor.']);
+        }else{
+            $qry = tm_commanddata::where('ai_commanddata_id', $commanddata_id);
+            if ($qry->count() === 0) {
+                return response()->json(['status'=>'failed','message'=>'La comanda no existe.']);
+            }
+            $qry->update(['tx_commanddata_discountrate' => $request->input('a')]);
+
+            $rs = $qry->first();
+
+            $rs_request = tm_request::select('tm_requests.tx_request_slug')->join('tm_commands','tm_requests.ai_request_id','tm_commands.command_ai_request_id')->where('tm_commands.ai_command_id',$rs['commanddata_ai_command_id'])->first();
+            return response()->json(['status'=>'success','message'=>'Descuento aplicado.', 'data' => ['request' => $rs_request]]);
+        }
+
+    }
 }

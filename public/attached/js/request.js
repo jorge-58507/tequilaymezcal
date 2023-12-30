@@ -1081,7 +1081,7 @@ class class_command{
   generate_articleprocesed(command_procesed){
     var raw_price = [];
     var content_command_procesed = `<div class="list-group">`;
-    command_procesed.map((command) => {
+    command_procesed.map((command,index) => {
       var raw_command = command.tx_commanddata_option.split(',');
       if (raw_command.length > 1) {
         var option = '<ul>';
@@ -1110,6 +1110,25 @@ class class_command{
         }
       })
       content_recipe += `</ul>`;
+
+      if (recipe.length > 0) {
+        content_recipe = `
+          <span class="d-inline-flex gap-1">
+            <button class="btn btn-link text-decoration-none btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRecipe${index}" aria-expanded="false" aria-controls="collapseExample">
+              Ver Receta
+            </button>
+          </span>
+          <div class="collapse" id="collapseRecipe${index}">
+            <div class="card card-body text-truncate">
+              ${content_recipe}
+            </div>
+          </div>
+        `;
+      }else{
+        content_recipe = '';
+      }
+
+
 
       content_command_procesed += `
         <a href="#" class="list-group-item list-group-item-action ${bg_status}" aria-current="true" onclick="event.preventDefault();">

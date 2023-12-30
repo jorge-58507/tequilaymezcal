@@ -88,6 +88,7 @@ Route::put('commanddata/{param}/setready', 'commanddataController@set_ready')->m
 Route::put('requisition/{param}/provider', 'requisitionController@upd_provider')->middleware('auth');
 Route::put('dataproductinput/{param}', 'productinputController@update_data')->middleware('auth');
 Route::put('command/{param}/discount', 'commandController@discount')->middleware('auth');
+Route::put('commanddata/{param}/discount', 'commanddataController@discount')->middleware('auth');
 Route::put('purchase/{param}/ticket', 'productinputController@upd_ticket')->middleware('auth');
 Route::put('purchase/{param}/date', 'productinputController@upd_date')->middleware('auth');
 Route::put('user_password/{param}', 'userController@upd_password')->middleware('auth');

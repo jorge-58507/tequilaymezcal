@@ -700,6 +700,7 @@
     const cls_cashregister = new class_cashregister;
 
     const cls_giftcard = new class_giftcard;
+    const cls_commanddata = new class_commanddata;
 
     var client_list = JSON.parse('<?php echo json_encode($data['client_list']) ?>');
 		const cls_client = new class_client(client_list);
