@@ -1426,7 +1426,8 @@ class class_charge{
         cls_general.shot_toast_bs('Debe ingresar una tasa valida.'); return false;
       }
       tip = (suggested_tip * cls_charge.charge_request.gross_total) / 100;
-      tip = cls_general.val_price(tip);
+      console.log('tip_antes: '+tip);
+      tip = cls_general.val_price(tip,2,1,1);
     }
     tip = parseFloat(tip);
     var new_total = parseFloat(cls_charge.charge_request.subtotal) + tip + parseFloat(cls_charge.charge_request.tax);
