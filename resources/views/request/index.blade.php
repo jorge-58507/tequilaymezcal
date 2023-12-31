@@ -189,6 +189,7 @@
 		var cls_article = new class_article(raw_article);
 		
 		var cls_command = new class_command;
+		var cls_commanddata = new class_commanddata;
 
 		var raw_client = JSON.parse('<?php echo json_encode($data['client_list']) ?>');
 		var cls_client = new class_client(raw_client);
