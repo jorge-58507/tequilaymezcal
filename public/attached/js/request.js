@@ -1094,13 +1094,13 @@ class class_command{
       if (command.tx_commanddata_status === 0) {
         var bg_status = 'text-bg-warning text-body-tertiary';
         var btn = ``;
-      }else{
+        var btn_discountrate = '';
+      } else {
         // [{ PRICE, discount, tax, quantity }]
         raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
         var bg_status = '';
-        var btn = `
-          <button type="button" class="btn btn-secondary" onclick="event.preventDefault(); cls_command.loginuser_cancel(${command.ai_commanddata_id})">Anular</button>
-        `;
+        var btn = `<button type="button" class="btn btn-secondary" onclick="event.preventDefault(); cls_command.loginuser_cancel(${command.ai_commanddata_id})">Anular</button>`;
+        var btn_discountrate = `<button type="button" class="btn btn-info" onclick="event.preventDefault(); cls_commanddata.set_discountrate(${command.ai_commanddata_id})">Desc. ${command.tx_commanddata_discountrate}%</button>`;
       }
       var recipe = JSON.parse(command.tx_commanddata_recipe);
       var content_recipe = '<ul>';
@@ -1128,8 +1128,6 @@ class class_command{
         content_recipe = '';
       }
 
-
-
       content_command_procesed += `
         <a href="#" class="list-group-item list-group-item-action ${bg_status}" aria-current="true" onclick="event.preventDefault();">
           <div class="d-flex w-100 justify-content-between">
@@ -1141,6 +1139,7 @@ class class_command{
           <small>Consumo: ${command.tx_command_consumption}${observation}</small><br/>
           <div class="text-center">
             ${btn}
+            ${btn_discountrate}
           </div>
         </a>
       `;
@@ -2171,5 +2170,40 @@ class class_client{
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
+  }
+}
+class class_commanddata{
+  set_discountrate(commanddata_id) {
+    swal({
+      title: 'Porcentaje de Descuento',
+      text: "Ingrese el porcentaje que desea descontar.",
+
+      content: {
+        element: "input",
+        attributes: {
+          placeholder: "porcentaje",
+          type: "text",
+        },
+      },
+    })
+      .then((quantity) => {
+        if (cls_general.is_empty_var(quantity) === 0) {
+          return swal("Debe ingresar un numero.");
+        }
+        if (isNaN(quantity)) {
+          return swal("Debe ingresar un numero entero.");
+        }
+        var url = '/commanddata/' + commanddata_id + '/discount';
+        var method = 'PUT';
+        var body = JSON.stringify({ a: quantity });
+        var funcion = function (obj) {
+          if (obj.status === 'success') {
+            cls_request.showByRequest(obj.data.request.tx_request_slug);
+          } else {
+            cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+          }
+        }
+        cls_general.async_laravel_request(url, method, funcion, body);
+      });
   }
 }

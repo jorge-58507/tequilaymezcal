@@ -491,6 +491,10 @@ class general_funct {
       }
       if (split === 1) {
         var pre_round = '0.' + str_splited[1];
+        if (str_splited[1].slice(-1) == '5') {
+          var dec_sum = '0.' + decimal_part + '1';
+          str_splited[1] = parseFloat(str_splited[1]) + parseFloat(dec_sum);
+        }
         str_splited[1] = parseFloat(pre_round).toFixed(decimal)  // REDONDEO
         str_splited[1] = str_splited[1].toString();              //TRANSFORMAR EN STRING
         var raw_split = str_splited[1].split('.');               //CORTAR
@@ -515,11 +519,14 @@ class general_funct {
     if (str === '') { return '';	}
     str = parseFloat(str);          //convertirlo a decimal
 
-    str = str.toFixed(decimal + 1);
-    var pow = Math.pow(10, decimal);
-    str *= pow;
-    str = Math.round(str);
-    var str = str / pow;
+    // str = str.toFixed(decimal + 1);
+    // console.log(str);
+    // str = parseFloat(str).toFixed(decimal);
+    // console.log(str);
+    // var pow = Math.pow(10, decimal+1);
+    // str *= pow;
+    // str = Math.round(str);
+    // var str = str / pow;
 
     if (decimal > 0) {
       var pat = new RegExp('(^[-][0-9]{1}|^[0-9]+|[0-9]+)([.][0-9]{1,' + decimal + '})?$');
@@ -540,11 +547,18 @@ class general_funct {
       if (refill === 1) {                   //SI RELLENAR ES 1, AGREGARLE CEROS ALFINAL
         str_splited[1]+=decimal_part;       // REFILL
       }
+      
       if (split === 1) {                    //SI RECORTAR EL STRING ES 1, REALIZAR EL CORTE
-        str_splited[1] = parseFloat('0.' + str_splited[1]).toFixed(decimal)  // REDONDEO
-        str_splited[1] = str_splited[1].toString();                           //TRANSFORMAR EN STRING
-        var raw_split = str_splited[1].split('.');                            //CORTAR
+        str_splited[1] = parseFloat('0.' + str_splited[1]).toFixed(decimal+1)   // REDONDEO
+        if (str_splited[1].slice(-1) == '5') {
+          var dec_sum = '0.'+decimal_part+'1';
+          str_splited[1] = parseFloat(str_splited[1]) + parseFloat(dec_sum);
+        }
+        str_splited[1] = parseFloat(str_splited[1]).toFixed(decimal)            // REDONDEO
+        str_splited[1] = str_splited[1].toString();                             // TRANSFORMAR EN STRING
+        var raw_split = str_splited[1].split('.');                              // CORTAR
         str_splited[1] = raw_split[1];
+        str_splited[0] = parseFloat(str_splited[0]) + parseFloat(raw_split[0]);
       }
       str = (decimal > 0) ? str_splited[0] + '.' + str_splited[1] : str_splited[0];
     } else {
@@ -638,22 +652,22 @@ class general_funct {
       }else{
         ttl_nontaxable += article.quantity * article.price;
       }
-
       ttl_gross     += article.quantity * article.price;
       subtotal      += article.quantity * price_discount;
       total         += article.quantity * price_tax;
       ttl_discount  += article.quantity * discount;
       ttl_tax       += article.quantity * tax;
+
     })
     return { 
-      taxable:      cls_general.val_dec(ttl_taxable, 2, 1, 1),
-      nontaxable:   cls_general.val_dec(ttl_nontaxable, 2, 1, 1),
-      gross_total:  cls_general.val_dec(ttl_gross, 2, 1, 1), 
-      subtotal:     cls_general.val_dec(subtotal, 2, 1, 1), 
+      taxable:      cls_general.val_price(ttl_taxable, 2, 1, 1),
+      nontaxable:   cls_general.val_price(ttl_nontaxable, 2, 1, 1),
+      gross_total:  cls_general.val_price(ttl_gross, 2, 1, 1), 
+      subtotal:     cls_general.val_price(subtotal, 2, 1, 1), 
       // total: total,
-      total:        cls_general.val_dec(total, 2, 1, 1),
-      discount:     cls_general.val_dec(ttl_discount, 2, 1, 1), 
-      tax:          cls_general.val_dec(ttl_tax, 2, 1, 1)
+      total:        cls_general.val_price(total, 2, 1, 1),
+      discount:     cls_general.val_price(ttl_discount, 2, 1, 1), 
+      tax:          cls_general.val_price(ttl_tax, 2, 1, 1)
     }
   }
 
