@@ -235,10 +235,17 @@ class commandController extends Controller
 
         return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command]]);
     }
-    public function set_ready($id)
+    public function set_ready(Request $request, $id)
     {
-        tm_command::where('ai_command_id',$id)->update(['tx_command_delivered' => 1]);
-        tm_commanddata::where('commanddata_ai_command_id',$id)->update(['tx_commanddata_delivered'=>1]);
+
+        // tm_command::where('ai_command_id',$id)->update(['tx_command_delivered' => 1]);
+        // tm_commanddata::where('commanddata_ai_command_id',$id)->update(['tx_commanddata_delivered'=>1]);
+
+        $rs_commanddata = tm_commanddata::select('tm_commanddatas.ai_commanddata_id')->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')->where('commanddata_ai_command_id',$id)->where('tm_articles.tx_article_kitchen',$request->input('a'))->get();
+        $commanddataController = new commanddataController;
+        foreach ($rs_commanddata as $key => $value) {
+            $commanddataController->set_ready($value['ai_commanddata_id']);
+        }
 
         $kitchenController = new kitchenController;
         $data = $kitchenController->all();

@@ -255,7 +255,7 @@ class class_command
             </div>
           </div>
         `;
-        // document.getElementById('inspectCommandModal_footer').innerHTML = `<a href="#" class="btn btn-warning btn-lg" onclick="cls_general.disable_submit(this,0); cls_command.set_ready(${obj.data.info.ai_command_id},this)">Listo</a>`;
+        document.getElementById('inspectCommandModal_footer').innerHTML = `<a href="#" class="btn btn-warning btn-lg" onclick="cls_general.disable_submit(this,0); cls_command.set_ready(${obj.data.info.ai_command_id},this,${kitchen_id})">Listo</a>`;
         const modal = new bootstrap.Modal('#inspectCommandModal', {})
         modal.show();
       } else {
@@ -315,7 +315,7 @@ class class_command
     cls_general.async_laravel_request(url, method, funcion, body);
   }
 
-  set_ready(command_id, btn){
+  set_ready(command_id, btn, kitchen_id){
     swal({
       title: "¿Confirma?",
       icon: "info",
@@ -338,7 +338,7 @@ class class_command
         case 'si':
           var url = '/command/'+command_id+'/setready';
           var method = 'PUT';
-          var body = '';
+          var body = JSON.stringify({a: kitchen_id});
           var funcion = function (obj) {
             if (obj.status === 'success') {
               cls_kitchen.notready = obj.data.notready;
