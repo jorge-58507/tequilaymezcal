@@ -19,7 +19,7 @@ class CreateTmArticlesTable extends Migration
             $table->integer('article_ai_category_id');
             $table->string('tx_article_code');
             $table->string('tx_article_value');
-            $table->longtext('tx_article_option')->default('{}');
+            $table->longtext('tx_article_option');
             $table->integer('tx_article_promotion')->default(0);
             $table->float('tx_article_taxrate');
             $table->float('tx_article_discountrate');

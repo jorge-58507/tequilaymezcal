@@ -72,6 +72,7 @@ Route::post('/user_role/{param_a}/add', 'userController@add_role');
 Route::post('/user_role/{param_a}/delete', 'userController@delete_role');
 Route::post('/purchase/convert', 'productinputController@convert_directpurchase');
 Route::post('/commanddatalastrequest/', 'commanddataController@add_tolastrequest');
+Route::post('/acregister/filter', 'acregisterController@filter');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
@@ -122,6 +123,7 @@ Route::resource('user', 'userController')->middleware('auth');
 Route::resource('role', 'roleController')->middleware('auth');
 Route::resource('productcode', 'productcodeController')->middleware('auth');
 Route::resource('directpurchase', 'directpurchaseController')->middleware('auth');
+Route::resource('acregister', 'acregisterController');
 
 // PRINT
 Route::get('print_cashregister/{param}', 'cashregisterController@print_rollpaper_cashregister');
@@ -141,6 +143,7 @@ Route::get('print_reportdetailcreditnote/{param_a}/{param_b}', 'printController@
 Route::get('print_reportproductinputbyprovider/{param_a}/{param_b}', 'printController@print_reportproductinputbyprovider');
 Route::get('print_reportdepletion/{param_a}/{param_b}', 'printController@print_reportdepletion');
 Route::get('print_reportcommanddatanulled/{param_a}/{param_b}', 'printController@print_reportcommanddatanulled');
+Route::get('print_reportacregister/{param_a}/{param_b}/{param_c}', 'printController@print_reportacregister');
 
 
 

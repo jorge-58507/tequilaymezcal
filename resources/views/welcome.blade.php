@@ -146,48 +146,48 @@
 
             {{-- MODAL ACCESSCONTROL --}}
             <div class="modal fade" id="accessControlModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5">Registro de Asistencia</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="accessControlModal_body">
-                    <div class="row h_100">
-                        <div class="col-6 text-center pb-3">
-                            <button type="button" id="btn_set_in" class="btn btn-lg btn-success" onclick="cls_controlaccess.set_in(this)">Entrada</button>
-                        </div>
-                        <div class="col-6 text-center">
-                            <button type="button" id="btn_set_out" class="btn btn-lg btn-primary" onclick="cls_controlaccess.set_out(this)">Salida</button>
-                        </div>
-                        <div class="col-6 text-center">
-                            <button type="button" id="btn_set_breakin" class="btn btn-lg btn-info" onclick="cls_controlaccess.set_breakin(this)">Salida Almuerzo</button>
-                        </div>
-                        <div class="col-6 text-center">
-                            <button type="button" id="btn_set_breakout" class="btn btn-lg btn-info" onclick="cls_controlaccess.set_breakout(this)">Entrada Almuerzo</button>
-                        </div>
-                        <div class="col-12" style="opacity: 0;">
-                            <form action="" name="form_controlaccess_IN" onsubmit="event.preventDefault(); cls_controlaccess.in()">
-                                <input type="text" id="controlaccess_IN" name="controlaccess_IN" class="form-control" value="IN">
-                            </form>
-                            <form action="" name="form_controlaccess_OUT" onsubmit="event.preventDefault(); cls_controlaccess.out()">
-                                <input type="text" id="controlaccess_OUT" name="controlaccess_OUT" class="form-control" value="OUT">
-                            </form>
-                            <form action="" name="form_controlaccess_BREAKIN" onsubmit="event.preventDefault(); cls_controlaccess.breakin()">
-                                <input type="text" id="controlaccess_BREAKIN" name="controlaccess_BREAKIN" class="form-control" value="BREAKIN">
-                            </form>
-                            <form action="" name="form_controlaccess_BREAKOUT" onsubmit="event.preventDefault(); cls_controlaccess.breakout()">
-                                <input type="text" id="controlaccess_BREAKOUT" name="controlaccess_BREAKOUT" class="form-control" value="BREAKOUT">
-                            </form>
-                        </div>
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5">Registro de Asistencia</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    
+                    <div class="modal-body" id="accessControlModal_body">
+                        <div class="row h_100">
+                            <div class="col-6 text-center pb-3">
+                                <button type="button" id="btn_set_in" class="btn btn-lg btn-success" onclick="cls_controlaccess.set_in(this)">Entrada</button>
+                            </div>
+                            <div class="col-6 text-center">
+                                <button type="button" id="btn_set_out" class="btn btn-lg btn-primary" onclick="cls_controlaccess.set_out(this)">Salida</button>
+                            </div>
+                            <div class="col-6 text-center">
+                                <button type="button" id="btn_set_breakin" class="btn btn-lg btn-info" onclick="cls_controlaccess.set_breakin(this)">Salida Almuerzo</button>
+                            </div>
+                            <div class="col-6 text-center">
+                                <button type="button" id="btn_set_breakout" class="btn btn-lg btn-info" onclick="cls_controlaccess.set_breakout(this)">Entrada Almuerzo</button>
+                            </div>
+                            <div class="col-12" style="opacity: 0;">
+                                <form action="" name="form_controlaccess_IN" onsubmit="event.preventDefault(); cls_controlaccess.in()">
+                                    <input type="text" id="controlaccess_IN" name="controlaccess_IN" class="form-control" value="IN">
+                                </form>
+                                <form action="" name="form_controlaccess_OUT" onsubmit="event.preventDefault(); cls_controlaccess.out()">
+                                    <input type="text" id="controlaccess_OUT" name="controlaccess_OUT" class="form-control" value="OUT">
+                                </form>
+                                <form action="" name="form_controlaccess_BREAKIN" onsubmit="event.preventDefault(); cls_controlaccess.breakin()">
+                                    <input type="text" id="controlaccess_BREAKIN" name="controlaccess_BREAKIN" class="form-control" value="BREAKIN">
+                                </form>
+                                <form action="" name="form_controlaccess_BREAKOUT" onsubmit="event.preventDefault(); cls_controlaccess.breakout()">
+                                    <input type="text" id="controlaccess_BREAKOUT" name="controlaccess_BREAKOUT" class="form-control" value="BREAKOUT">
+                                </form>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-                </div>
-            </div>
             </div>
 
         </div>

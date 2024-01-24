@@ -53,7 +53,7 @@ class articleController extends Controller
         $code = $request->input('b');
         $category = $request->input('c');
         $promotion = $request->input('d');
-        $option = $request->input('e');
+        $option = (!empty($request->input('e'))) ? $request->input('e') : [];
 
         $check_description = tm_article::where('tx_article_value',$description)->where('article_ai_category_id',$category)->count();
         if ($check_description > 0) {

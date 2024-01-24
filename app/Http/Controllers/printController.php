@@ -1292,40 +1292,40 @@ class printController extends Controller
 		$rs_productinput = $productinputController->report($from,$to);
 
 		$total_nontaxable = 0;
-    $total_taxable = 0;
-    $total_tax = 0;
-    foreach($rs_productinput['list'] as $productinput) {
-      $total_nontaxable  += $productinput['tx_productinput_nontaxable'];
-      $total_taxable     += $productinput['tx_productinput_taxable'];
-      $total_tax         += $productinput['tx_productinput_tax'];
-    }
+		$total_taxable = 0;
+		$total_tax = 0;
+		foreach($rs_productinput['list'] as $productinput) {
+		$total_nontaxable  += $productinput['tx_productinput_nontaxable'];
+		$total_taxable     += $productinput['tx_productinput_taxable'];
+		$total_tax         += $productinput['tx_productinput_tax'];
+		}
 
 		$content = '
-      <div class="row py-4">
-        <div class="col-sm-12 text-center">
-          <h3>Reporte de Compras</h3>
-          <strong>Desde:</strong> '.date('d-m-Y', strtotime($c_from)).'
-          &nbsp;
-          <strong>Hasta:</strong> '.date('d-m-Y', strtotime($c_to)).'	
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-12 text-center">
-          <h5>TOTALES DE COMPRAS</h5>
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Base No Imponible</strong><br><strong>B/</strong> '.number_format($total_nontaxable,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Base Imponible</strong><br><strong>B/</strong> '.number_format($total_taxable,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Impuesto</strong><br><strong>B/</strong> '.number_format($total_tax,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Total</strong><br><strong>B/</strong> '.number_format($total_nontaxable+$total_taxable+$total_tax,2).'
-        </div>
-      </div>
+			<div class="row py-4">
+				<div class="col-sm-12 text-center">
+				<h3>Reporte de Compras</h3>
+				<strong>Desde:</strong> '.date('d-m-Y', strtotime($c_from)).'
+				&nbsp;
+				<strong>Hasta:</strong> '.date('d-m-Y', strtotime($c_to)).'	
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-12 text-center">
+				<h5>TOTALES DE COMPRAS</h5>
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Base No Imponible</strong><br><strong>B/</strong> '.number_format($total_nontaxable,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Base Imponible</strong><br><strong>B/</strong> '.number_format($total_taxable,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Impuesto</strong><br><strong>B/</strong> '.number_format($total_tax,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Total</strong><br><strong>B/</strong> '.number_format($total_nontaxable+$total_taxable+$total_tax,2).'
+				</div>
+			</div>
 		';
 		$content_bottom = '';
 
@@ -1350,124 +1350,124 @@ class printController extends Controller
 		$creditnoteController = new creditnoteController;
 		$rs_creditnote = $creditnoteController->report($from,$to);
 
-    $total_nontaxable = 0;
-    $total_taxable = 0;
-    $total_tax = 0;
-    $total_change = 0;
+		$total_nontaxable = 0;
+		$total_taxable = 0;
+		$total_tax = 0;
+		$total_change = 0;
 		foreach ($rs_charge['list'] as $key => $charge)  {
-      $total_nontaxable += $charge['tx_charge_nontaxable'];
-      $total_taxable += $charge['tx_charge_taxable'];
-      $total_tax += $charge['tx_charge_tax'];
-      $total_change += $charge['tx_charge_change'];
-    }
+			$total_nontaxable += $charge['tx_charge_nontaxable'];
+			$total_taxable += $charge['tx_charge_taxable'];
+			$total_tax += $charge['tx_charge_tax'];
+			$total_change += $charge['tx_charge_change'];
+		}
 
-    $cn_nontaxable = 0;
-    $cn_taxable = 0;
-    $cn_tax = 0;
+		$cn_nontaxable = 0;
+		$cn_taxable = 0;
+		$cn_tax = 0;
 		foreach ($rs_creditnote['list'] as $key => $creditnote) {
-      $cn_nontaxable += $creditnote['tx_creditnote_nontaxable'];
-      $cn_taxable += $creditnote['tx_creditnote_taxable'];
-      $cn_tax += $creditnote['tx_creditnote_tax'];
-    }
+			$cn_nontaxable += $creditnote['tx_creditnote_nontaxable'];
+			$cn_taxable += $creditnote['tx_creditnote_taxable'];
+			$cn_tax += $creditnote['tx_creditnote_tax'];
+		}
 
-    $raw_paymenttotal = [1=>0, 2=>0, 3=>0, 4=>0, 5=>0, 6=>0, 7=>0, 8=>0 ];
+		$raw_paymenttotal = [1=>0, 2=>0, 3=>0, 4=>0, 5=>0, 6=>0, 7=>0, 8=>0 ];
 		foreach ($rs_charge['paymentmethod'] as $key => $payment)  {
-      $raw_paymenttotal[$payment['payment_ai_paymentmethod_id']] += $payment['tx_payment_amount'];
-    }
-    $content = '
-      <div class="row py-4">
-        <div class="col-sm-12 text-center">
-          <h3>Reporte de Ventas</h3>
-          <strong>Desde:</strong> '.date('d-m-Y',strtotime($c_from)).'
-          &nbsp;
-          <strong>Hasta:</strong> '.date('d-m-Y',strtotime($c_to)).'		
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-12 text-center">
-          <h5>TOTALES DE VENTA</h5>
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Base No Imponible</strong><br><strong>B/</strong> '.number_format($total_nontaxable,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Base Imponible</strong><br><strong>B/</strong>  '.number_format($total_taxable,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Impuesto</strong><br><strong>B/</strong>  '.number_format($total_tax,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Total</strong><br><strong>B/</strong>  '.number_format($total_nontaxable+$total_taxable+$total_tax,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <h5>TOTALES NOTA DE CREDITO</h5>
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Base No Imponible</strong><br><strong>B/</strong> '.number_format($cn_nontaxable,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Base Imponible</strong><br><strong>B/</strong> '.number_format($cn_taxable,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Devolucion de Impuestos</strong><br><strong>B/</strong> '.number_format($cn_tax,2).'
-        </div>
-        <div class="col-sm-12 text-center">
-          <strong>Total</strong><br><strong>B/</strong> '.number_format($cn_nontaxable+$cn_taxable+$cn_tax,2).'
-        </div>
-      </div>
-      <div class="row pt-4">
-        <div class="col-lg-12">
-					<table class="table">
-						<tbody>
-							<tr class="bs_1">
-								<th colspan="4">Medios de Pago</td>
-							</tr>
-							<tr>
-								<td>
-									<strong>Efectivo</strong><br>
-									B/ '.number_format($raw_paymenttotal[1]-$total_change,2).'
-								</td>
-								<td>
-									<strong>Cheque</strong><br>
-									B/ '.number_format($raw_paymenttotal[2],2).'
-								</td>
-								<td>
-									<strong>Tarjeta Debito</strong><br>
-									B/ '.number_format($raw_paymenttotal[3],2).'
-								</td>
-								<td>
-									<strong>Tarjeta Credito</strong><br>
-									B/ '.number_format($raw_paymenttotal[4],2).'
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<strong>Yappi</strong><br>
-									B/ '.number_format($raw_paymenttotal[5],2).'
-								</td>
-								<td>
-									<strong>Nequi</strong><br>
-									B/ '.number_format($raw_paymenttotal[6],2).'
-								</td>
-								<td>
-									<strong>Otro</strong><br>
-									B/ '.number_format($raw_paymenttotal[7],2).'
-								</td>
-								<td>
-									<strong>Cupon</strong><br>
-									B/ '.number_format($raw_paymenttotal[8],2).'
-								</td>
-							</tr>
-						</tbody>
-						<tfoot>
-							<tr class="bs_1">
-								<td colspan="4">&nbsp;</td>
-							</tr>
-						</tfoot>
-					</table>
-        </div>
-      </div>
-    ';
+			$raw_paymenttotal[$payment['payment_ai_paymentmethod_id']] += $payment['tx_payment_amount'];
+		}
+		$content = '
+			<div class="row py-4">
+				<div class="col-sm-12 text-center">
+				<h3>Reporte de Ventas</h3>
+				<strong>Desde:</strong> '.date('d-m-Y',strtotime($c_from)).'
+				&nbsp;
+				<strong>Hasta:</strong> '.date('d-m-Y',strtotime($c_to)).'		
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-12 text-center">
+				<h5>TOTALES DE VENTA</h5>
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Base No Imponible</strong><br><strong>B/</strong> '.number_format($total_nontaxable,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Base Imponible</strong><br><strong>B/</strong>  '.number_format($total_taxable,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Impuesto</strong><br><strong>B/</strong>  '.number_format($total_tax,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Total</strong><br><strong>B/</strong>  '.number_format($total_nontaxable+$total_taxable+$total_tax,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<h5>TOTALES NOTA DE CREDITO</h5>
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Base No Imponible</strong><br><strong>B/</strong> '.number_format($cn_nontaxable,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Base Imponible</strong><br><strong>B/</strong> '.number_format($cn_taxable,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Devolucion de Impuestos</strong><br><strong>B/</strong> '.number_format($cn_tax,2).'
+				</div>
+				<div class="col-sm-12 text-center">
+				<strong>Total</strong><br><strong>B/</strong> '.number_format($cn_nontaxable+$cn_taxable+$cn_tax,2).'
+				</div>
+			</div>
+			<div class="row pt-4">
+				<div class="col-lg-12">
+							<table class="table">
+								<tbody>
+									<tr class="bs_1">
+										<th colspan="4">Medios de Pago</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Efectivo</strong><br>
+											B/ '.number_format($raw_paymenttotal[1]-$total_change,2).'
+										</td>
+										<td>
+											<strong>Cheque</strong><br>
+											B/ '.number_format($raw_paymenttotal[2],2).'
+										</td>
+										<td>
+											<strong>Tarjeta Debito</strong><br>
+											B/ '.number_format($raw_paymenttotal[3],2).'
+										</td>
+										<td>
+											<strong>Tarjeta Credito</strong><br>
+											B/ '.number_format($raw_paymenttotal[4],2).'
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Yappi</strong><br>
+											B/ '.number_format($raw_paymenttotal[5],2).'
+										</td>
+										<td>
+											<strong>Nequi</strong><br>
+											B/ '.number_format($raw_paymenttotal[6],2).'
+										</td>
+										<td>
+											<strong>Otro</strong><br>
+											B/ '.number_format($raw_paymenttotal[7],2).'
+										</td>
+										<td>
+											<strong>Cupon</strong><br>
+											B/ '.number_format($raw_paymenttotal[8],2).'
+										</td>
+									</tr>
+								</tbody>
+								<tfoot>
+									<tr class="bs_1">
+										<td colspan="4">&nbsp;</td>
+									</tr>
+								</tfoot>
+							</table>
+				</div>
+			</div>
+		';
 
 		$content_bottom = '';
 
@@ -1491,24 +1491,24 @@ class printController extends Controller
 		$rs_productinput = $productinputController->report($from,$to);
 
 		$total_nontaxable = 0;
-    $total_taxable = 0;
-    $total_tax = 0;
+		$total_taxable = 0;
+		$total_tax = 0;
 		$content = '
-    <h5>Listado de Compras, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
-      <table class="table table-bordered table-condensed table-striped table-print">
-        <thead style="border: solid">
-          <tr>
-            <th class="col-xs-2 col-sm-2 col-md-2 col-lg-2">Fecha</th>
-            <th class="col-xs-4 col-sm-4 col-md-4 col-lg-4">Proveedor</th>
-            <th class="col-xs-3 col-sm-3 col-md-3 col-lg-3">RUC</th>
-            <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">#Num.</th>
-            <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Imp.</th>
-            <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-    ';
-    foreach($rs_productinput['list'] as $productinput) {
+			<h5>Listado de Compras, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
+			<table class="table table-bordered table-condensed table-striped table-print">
+				<thead style="border: solid">
+				<tr>
+					<th class="col-xs-2 col-sm-2 col-md-2 col-lg-2">Fecha</th>
+					<th class="col-xs-4 col-sm-4 col-md-4 col-lg-4">Proveedor</th>
+					<th class="col-xs-3 col-sm-3 col-md-3 col-lg-3">RUC</th>
+					<th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">#Num.</th>
+					<th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Imp.</th>
+					<th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total</th>
+				</tr>
+				</thead>
+				<tbody>
+		';
+    	foreach($rs_productinput['list'] as $productinput) {
 			$content .= '
 				<tr>
 					<td>'.date('d-m-Y',strtotime($productinput['tx_productinput_date'])).'</td>
@@ -1519,29 +1519,29 @@ class printController extends Controller
 					<td>'.number_format($productinput['tx_productinput_total'],2).'</td>
 				</tr>
 			';
-      $total_nontaxable  += $productinput['tx_productinput_nontaxable'];
-      $total_taxable     += $productinput['tx_productinput_taxable'];
-      $total_tax         += $productinput['tx_productinput_tax'];
-    }
-    $content .= '
-        </tbody>
-        <tfoot style="border:solid;">
-          <tr>
-            <td colspan="6">
-							<table class="table" style="border: 0;">
-								<tbody>
-									<tr>
-										<td style="border: 0;"><strong>Subtotal: </strong> B/ '.number_format($total_nontaxable+$total_taxable,2).'</th>
-										<td style="border: 0;"><strong>Imp.: </strong> B/ '.number_format($total_tax,2).'</th>
-										<td style="border: 0;"><strong>Total: </strong> B/ '.number_format($total_nontaxable+$total_taxable+$total_tax,2).'</th>
-									</tr>
-								</tbody>
-							</table>
-						</td>
-          </tr>
-        </tfoot>
-      </table>
-    ';
+			$total_nontaxable  += $productinput['tx_productinput_nontaxable'];
+			$total_taxable     += $productinput['tx_productinput_taxable'];
+			$total_tax         += $productinput['tx_productinput_tax'];
+    	}
+		$content .= '
+			</tbody>
+			<tfoot style="border:solid;">
+				<tr>
+					<td colspan="6">
+						<table class="table" style="border: 0;">
+							<tbody>
+								<tr>
+									<td style="border: 0;"><strong>Subtotal: </strong> B/ '.number_format($total_nontaxable+$total_taxable,2).'</th>
+									<td style="border: 0;"><strong>Imp.: </strong> B/ '.number_format($total_tax,2).'</th>
+									<td style="border: 0;"><strong>Total: </strong> B/ '.number_format($total_nontaxable+$total_taxable+$total_tax,2).'</th>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+		';
 		$content_bottom = '';
 
 		$raw_page = [
@@ -1565,16 +1565,16 @@ class printController extends Controller
 		$creditnoteController = new creditnoteController;
 		$rs_creditnote = $creditnoteController->report($from,$to);
 
-    $total_nontaxable = 0;
-    $total_taxable = 0;
-    $total_tax = 0;
-    $total_change = 0;
+		$total_nontaxable = 0;
+		$total_taxable = 0;
+		$total_tax = 0;
+		$total_change = 0;
 
-    $total_cn_nontaxable = 0;
-    $total_cn_taxable = 0;
-    $total_cn_tax = 0;
+		$total_cn_nontaxable = 0;
+		$total_cn_taxable = 0;
+		$total_cn_tax = 0;
 
-    $content = '
+    	$content = '
 			<h5>Listado de Ventas, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
 				<table class="table table-bordered table-condensed table-striped table-print">
 					<thead style="border: solid">
@@ -1588,91 +1588,91 @@ class printController extends Controller
 						</tr>
 					</thead>
 					<tbody>
-    ';
+    	';
 		foreach ($rs_charge['list'] as $key => $charge) {
-      $content .= '
-        <tr>
-          <td>'.date('d-m-Y h:i A',strtotime($charge['created_at'])).'</td>
-          <td>'.$charge['tx_charge_number'].'</td>
-          <td>'.$charge['tx_client_name'].' RUC '.$charge['tx_client_cif'].' DV '.$charge['tx_client_dv'].'</td>
-          <td>'.$charge['user_name'].'</td>
-          <td>'.number_format($charge['tx_charge_discount'],2).'</td>
-          <td>'.number_format($charge['tx_charge_total'],2).'</td>
-        </tr>
-      ';
-      $total_nontaxable += $charge['tx_charge_nontaxable'];
-      $total_taxable += $charge['tx_charge_taxable'];
-      $total_tax += $charge['tx_charge_tax'];
-    }
-    $content .= '
-				</tbody>
-				<tfoot style="border:solid;">
-          <tr>
-            <td colspan="6">
-							<table class="table" style="border: 0;">
-								<tbody>
-									<tr>
-										<td style="border: 0;"><strong>Subtotal: </strong> B/ '.number_format($total_nontaxable+$total_taxable,2).'</th>
-										<td style="border: 0;"><strong>Imp.: </strong> B/ '.number_format($total_tax,2).'</th>
-										<td style="border: 0;"><strong>Total: </strong> B/ '.number_format($total_nontaxable+$total_taxable+$total_tax,2).'</th>
-									</tr>
-								</tbody>
-							</table>
-						</td>
-          </tr>
+			$content .= '
+				<tr>
+				<td>'.date('d-m-Y h:i A',strtotime($charge['created_at'])).'</td>
+				<td>'.$charge['tx_charge_number'].'</td>
+				<td>'.$charge['tx_client_name'].' RUC '.$charge['tx_client_cif'].' DV '.$charge['tx_client_dv'].'</td>
+				<td>'.$charge['user_name'].'</td>
+				<td>'.number_format($charge['tx_charge_discount'],2).'</td>
+				<td>'.number_format($charge['tx_charge_total'],2).'</td>
+				</tr>
+			';
+			$total_nontaxable += $charge['tx_charge_nontaxable'];
+			$total_taxable += $charge['tx_charge_taxable'];
+			$total_tax += $charge['tx_charge_tax'];
+		}
+    	$content .= '
+					</tbody>
+					<tfoot style="border:solid;">
+						<tr>
+							<td colspan="6">
+								<table class="table" style="border: 0;">
+									<tbody>
+										<tr>
+											<td style="border: 0;"><strong>Subtotal: </strong> B/ '.number_format($total_nontaxable+$total_taxable,2).'</th>
+											<td style="border: 0;"><strong>Imp.: </strong> B/ '.number_format($total_tax,2).'</th>
+											<td style="border: 0;"><strong>Total: </strong> B/ '.number_format($total_nontaxable+$total_taxable+$total_tax,2).'</th>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
 				</tfoot>
 			</table>
-    ';
+    	';
 
-    $content .= '
-      <h5>Listado de Notas de Cr&eacute;dito, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
-      <table class="table table-bordered table-condensed table-striped table-print">
-        <thead style="border: solid">
-          <tr class="text-center">
-            <th class="col-sm-2">Fecha</th>
-            <th class="col-sm-1">#Num</th>
-            <th class="col-sm-5">Cliente</th>
-            <th class="col-sm-2">Cajera(o)</th>
-            <th class="col-sm-1">Imp.</th>
-            <th class="col-sm-1">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-    ';
+		$content .= '
+		<h5>Listado de Notas de Cr&eacute;dito, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
+		<table class="table table-bordered table-condensed table-striped table-print">
+			<thead style="border: solid">
+			<tr class="text-center">
+				<th class="col-sm-2">Fecha</th>
+				<th class="col-sm-1">#Num</th>
+				<th class="col-sm-5">Cliente</th>
+				<th class="col-sm-2">Cajera(o)</th>
+				<th class="col-sm-1">Imp.</th>
+				<th class="col-sm-1">Total</th>
+			</tr>
+			</thead>
+			<tbody>
+		';
 		foreach ($rs_creditnote['list'] as $key => $creditnote) {
-      $content .= '
-        <tr>
-          <td>'.date('d-m-Y h:i A', strtotime($creditnote['created_at'])).'</td>
-          <td>'.$creditnote['tx_creditnote_number'].'</td>
-          <td>'.$creditnote['tx_client_name'].' RUC '.$creditnote['tx_client_cif'].' DV '.$creditnote['tx_client_dv'].'</td>
-          <td>'.$creditnote['user_name'].'</td>
-          <td>'.$creditnote['tx_creditnote_tax'].'</td>
-          <td>'.number_format($creditnote['tx_creditnote_nontaxable'] + $creditnote['tx_creditnote_taxable'] + $creditnote['tx_creditnote_tax'],2).'</td>
-        </tr>
-      ';
-      $total_cn_nontaxable += $creditnote['tx_creditnote_nontaxable'];
-      $total_cn_taxable += $creditnote['tx_creditnote_taxable'];
-      $total_cn_tax += $creditnote['tx_creditnote_tax'];
-    }
-    $content .= '
-        </tbody>
-        <tfoot style="border:solid;">
-          <tr>
-            <td colspan="6">
-							<table class="table" style="border: 0;">
-								<tbody>
-									<tr>
-										<td style="border: 0;"><strong>Subtotal: </strong> B/ '.number_format($total_cn_nontaxable+$total_cn_taxable,2).'</th>
-										<td style="border: 0;"><strong>Imp.: </strong> B/ '.number_format($total_cn_tax,2).'</th>
-										<td style="border: 0;"><strong>Total: </strong> B/ '.number_format($total_cn_nontaxable+$total_cn_taxable+$total_cn_tax,2).'</th>
-									</tr>
-								</tbody>
-							</table>
-						</td>
-          </tr>
-        </tfoot>
-      </table>
-    ';
+			$content .= '
+				<tr>
+					<td>'.date('d-m-Y h:i A', strtotime($creditnote['created_at'])).'</td>
+					<td>'.$creditnote['tx_creditnote_number'].'</td>
+					<td>'.$creditnote['tx_client_name'].' RUC '.$creditnote['tx_client_cif'].' DV '.$creditnote['tx_client_dv'].'</td>
+					<td>'.$creditnote['user_name'].'</td>
+					<td>'.$creditnote['tx_creditnote_tax'].'</td>
+					<td>'.number_format($creditnote['tx_creditnote_nontaxable'] + $creditnote['tx_creditnote_taxable'] + $creditnote['tx_creditnote_tax'],2).'</td>
+				</tr>
+			';
+			$total_cn_nontaxable += $creditnote['tx_creditnote_nontaxable'];
+			$total_cn_taxable += $creditnote['tx_creditnote_taxable'];
+			$total_cn_tax += $creditnote['tx_creditnote_tax'];
+		}
+		$content .= '
+			</tbody>
+			<tfoot style="border:solid;">
+			<tr>
+				<td colspan="6">
+								<table class="table" style="border: 0;">
+									<tbody>
+										<tr>
+											<td style="border: 0;"><strong>Subtotal: </strong> B/ '.number_format($total_cn_nontaxable+$total_cn_taxable,2).'</th>
+											<td style="border: 0;"><strong>Imp.: </strong> B/ '.number_format($total_cn_tax,2).'</th>
+											<td style="border: 0;"><strong>Total: </strong> B/ '.number_format($total_cn_nontaxable+$total_cn_taxable+$total_cn_tax,2).'</th>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+			</tr>
+			</tfoot>
+		</table>
+		';
 
 		$content_bottom = '';
 
@@ -1695,59 +1695,59 @@ class printController extends Controller
 		$creditnoteController = new creditnoteController;
 		$rs_creditnote = $creditnoteController->report($from,$to);
 
-    $total_cn_nontaxable = 0;
-    $total_cn_taxable = 0;
-    $total_cn_tax = 0;
+		$total_cn_nontaxable = 0;
+		$total_cn_taxable = 0;
+		$total_cn_tax = 0;
 
-    $content = '
-      <h5>Listado de Notas de Cr&eacute;dito, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
-      <table class="table table-bordered table-condensed table-striped table-print">
-        <thead style="border: solid">
-          <tr class="text-center">
-            <th class="col-sm-2">Fecha</th>
-            <th class="col-sm-1">#Num</th>
-            <th class="col-sm-5">Cliente</th>
-            <th class="col-sm-2">Cajera(o)</th>
-            <th class="col-sm-1">Imp.</th>
-            <th class="col-sm-1">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-    ';
+		$content = '
+		<h5>Listado de Notas de Cr&eacute;dito, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
+		<table class="table table-bordered table-condensed table-striped table-print">
+			<thead style="border: solid">
+			<tr class="text-center">
+				<th class="col-sm-2">Fecha</th>
+				<th class="col-sm-1">#Num</th>
+				<th class="col-sm-5">Cliente</th>
+				<th class="col-sm-2">Cajera(o)</th>
+				<th class="col-sm-1">Imp.</th>
+				<th class="col-sm-1">Total</th>
+			</tr>
+			</thead>
+			<tbody>
+		';
 		foreach ($rs_creditnote['list'] as $key => $creditnote) {
-      $content .= '
-        <tr>
-          <td>'.date('d-m-Y h:i A', strtotime($creditnote['created_at'])).'</td>
-          <td>'.$creditnote['tx_creditnote_number'].'</td>
-          <td>'.$creditnote['tx_client_name'].' RUC '.$creditnote['tx_client_cif'].' DV '.$creditnote['tx_client_dv'].'</td>
-          <td>'.$creditnote['user_name'].'</td>
-          <td>'.$creditnote['tx_creditnote_tax'].'</td>
-          <td>'.number_format($creditnote['tx_creditnote_nontaxable'] + $creditnote['tx_creditnote_taxable'] + $creditnote['tx_creditnote_tax'],2).'</td>
-        </tr>
-      ';
-      $total_cn_nontaxable += $creditnote['tx_creditnote_nontaxable'];
-      $total_cn_taxable += $creditnote['tx_creditnote_taxable'];
-      $total_cn_tax += $creditnote['tx_creditnote_tax'];
-    }
-    $content .= '
-        </tbody>
-        <tfoot style="border:solid;">
-          <tr>
-            <td colspan="6">
-							<table class="table" style="border: 0;">
-								<tbody>
-									<tr>
-										<td style="border: 0;"><strong>Subtotal: </strong> B/ '.number_format($total_cn_nontaxable+$total_cn_taxable,2).'</th>
-										<td style="border: 0;"><strong>Imp.: </strong> B/ '.number_format($total_cn_tax,2).'</th>
-										<td style="border: 0;"><strong>Total: </strong> B/ '.number_format($total_cn_nontaxable+$total_cn_taxable+$total_cn_tax,2).'</th>
-									</tr>
-								</tbody>
-							</table>
-						</td>
-          </tr>
-        </tfoot>
-      </table>
-    ';
+			$content .= '
+				<tr>
+				<td>'.date('d-m-Y h:i A', strtotime($creditnote['created_at'])).'</td>
+				<td>'.$creditnote['tx_creditnote_number'].'</td>
+				<td>'.$creditnote['tx_client_name'].' RUC '.$creditnote['tx_client_cif'].' DV '.$creditnote['tx_client_dv'].'</td>
+				<td>'.$creditnote['user_name'].'</td>
+				<td>'.$creditnote['tx_creditnote_tax'].'</td>
+				<td>'.number_format($creditnote['tx_creditnote_nontaxable'] + $creditnote['tx_creditnote_taxable'] + $creditnote['tx_creditnote_tax'],2).'</td>
+				</tr>
+			';
+			$total_cn_nontaxable += $creditnote['tx_creditnote_nontaxable'];
+			$total_cn_taxable += $creditnote['tx_creditnote_taxable'];
+			$total_cn_tax += $creditnote['tx_creditnote_tax'];
+		}
+		$content .= '
+			</tbody>
+			<tfoot style="border:solid;">
+			<tr>
+				<td colspan="6">
+					<table class="table" style="border: 0;">
+						<tbody>
+							<tr>
+								<td style="border: 0;"><strong>Subtotal: </strong> B/ '.number_format($total_cn_nontaxable+$total_cn_taxable,2).'</th>
+								<td style="border: 0;"><strong>Imp.: </strong> B/ '.number_format($total_cn_tax,2).'</th>
+								<td style="border: 0;"><strong>Total: </strong> B/ '.number_format($total_cn_nontaxable+$total_cn_taxable+$total_cn_tax,2).'</th>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+			</tfoot>
+		</table>
+		';
 
 		$content_bottom = '';
 
@@ -1778,24 +1778,24 @@ class printController extends Controller
 		$rs_productinput = json_decode(json_encode($rs_productinput),true);
 
 		$total_nontaxable = 0;
-    $total_taxable = 0;
-    $total_tax = 0;
+		$total_taxable = 0;
+		$total_tax = 0;
 		$content = '
-    <h5>Listado de Compras por Proveedor, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
-      <table class="table table-bordered table-condensed table-striped table-print">
-        <thead style="border: solid">
-          <tr>
-            <th class="col-xs-5 col-sm-5 col-md-5 col-lg-5">Proveedor</th>
-            <th class="col-xs-2 col-sm-2 col-md-2 col-lg-2">RUC</th>
-            <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total No Imp.</th>
-            <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total Imponible.</th>
-            <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total Impuesto</th>
-            <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-    ';
-    foreach($rs_productinput as $productinput) {
+			<h5>Listado de Compras por Proveedor, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
+			<table class="table table-bordered table-condensed table-striped table-print">
+				<thead style="border: solid">
+					<tr>
+						<th class="col-xs-5 col-sm-5 col-md-5 col-lg-5">Proveedor</th>
+						<th class="col-xs-2 col-sm-2 col-md-2 col-lg-2">RUC</th>
+						<th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total No Imp.</th>
+						<th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total Imponible.</th>
+						<th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total Impuesto</th>
+						<th class="col-xs-1 col-sm-1 col-md-1 col-lg-1">Total</th>
+					</tr>
+				</thead>
+				<tbody>
+		';
+    	foreach($rs_productinput as $productinput) {
 			$content .= '
 				<tr>
 					<td>'.$productinput['tx_provider_value'].'</td>
@@ -1806,15 +1806,15 @@ class printController extends Controller
 					<td>'.number_format($productinput['total_nontaxable'] + $productinput['total_taxable'] + $productinput['total_tax'],2).'</td>
 				</tr>
 			';
-      $total_nontaxable  += $productinput['total_nontaxable'];
-      $total_taxable     += $productinput['total_taxable'];
-      $total_tax         += $productinput['total_tax'];
-    }
-    $content .= '
-        </tbody>
-        <tfoot style="border:solid;">
-          <tr>
-            <td colspan="6">
+			$total_nontaxable  += $productinput['total_nontaxable'];
+			$total_taxable     += $productinput['total_taxable'];
+			$total_tax         += $productinput['total_tax'];
+		}
+		$content .= '
+				</tbody>
+				<tfoot style="border:solid;">
+					<tr>
+						<td colspan="6">
 							<table class="table" style="border: 0;">
 								<tbody>
 									<tr>
@@ -1825,10 +1825,10 @@ class printController extends Controller
 								</tbody>
 							</table>
 						</td>
-          </tr>
-        </tfoot>
-      </table>
-    ';
+					</tr>
+				</tfoot>
+			</table>
+		';
 		$content_bottom = '';
 
 		$raw_page = [
@@ -1850,21 +1850,21 @@ class printController extends Controller
 		$rs = tm_depletion::select('tm_products.tx_product_value','tm_depletions.tx_depletion_quantity','tm_depletions.tx_depletion_status','tm_depletions.created_at')->join('tm_products','tm_products.ai_product_id','tm_depletions.depletion_ai_product_id')->where('tm_depletions.created_at','>=',$c_from)->where('tm_depletions.created_at','<=',$c_to)->orderby('created_at','DESC')->get();
 
 		$total_nontaxable = 0;
-    $total_taxable = 0;
-    $total_tax = 0;
+		$total_taxable = 0;
+		$total_tax = 0;
 		$content = '
 			<h5>Listado de Mermas, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
-				<table class="table table-bordered table-condensed table-striped table-print">
-					<thead style="border: solid">
-						<tr>
-							<th class="col-lg-2">Cantidad</th>
-							<th class="col-lg-6">Descripción</th>
-							<th class="col-lg-4">Fecha</th>
-						</tr>
-					</thead>
-					<tbody>
-    ';
-    foreach($rs as $depletion) {
+			<table class="table table-bordered table-condensed table-striped table-print">
+				<thead style="border: solid">
+					<tr>
+						<th class="col-lg-2">Cantidad</th>
+						<th class="col-lg-6">Descripción</th>
+						<th class="col-lg-4">Fecha</th>
+					</tr>
+				</thead>
+				<tbody>
+    	';
+		foreach($rs as $depletion) {
 			$content .= '
 				<tr>
 					<td style="text-align: center;">'.$depletion['tx_depletion_quantity'].'</td>
@@ -1872,18 +1872,18 @@ class printController extends Controller
 					<td>'.date('d-m-Y h:i A', strtotime($depletion['created_at'])).'</td>
 				</tr>
 			';
-    }
-    $content .= '
-        </tbody>
-        <tfoot style="border:solid;">
-          <tr>
-            <td colspan="3">
-							&nbsp;
-						</td>
-          </tr>
-        </tfoot>
-      </table>
-    ';
+		}
+		$content .= '
+				</tbody>
+				<tfoot style="border:solid;">
+				<tr>
+					<td colspan="3">
+						&nbsp;
+					</td>
+				</tr>
+				</tfoot>
+			</table>
+		';
 		$content_bottom = '';
 
 		$raw_page = [
@@ -1906,17 +1906,17 @@ class printController extends Controller
 		
 		$content = '
 			<h5>Listado de Comandas Anuladas, Desde: '.date('d-m-Y',strtotime($c_from)).' Hasta: '.date('d-m-Y',strtotime($c_to)).'</h5>
-				<table class="table table-bordered table-condensed table-striped table-print">
-					<thead style="border: solid">
-						<tr>
-							<th class="col-sm-2">Cantidad</th>
-							<th class="col-sm-6">Descripción</th>
-							<th class="col-sm-4">Fecha</th>
-						</tr>
-					</thead>
-					<tbody>
-    ';
-    foreach($rs as $anuled) {
+			<table class="table table-bordered table-condensed table-striped table-print">
+				<thead style="border: solid">
+					<tr>
+						<th class="col-sm-2">Cantidad</th>
+						<th class="col-sm-6">Descripción</th>
+						<th class="col-sm-4">Fecha</th>
+					</tr>
+				</thead>
+				<tbody>
+    	';
+		foreach($rs as $anuled) {
 			$content .= '
 				<tr>
 					<td style="text-align: center;">'.$anuled['tx_commanddata_quantity'].'</td>
@@ -1924,18 +1924,18 @@ class printController extends Controller
 					<td style="text-align: center;">'.date('d-m-Y h:i A', strtotime($anuled['created_at'])).'</td>
 				</tr>
 			';
-    }
-    $content .= '
-        </tbody>
-        <tfoot style="border:solid;">
-          <tr>
-            <td colspan="3">
+		}
+		$content .= '
+				</tbody>
+				<tfoot style="border:solid;">
+					<tr>
+						<td colspan="3">
 							&nbsp;
 						</td>
-          </tr>
-        </tfoot>
-      </table>
-    ';
+					</tr>
+				</tfoot>
+			</table>
+		';
 		
 		$content_bottom = '';
 
@@ -1951,6 +1951,166 @@ class printController extends Controller
 		return $pdf->stream();
 	}
 
+
+
+
+
+
+
+
+
+	public function print_reportacregister ($from,$to,$user_id){
+		$acregisterController = new acregisterController;
+		$user_id = ($user_id === 'empty') ? '' : $user_id;
+		$raw_report = $acregisterController->report($from,$to,$user_id);
+
+		$data_counter = '';
+		foreach ($raw_report['counter_list'] as $value) {
+			$data_counter .= '
+				<tr class="bs_1">
+					<td class="text_center">'.$value['name'].'</td>
+					<td class="text_center">'.$value['counter'].'</td>
+					<td class="text_center">'.$value['inasistance'].'</td>
+				</tr>
+			';
+		}
+		$content[] = '
+			<div>
+				<h4>Conteo de Asistencias</h4>
+				<table class="table h_70">
+					<thead>
+						<tr class="bs_1">
+							<th>Nombre</td>
+							<th>Asistencias</td>
+							<th>Inasistencias</td>
+						</tr>
+					</thead>
+					<tbody>
+						'.$data_counter.'
+					</tbody>
+					<tfoot>
+						<tr class="bs_1">
+							<td colspan="3">&nbsp;</td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		';
+
+		$data_attendance = '';
+		foreach ($raw_report['report'] as $raw_person) {
+			foreach ($raw_person as $key => $date) {
+				foreach ($date as $key => $value) {
+					$data_attendance .= '
+						<tr class="bs_1">
+							<td class="text_center">'.$value['name'].'</td>
+							<td class="text_center">'.$value['date'].'</td>
+							<td class="text_center">'.((!empty($value['in'])) ? $value['in'] : "").'</td>
+							<td class="text_center">'.((!empty($value['out'])) ? $value['out'] : "").'</td>
+							<td class="text_center">'.((!empty($value['asistance'])) ? $value['asistance'] : "").'</td>
+							<td class="text_center">'.((!empty($value['breaktime'])) ? $value['breaktime'] : "").'</td>
+							<td class="text_center">'.((!empty($value['totaltime'])) ? $value['totaltime'] : "").'</td>
+							<td class="text_center">'.((!empty($value['extratime'])) ? $value['extratime'] : "").'</td>
+						</tr>
+					';
+				}
+			}
+		}
+		$content[] = '
+			<div>
+				<h4>Listado de Asistencias</h4>
+				<table class="table h_70">
+					<thead>
+						<tr class="bs_1">
+							<th>Nombre</td>
+							<th>Fecha</td>
+							<th>Entrada</td>
+							<th>Salida</td>
+							<th>Asistencia</td>
+							<th>Breaktime</td>
+							<th>Tiempo Total</td>
+							<th>Tiempo Extra</td>
+						</tr>
+					</thead>
+					<tbody>
+						'.$data_attendance.'
+					</tbody>
+					<tfoot>
+						<tr class="bs_1">
+							<td colspan="8">&nbsp;</td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		';
+
+
+
+		$data_register = '';
+		foreach ($raw_report['list'] as $value) {
+			switch ($value['tx_acregister_type']) {
+				case 1:
+          			$register_type = 'Entrada';
+					break;
+				case 2:
+          			$register_type = 'Entrada al Break';
+					break;
+				case 3:
+          			$register_type = 'Salida del Break';
+					break;
+				default:
+          			$register_type = 'Salida';
+					break;
+			}
+
+			$data_register .= '
+				<tr class="bs_1">
+					<td class="text_center">'.$value['id'].'</td>
+					<td class="text_center">'.$value['name'].'</td>
+					<td class="text_center">'.$register_type.'</td>
+					<td class="text_center">'.$value['created_at'].'</td>
+				</tr>
+			';
+		}
+		$content[] = '
+			<div>
+				<h4>Registros</h4>
+				<table class="table h_70">
+					<thead>
+						<tr class="bs_1">
+							<th>ID</td>
+							<th>Nombre</td>
+							<th>Registro</td>
+							<th>Fecha</td>
+						</tr>
+					</thead>
+					<tbody>
+						'.$data_register.'
+					</tbody>
+					<tfoot>
+						<tr class="bs_1">
+							<td colspan="4">&nbsp;</td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		';
+
+
+
+		$content_bottom = '';
+
+		$raw_page = [
+			'date' => date('d-m-Y'),
+			'title'=>'Reporte de Asistencias,  <br/>Desde: '.date('d-m-Y',strtotime($from)).' Hasta: '.date('d-m-Y',strtotime($to)).'<br/>('.$raw_report['total_day'].' dias)',
+			'content'=>$content,
+			'bottom'=>$content_bottom,
+			'title_page'=>"Reporte de Asistencias"
+		];
+		$pdf = \App::make('dompdf.wrapper');
+		$pdf->loadHTML($this->full_page($raw_page));
+		return $pdf->stream();
+	}
 
 
 

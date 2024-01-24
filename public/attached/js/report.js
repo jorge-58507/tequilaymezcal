@@ -84,6 +84,9 @@ class class_report
           case '10':
             cls_report.render_product_commanddata(from, to, obj.data.product_commanddata);
             break;
+          case '11':
+            cls_report.render_accesscontrol(from, to, obj.data.acregister);
+            break;
           default:
             cls_general.shot_toast_bs('Opción incorrecta.',{bg: 'text-bg-danger'});
             break;
@@ -681,7 +684,6 @@ class class_report
       // names must be equal
       return 0;
     });
-    console.log(raw_report);
     cls_dataproductinput.filtered = raw_report;
     list += `<div class="col-12 py-2" id="container_filtered">${cls_dataproductinput.generate_list(raw_report)}</div></div>`;
     document.getElementById('container_report').innerHTML = list;
@@ -733,6 +735,32 @@ class class_report
     cls_commanddata.filtered = raw_report;
     list += `<div class="col-12 py-2" id="container_filtered">${cls_commanddata.generate_productlist(raw_report)}</div></div>`;
     document.getElementById('container_report').innerHTML = list;
+  }
+  render_accesscontrol(from, to, raw_acregister){
+    var opt_user = '';
+    raw_acregister.user_list.map((line) => {
+      opt_user += `<option value="${line.id}">${line.name}</option>`;
+    })
+    var list = `<h5>Asistencia, Desde: ${from} Hasta: ${to}</h5>
+    <div class="row">
+      <div class="col-10 py-2">
+        <label for="sel_filterAttendance">Usuarios</label>
+        <select id="sel_filterAttendance" class="form-select" onchange="cls_accesscontrol.filter(this.value)"><option value=''>Seleccione</option>${opt_user}</select>
+      </div>
+      <div class="col-2 py-2">
+        <button class="badge btn btn-info" onclick="cls_accesscontrol.print()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+            <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+            <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+    list += `<div class="col-12 py-2" id="container_counterdays">${cls_accesscontrol.generate_list_counter(raw_acregister.counter_list)}</div></div>`;
+    list += `<div class="col-12 py-2" id="container_filtered">${cls_accesscontrol.generate_list(raw_acregister.report)}</div></div>`;
+    list += `<div class="col-12 py-2" id="container_register">${cls_accesscontrol.generate_list_register(raw_acregister.list)}</div></div>`;
+    document.getElementById('container_report').innerHTML = list;
+
   }
 
 }
@@ -1001,4 +1029,100 @@ class class_depletion{
     var to = document.getElementById('reportToDatefilter').value;
     cls_general.print_html(`/print_reportdepletion/${from}/${to}`);
   }
+}
+
+class class_accessControl{
+  constructor () {
+    this.result = [];
+  }
+  generate_list(raw_report) {
+    var list = `<h5>Asistencias</h5><table class="table"><thead class="text-bg-primary"><tr><th>Nombre</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Presente</th><th>Breaktime</th><th>Horas Trabajadas</th><th>Tiempo Extra</th></tr></thead><tbody>`;
+    raw_report.map((raw_person) => {
+      for (const a in raw_person) {
+        if (Object.hasOwnProperty.call(raw_person, a)) {
+          raw_person[a].map((line) => {
+            list += `
+              <tr>
+                <td>${line.name}</td>
+                <td>${line.date}</td>
+                <td>${(line.in) ? line.in : ''}</td>
+                <td>${(line.out) ? line.out : ''}</td>
+                <td>${(line.asistance) ? line.asistance : ''}</td>
+                <td>${(line.breaktime) ? line.breaktime : ''}</td>
+                <td>${(line.totaltime) ? line.totaltime : ''}</td>
+                <td>${(line.extratime) ? line.extratime : ''}</td>
+              </tr>
+            `;
+          })
+        }
+      }
+    })
+    return list+`</tbody><tfoot><tr><td colspan="7"></td></tr></tfoot></table>`;
+  }
+  generate_list_counter(raw_report) {
+    var list = `<h5>Listado de Asistencia</h5><table class="table"><thead class="text-bg-success"><tr><th>Nombre</th><th>Asistencia</th><th>Inasistencia</th></tr></thead><tbody>`;
+    raw_report.map((line) => {
+      list += `
+        <tr>
+          <td>${line.name}</td>
+          <td>${line.counter}</td>
+          <td>${line.inasistance}</td>
+        </tr>
+      `;
+    })
+    return list + `</tbody><tfoot><tr><td colspan="7"></td></tr></tfoot></table>`;
+  }
+  generate_list_register(raw_report) {
+    var list = `<h5>Registros</h5><table class="table"><thead class="text-bg-secondary"><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Registro</th></tr></thead><tbody>`;
+    raw_report.map((line) => {
+      switch (line.tx_acregister_type) {
+        case 1:
+          var register_type = 'Entrada';
+          break;
+        case 2:
+          var register_type = 'Entrada al break';
+          break;
+        case 3:
+          var register_type = 'Salida del break';
+          break;
+        default:
+          var register_type = 'Salida';
+          break;
+      }
+      list += `
+        <tr>
+          <td>${line.id}</td>
+          <td>${line.name}</td>
+          <td>${register_type}</td>
+          <td>${line.created_at}</td>
+        </tr>
+      `;
+    })
+    return list + `</tbody><tfooter><tr><td colspan="7"></td></tr></tfooter></table>`;
+  }
+  filter(user_id){
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+
+    var url = '/acregister/filter';
+    var method = 'POST';
+    var body = JSON.stringify({ a: from, b: to, c: user_id });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('container_counterdays').innerHTML = cls_accesscontrol.generate_list_counter(obj.data.counter_list);
+        document.getElementById('container_filtered').innerHTML = cls_accesscontrol.generate_list(obj.data.report);
+        document.getElementById('container_register').innerHTML = cls_accesscontrol.generate_list_register(obj.data.list);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  print() {
+    var user_id = (cls_general.is_empty_var(document.getElementById('sel_filterAttendance').value) === 0) ? 'empty' : document.getElementById('sel_filterAttendance').value;
+    var from = document.getElementById('reportFromDatefilter').value;
+    var to = document.getElementById('reportToDatefilter').value;
+    cls_general.print_html(`/print_reportacregister/${from}/${to}/${user_id}`);
+  }
+
 }

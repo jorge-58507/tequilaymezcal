@@ -124,6 +124,9 @@
                             </div>
                             <div class="row py-3">
                                 <div class="col-sm-6 text-center d-grid gap-2">
+                                    <button class="btn tmgreen_bg btn_xl" data-bs-toggle="modal" data-bs-target="#accessControlModal" onclick="cls_controlaccess.init()" type="button">{{ __('Marcación') }}</button>
+                                </div>
+                                <div class="col-sm-6 text-center d-grid gap-2">
                                     <button class="btn btn-primary btn_xl" onclick="document.getElementById('form_logout').submit()" type="button">Salir</button>
                                 </div>
                             </div>
@@ -137,6 +140,52 @@
                     </div>
                 </div>
             </div>
+            {{-- MODAL ACCESSCONTROL --}}
+            <div class="modal fade" id="accessControlModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5">Registro de Asistencia</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="accessControlModal_body">
+                        <div class="row h_100">
+                            <div class="col-6 text-center pb-3">
+                                <button type="button" id="btn_set_in" class="btn btn-lg btn-success" onclick="cls_controlaccess.set_in(this)">Entrada</button>
+                            </div>
+                            <div class="col-6 text-center">
+                                <button type="button" id="btn_set_out" class="btn btn-lg btn-primary" onclick="cls_controlaccess.set_out(this)">Salida</button>
+                            </div>
+                            <div class="col-6 text-center">
+                                <button type="button" id="btn_set_breakin" class="btn btn-lg btn-info" onclick="cls_controlaccess.set_breakin(this)">Salida Almuerzo</button>
+                            </div>
+                            <div class="col-6 text-center">
+                                <button type="button" id="btn_set_breakout" class="btn btn-lg btn-info" onclick="cls_controlaccess.set_breakout(this)">Entrada Almuerzo</button>
+                            </div>
+                            <div class="col-12" style="opacity: 0;">
+                                <form action="" name="form_controlaccess_IN" onsubmit="event.preventDefault(); cls_controlaccess.in()">
+                                    <input type="text" id="controlaccess_IN" name="controlaccess_IN" class="form-control" value="IN">
+                                </form>
+                                <form action="" name="form_controlaccess_OUT" onsubmit="event.preventDefault(); cls_controlaccess.out()">
+                                    <input type="text" id="controlaccess_OUT" name="controlaccess_OUT" class="form-control" value="OUT">
+                                </form>
+                                <form action="" name="form_controlaccess_BREAKIN" onsubmit="event.preventDefault(); cls_controlaccess.breakin()">
+                                    <input type="text" id="controlaccess_BREAKIN" name="controlaccess_BREAKIN" class="form-control" value="BREAKIN">
+                                </form>
+                                <form action="" name="form_controlaccess_BREAKOUT" onsubmit="event.preventDefault(); cls_controlaccess.breakout()">
+                                    <input type="text" id="controlaccess_BREAKOUT" name="controlaccess_BREAKOUT" class="form-control" value="BREAKOUT">
+                                </form>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
 
         <script src="{{ asset('attached/js/popper.js') }}"></script>
@@ -144,21 +193,23 @@
         <script src="{{ asset('attached/js/jquery.js') }}"></script>
         <script src="{{ asset('attached/js/validCampoFranz.js') }}"></script>
         <script src="{{ asset('attached/js/mp.js') }}"></script>
+        <script src="{{ asset('attached/js/controlaccess.js') }}"></script>
 
         <script src="{{ asset('attached/js/jquery-ui.min_edit.js')}}"></script>
         <link href="{{ asset('attached/dist/css/jquery-ui.css')}}" rel="stylesheet">
         <!-- keyboard widget css & script -->
-        <link href="{{ asset('attached/dist/css/keyboard.min.css')}}" rel="stylesheet">
-        <script src="{{ asset('attached/dist/js/jquery.keyboard.js')}}"></script>
+        {{-- <link href="{{ asset('attached/dist/css/keyboard.min.css')}}" rel="stylesheet"> --}}
+        {{-- <script src="{{ asset('attached/dist/js/jquery.keyboard.js')}}"></script> --}}
 
         <!-- css for the preview keyset extension -->
-        <link href="{{ asset('attached/dist/css/keyboard-previewkeyset.min.css')}}" rel="stylesheet">
+        {{-- <link href="{{ asset('attached/dist/css/keyboard-previewkeyset.min.css')}}" rel="stylesheet"> --}}
 
         <!-- keyboard optional extensions - include ALL (includes mousewheel) -->
-        <script src="{{ asset('attached/dist/js/jquery.keyboard.extension-all.min.js')}}"></script>
+        {{-- <script src="{{ asset('attached/dist/js/jquery.keyboard.extension-all.min.js')}}"></script> --}}
 
         <script type="text/javascript">
             const cls_general = new general_funct();
+            const cls_controlaccess = new class_controlaccess();
         </script>
 
         @yield('javascript')

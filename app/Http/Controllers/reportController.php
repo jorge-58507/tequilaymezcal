@@ -72,7 +72,11 @@ class reportController extends Controller
                 $rs_commanddata = $commanddataController->report_product($from,$to);
                 return response()->json([ 'status'=>'success','message'=>'','data'=>[ 'product_commanddata' => $rs_commanddata['product_list'] ] ]);
                 break;
-
+            case '11':
+                $acregisterController = new acregisterController;
+                $rs_acregisterController = $acregisterController->report($from, $to);
+                return response()->json(['status' => 'success', 'message' => '', 'data' => ['acregister' => $rs_acregisterController ]]);
+                break;
             default:
 
                 break;

@@ -35,6 +35,7 @@
             <option value="8">Ventas por Art&iacute;culos</option>
             <option value="9">Compras por Producto</option>
             <option value="10">Ventas por Productos</option>
+            <option value="11">Asistencias</option>
           </optgroup>
         </select>
       </div>
@@ -67,6 +68,7 @@
 		var cls_charge = new class_charge();
 		var cls_creditnote = new class_creditnote();
 		var cls_depletion = new class_depletion();
+		var cls_accesscontrol = new class_accessControl();
 
     $( function() {
       var dateFormat = "mm/dd/yy",
