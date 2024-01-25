@@ -13,7 +13,7 @@ class kitchenController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function all(){
-        $rs_notready =  tm_command::select('tm_commands.ai_command_id', 'tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_description','tm_articles.tx_article_kitchen','tm_commanddatas.tx_commanddata_option','tm_commanddatas.tx_commanddata_status','tm_commanddatas.tx_commanddata_delivered','tm_categories.tx_category_value')
+        $rs_notready =  tm_command::select('tm_commands.ai_command_id', 'tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.tx_commanddata_description','tm_articles.tx_article_kitchen','tm_commanddatas.tx_commanddata_option','tm_commanddatas.tx_commanddata_status','tm_commanddatas.tx_commanddata_delivered','tm_categories.tx_category_value')
         ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
         ->join('tm_articles','tm_articles.ai_article_id','tm_commanddatas.commanddata_ai_article_id')
         ->join('tm_categories','tm_categories.ai_category_id','tm_articles.article_ai_category_id')
@@ -22,7 +22,7 @@ class kitchenController extends Controller
         ->where('tx_command_delivered',0)->orderby('created_at','ASC')->get();
 
         $date_limit = date('Y-m-d H:i:s',strtotime('-3 days'));
-        $rs_ready =     tm_command::select('tm_commands.ai_command_id', 'tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')
+        $rs_ready =     tm_command::select('tm_commands.ai_command_id', 'tm_tables.tx_table_value','tm_commands.created_at','tm_commands.updated_at','tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.tx_commanddata_description','tm_commanddatas.tx_commanddata_option')
         ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
         ->join('tm_requests','tm_requests.ai_request_id','tm_commands.command_ai_request_id')
         ->join('tm_tables','tm_requests.request_ai_table_id','tm_tables.ai_table_id')

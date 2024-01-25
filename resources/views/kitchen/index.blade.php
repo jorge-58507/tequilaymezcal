@@ -46,7 +46,7 @@
                   </div>
                 </nav>
                 <div class="tab-content" id="nav-tabContent">
-                  <div class="tab-pane fade show active" id="tab_notready_kitchen" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+                  <div class="tab-pane fade show active" id="" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
                     <div id="container_notready_kitchen" class="row">
                         COCINA
                     </div>
@@ -91,7 +91,7 @@
       cls_kitchen.render_ready();
 
       setInterval(() => {
-          // cls_kitchen.reload();
+        cls_kitchen.reload();
       }, 15000);
 
 		});

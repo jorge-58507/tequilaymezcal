@@ -146,15 +146,6 @@ Route::get('print_reportcommanddatanulled/{param_a}/{param_b}', 'printController
 Route::get('print_reportacregister/{param_a}/{param_b}/{param_c}', 'printController@print_reportacregister');
 
 
-
-// Auth::routes();
-
-// Route::get('/home', 'HomeController@index')->name('home');
-
-// Route::get('/home', 'HomeController@index')->name('home');
 Auth::routes();
-
-// Route::get('/login', function (Request $request) {      return redirect('/');   });
-// Route::get('/gin', function (Request $request) {      return redirect('/');   });
 
 

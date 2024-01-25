@@ -129,7 +129,7 @@ class class_command
         observation = (cls_general.is_empty_var(command.tx_command_observation) === 1) ? command.tx_command_observation : '';
         if (command.tx_commanddata_status === 1) {
           command_text += `
-            <h5 class="card-title text-truncate">${command.tx_commanddata_description}</h5>
+            <h5 class="card-title text-truncate">${command.tx_commanddata_quantity} ${command.tx_commanddata_description}</h5>
           `;
           if (cls_general.is_empty_var(command.tx_commanddata_option) === 1) {
             command_text += `Opciones <ul>`;
@@ -176,7 +176,7 @@ class class_command
           if (command.tx_commanddata_status === 1) {
             var btn_ready = (command.tx_commanddata_delivered === 0) ? `<a href="#" class="btn btn-info btn-lg" onclick="cls_general.disable_submit(this,0); cls_commanddata.set_ready(${command.ai_commanddata_id},this)">Listo</a>` : '';
             if (command.tx_article_kitchen === kitchen_id) {
-              command_list += `<p class="mb-2 fs-4">-${command.tx_commanddata_description} (${command.tx_presentation_value}) ${btn_ready}</p>`;
+              command_list += `<p class="mb-2 fs-4">-${command.tx_commanddata_quantity} ${command.tx_commanddata_description} (${command.tx_presentation_value}) ${btn_ready}</p>`;
               if (cls_general.is_empty_var(command.tx_commanddata_option) === 1) {
                 command_list += `Opciones<ul>`;
                 var split_option = command.tx_commanddata_option.split(',');
@@ -189,7 +189,6 @@ class class_command
               if (cls_general.is_empty_var(command.tx_commanddata_recipe) === 1) {
                 var raw_recipe = JSON.parse(command.tx_commanddata_recipe);
                 if (raw_recipe.length > 0) {
-                  // recipe_list += `-Receta <ul>`;
                   recipe_list += `
                     <span class="d-inline-flex gap-1">
                       <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample${index}" aria-expanded="false" aria-controls="collapseExample">
