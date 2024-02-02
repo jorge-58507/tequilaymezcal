@@ -261,7 +261,7 @@ class cashregisterController extends Controller
 			}
 		}
 
-        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
         
         /* Start the printer */
@@ -277,10 +277,10 @@ class cashregisterController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        $printer -> text("Cancino, S.A.\n");
-        $printer -> text("155732394-2-2023 DV 25.\n");
-        $printer -> text("Boulevard Penonomé, Feria, Local #46\n");
-        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7780\n");
+        $printer -> text("Cancino Nuñez, S.A.\n");
+        $printer -> text("155732387-2-2023 DV 14.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
         $printer -> feed();
         
         /* Title of receipt */
@@ -357,7 +357,7 @@ class cashregisterController extends Controller
         $cashregisterController = new cashregisterController;
 		$rs_cashregister = $cashregisterController->getit($cashregister_id);
 
-        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
         
         /* Start the printer */

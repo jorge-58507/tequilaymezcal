@@ -20,7 +20,7 @@ class optionSeeder extends Seeder
 
         $tm = new tm_option;
         $tm->tx_option_title = 'TITULO';
-        $tm->tx_option_value = 'Tequila y Mezcal';
+        $tm->tx_option_value = 'Jade Café';
         $tm->save();
 
         $tm = new tm_option;
@@ -50,7 +50,7 @@ class optionSeeder extends Seeder
 
         $tm = new tm_option;
         $tm->tx_option_title = 'EMAIL';
-        $tm->tx_option_value = 'tequilaymezcal@mail.com';
+        $tm->tx_option_value = 'jadecafe@mail.com';
         $tm->save();
 
         $tm = new tm_option;

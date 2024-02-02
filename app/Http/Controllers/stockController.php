@@ -30,7 +30,7 @@ class stockController extends Controller
     }
     public function all()
     {
-        $providerController = new providercontroller;
+        $providerController = new providerController;
         $rs_provider = $providerController->getAll();
         $requisitionController = new requisitionController;
         $rs_requisition = $requisitionController->getAll();
@@ -38,6 +38,8 @@ class stockController extends Controller
         $rs_productoutput = $productoutputController->getAll();
         $paymentproviderController = new paymentproviderController;        
         $rs_paymentprovider = $paymentproviderController->getAll();
+        $warehouseController = new warehouseController;
+        $rs_warehouse = $warehouseController->getAll();
 
         $rs_productinput = tm_productinput::join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->wherein('tx_productinput_status',[1,2])->get();
         $rs_paymentmethod = tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
@@ -51,7 +53,9 @@ class stockController extends Controller
             'paymentmethod'     => $rs_paymentmethod,
             'productcategory' => $rs_productcategory,
             'processed_productinput' => $rs_productinput,
-            'paymentprovider_list' => $rs_paymentprovider['all']
+            'paymentprovider_list' => $rs_paymentprovider['all'],
+            'warehouse_list' => $rs_warehouse['all'],
+            'productwarehouse_list'  => $rs_warehouse['productwarehouse']
         ];
     }
 

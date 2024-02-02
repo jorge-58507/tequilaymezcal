@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title','Caja')
+@section('title','Inventario')
 @section('css')
   <link rel="stylesheet" href="{{ asset('attached/css/jquery-ui.css') }}">
 @endsection
@@ -80,25 +80,72 @@
       </div>
     </div>
   </div>
+  <!-- Modal -->
+  <div class="modal fade" id="warehouseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="warehouseModal_title"></h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="warehouseModal_content" class="modal-body">
+        </div>
+        <div id="warehouseModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
 
 
-	<div id="container_request" class="row">
+	<div id="container_stock" class="row">
 
 
     <div class="row">
       <div class="col-xs-12 v_scrollable bb_1 border_gray" style="height: 100vh;">
         <nav>
           <div class="nav nav-tabs" id="nav-tab" role="tablist">
-            <button class="nav-link active" id="nav-provider-tab" data-bs-toggle="tab" data-bs-target="#tab_provider" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Proveedores</button>
-            <button class="nav-link" id="nav-productinput-tab" data-bs-toggle="tab" data-bs-target="#tab_productinput" type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">Compras</button>
-            <button class="nav-link" id="nav-requisition-tab" data-bs-toggle="tab" data-bs-target="#tab_requisition" type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">Ordenes de C.</button>
+            <button class="nav-link active" id="nav-provider-tab" data-bs-toggle="tab" data-bs-target="#tab_warehouse"  type="button" role="tab" aria-controls="nav-home" aria-selected="true">Bodega</button>
+            <button class="nav-link" id="nav-provider-tab" data-bs-toggle="tab" data-bs-target="#tab_provider"          type="button" role="tab" aria-controls="nav-home" aria-selected="false">Proveedores</button>
+            <button class="nav-link" id="nav-productinput-tab" data-bs-toggle="tab" data-bs-target="#tab_productinput"  type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">Compras</button>
+            <button class="nav-link" id="nav-requisition-tab" data-bs-toggle="tab" data-bs-target="#tab_requisition"    type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">Ordenes de C.</button>
             <button class="nav-link" id="nav-productoutput-tab" data-bs-toggle="tab" data-bs-target="#tab_productoutput" type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">Salidas</button>
             <button class="nav-link" id="nav-paymentprovider-tab" data-bs-toggle="tab" data-bs-target="#tab_paymentprovider" type="button" role="tab" aria-controls="nav-home" aria-selected="false" tabindex="-1">Pagos</button>
           </div>
         </nav>
 
         <div class="tab-content" id="nav-tabContent">
-          <div class="tab-pane fade show active" id="tab_provider" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+          <div class="tab-pane fade show active" id="tab_warehouse" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+            <div class="row">
+              <div class="col-md-12 col-lg-6">
+                <div class="input-group my-3">
+                  <input type="text" id="filter_warehouse" class="form-control" placeholder="Buscar por nombre o código." onkeyup="cls_warehouse.filter(this.value)">
+                  <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_warehouse.filter(document.getElementById('filter_warehouse').value)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-4">
+                <div class="input-group my-3">
+                  <label class="input-group-text" for="warehouseTypefilter">Tipo</label>
+                  <select id="warehouseTypefilter" class="form-select">
+                    <option value="0"  >Bodega</option>
+                    <option value="1"  >Producto</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-2 mt-2">
+                <button type="button" class="btn btn-lg btn-primary" onclick="cls_warehouse.create()">Crear Bodega</button>
+              </div>
+            </div>
+            <div class="row">
+              <div id="container_warehouse" class="col-sm-12">
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="tab_provider" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
             <div class="row">
               <div class="col-md-12 col-lg-6">
                 <div class="input-group my-3">
@@ -207,6 +254,10 @@
 	<script src="{{ asset('attached/js/jquery-ui.min_edit.js') }}"></script>
 	
 	<script type="text/javascript">
+    var raw_warehouse = JSON.parse('<?php echo json_encode($data['warehouse_list']) ?>');
+    var raw_productwarehouse = JSON.parse('<?php echo json_encode($data['productwarehouse_list']) ?>');
+		var cls_warehouse = new class_warehouse(raw_warehouse,raw_productwarehouse);
+
 		var raw_provider = JSON.parse('<?php echo json_encode($data['provider_list']) ?>');
 		var cls_provider = new class_provider(raw_provider);
 

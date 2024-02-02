@@ -1789,3 +1789,119 @@ class class_product{
   }
 
 }
+class class_warehouse {
+  constructor(raw_warehouse, raw_productwarehouse){
+    this.warehouse_list = raw_warehouse;
+    this.productwarehouse_list = raw_productwarehouse;
+  }
+  create(){
+    var content = `
+    <form action="#" onsubmit="cls_warehouse.save()">
+      <div class="row">
+        <div class="col-12">
+          <label for="warehouseValue" class="form-label">Nombre de la Bodega</label>
+          <input type="text" id="warehouseValue" class="form-control" value="">
+        </div>
+        <div class="col-12">
+          <label for="warehouseCode" class="form-label">Codigo de la Bodega</label>
+          <input type="text" id="warehouseCode" class="form-control" value="">
+        </div>
+        <div class="col-12">
+          <label for="warehouseLocation" class="form-label">Localización</label>
+          <input type="text" id="warehouseLocation" class="form-control" value="">
+        </div>
+      </div>
+    </form>
+    `
+    document.getElementById('warehouseModal_title').innerHTML = 'Crear Bodega';
+    document.getElementById('warehouseModal_content').innerHTML = content;
+    document.getElementById('warehouseModal_footer').innerHTML = `
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      <button type="button" class="btn btn-success" onclick="cls_warehouse.save()">Agregar</button>
+    `;
+
+
+    const modal_win = new bootstrap.Modal('#warehouseModal', {})
+    modal_win.show();
+  }
+  save(){
+    var value     = document.getElementById('warehouseValue').value;
+    var code      = document.getElementById('warehouseCode').value;
+    var location  = document.getElementById('warehouseLocation').value;
+
+    if (cls_general.is_empty_var(value) === 0 || cls_general.is_empty_var(code) === 0 || cls_general.is_empty_var(location) === 0) {
+      cls_general.shot_toast_bs('Debe llenar todos los campos.', { bg: 'text-bg-warning' });
+    }
+
+    var url = '/warehouse/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: value, b: code, c: location });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        //YA GUARDA MOSTRAR EL LISTADO, ACT LISTADO DEL CONSTRUCTOR Y HACER UN RENDER DE LA LISTA
+        cls_warehouse.warehouse_list = obj.data.all;
+        cls_warehouse.filter(document.getElementById('filter_warehouse').value);
+        const modal_win = bootstrap.Modal.getInstance('#warehouseModal');
+        if (modal_win) {
+          modal_win.hide();
+        }
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+
+
+  async filter(str) {
+    if (document.getElementById('warehouseTypefilter').value === '0') {
+      var filtered = await cls_warehouse.look_for(str);
+      var content = cls_warehouse.generate_list(filtered)
+      document.getElementById('container_warehouse').innerHTML = content;
+    }else{
+      var filtered = await cls_productwarehouse.look_for(str);
+      var content = cls_productwarehouse.generate_list(filtered)
+      document.getElementById('container_warehouse').innerHTML = content;
+    }
+  }
+
+  look_for(str, origin) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_warehouse.warehouse_list;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          var ocurrencys = 0;
+          for (const a in needles) {
+            if (haystack[i]['tx_warehouse_value'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_warehouse_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+        resolve(raw_filtered)
+      }, 1000)
+    });
+  }
+  generate_list(filtered) {
+    var content = '<ul class="list-group">';
+    filtered.map((warehouse) => {
+      var bg_status = (warehouse.tx_warehouse_status === 0) ? 'text-bg-secondary' : '';
+
+      content += `
+        <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start ${bg_status}" onclick="cls_warehouse.show('${warehouse.ai_warehouse_id}')">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold"><h5>${warehouse.tx_warehouse_value}</h5></div>
+            <small>Codigo: ${warehouse.tx_warehouse_number}</small>
+          </div>
+        </li>
+      `;
+    })
+    content += '</ul>';
+    return content;
+  }
+
+}

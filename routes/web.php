@@ -124,6 +124,7 @@ Route::resource('role', 'roleController')->middleware('auth');
 Route::resource('productcode', 'productcodeController')->middleware('auth');
 Route::resource('directpurchase', 'directpurchaseController')->middleware('auth');
 Route::resource('acregister', 'acregisterController');
+Route::resource('warehouse', 'warehouseController');
 
 // PRINT
 Route::get('print_cashregister/{param}', 'cashregisterController@print_rollpaper_cashregister');
