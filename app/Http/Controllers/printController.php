@@ -55,7 +55,7 @@ class printController extends Controller
 					<div class="text-center col-sm-3 col_25" style="height: 160px; float: left;">&nbsp;</div>
 					<div class="text-center col-sm-6 col_25" style="height: 160px; float: left;">
 						<img width="115px" height="115px" src="./attached/image/logo_print2.png">
-						<p style="font-size: 10pt;">Cancino, S.A.</p>
+						<p style="font-size: 10pt;">Cancino Nuñez, S.A.</p>
 					</div>
 					<div class="text-center col-sm-3 col_25" style="height: 160px; float: left; text-align: right;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
 			</div>
