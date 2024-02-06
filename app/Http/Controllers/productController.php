@@ -239,7 +239,7 @@ class productController extends Controller
             foreach ($article['recipe'] as $ingredient) {
                 foreach ($ingredient as $reduced) {
                     $raw_explode = explode(",",$reduced);
-                        //0 => 1, 1 => Unidad 2 => product_id, 3=> bodega, 4 => se muestra o no en comanda 5 => togo
+                        //0 => cantidad de la receta, 1 => Unidad 2 => product_id, 3=> bodega, 4 => se muestra o no en comanda 5 => togo
                     $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
                     ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
                     ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
