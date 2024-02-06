@@ -27,9 +27,6 @@ class requestController extends Controller
     public function index()
     {
         $rs_ubication =       tm_ubication::join('tm_tables','tm_tables.table_ai_ubication_id','tm_ubications.ai_ubication_id')->whereIn('tx_table_type',[1,2])->where('tx_table_active',1)->where('tx_ubication_status',1)->orderby('ai_ubication_id')->orderby('tx_table_type')->get();
-        // $rs_openrequest =       tm_request::select('tm_requests.ai_request_id','tm_requests.request_ai_table_id','tm_requests.tx_request_code','tm_requests.tx_request_title','tm_requests.tx_request_status','tm_requests.tx_request_slug','tm_requests.created_at','tm_clients.ai_client_id','tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_slug','tm_clients.tx_client_status','tm_tables.ai_table_id','tm_tables.table_ai_ubication_id','tm_tables.tx_table_code','tm_tables.tx_table_value','tm_tables.tx_table_image','tm_tables.tx_table_active','tm_tables.tx_table_slug')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',0)->get();
-        // $rs_closedrequest =     tm_request::join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',1)->get();
-        // $rs_canceledrequest =   tm_request::join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)->get();
         $rs_article =           tm_article::select('tm_articles.ai_article_id','tm_articles.tx_article_thumbnail','tm_articles.tx_article_code', 'tm_articles.tx_article_value', 'tm_articles.tx_article_promotion','tm_articles.tx_article_slug','tm_categories.ai_category_id','tm_categories.tx_category_value')->join('tm_categories','tm_categories.ai_category_id','tm_articles.article_ai_category_id')->where('tx_article_status',1)->orderby('tx_article_promotion','DESC')->orderby('tx_article_value','ASC')->get();
         $rs_client =            tm_client::where('tx_client_status',1)->get();
         $raw_request = $this->getAll();
@@ -37,7 +34,10 @@ class requestController extends Controller
         if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
             $chk_low_inventory = 0;
         }else{
-            $chk_low_inventory = tm_product::where('tx_product_status',1)->where('tx_product_quantity','<','tx_product_minimum')->where('tx_product_alarm',1)->count();
+            $chk_low_inventory = tm_product::where('tx_product_status',1)
+            ->join('tm_productwarehouses','tm_productwarehouses.productwarehouse_ai_product_id','tm_products.ai_product_id')
+            ->where('tx_productwarehouse_quantity','<','tx_productwarehouse_minimun')
+            ->where('tx_product_alarm',1)->count();
         }
         $url = tm_option::select('tx_option_value')->where('tx_option_title','API_URL')->first();
 

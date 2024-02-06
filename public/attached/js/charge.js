@@ -3022,7 +3022,6 @@ class class_payment{
       `
       received += parseFloat(payment.amount);
     })
-                                                                        console.log(received);
     raw_giftcard.map((giftcard, index) => {
       var number = (cls_general.is_empty_var(giftcard.giftcard_number) === 0) ? '' : '(' + giftcard.giftcard_number + ')';
       payment_list += `

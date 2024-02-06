@@ -131,7 +131,7 @@
         <div class="tab-content" id="nav-tabContent">
           <div class="tab-pane fade show active" id="tab_warehouse" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
             <div class="row">
-              <div class="col-md-12 col-lg-6">
+              <div class="col-md-12 col-lg-4">
                 <div class="input-group my-3">
                   <input type="text" id="filter_warehouse" class="form-control" placeholder="Buscar por nombre o código." onkeyup="cls_warehouse.filter(this.value)">
                   <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_warehouse.filter(document.getElementById('filter_warehouse').value)">
@@ -150,7 +150,7 @@
                   </select>
                 </div>
               </div>
-              <div class="col-md-6 col-lg-4 mt-2">
+              <div class="col-md-6 col-lg-6 mt-3">
                 <button type="button" class="btn btn-lg btn-primary" onclick="cls_warehouse.create()">Crear Bodega</button> &nbsp;
                 <button type="button" class="btn btn-lg btn-primary" onclick="cls_productwarehouse.add_product()">Asignar Producto</button>
               </div>

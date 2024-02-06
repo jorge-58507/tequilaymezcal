@@ -171,6 +171,7 @@
 	
 	<script type="text/javascript">
 		var low_inventory = '<?php echo $data['low_inventory'] ?>';
+    console.log(low_inventory);
 		if (low_inventory > 0) {
 		  swal ( "Atención" ,  "Existen artículos con baja existencia. Diríjase al Menu Compras." ,  "error" );      
 		}
