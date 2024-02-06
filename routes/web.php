@@ -49,10 +49,13 @@ Route::get('userlog/{param}', 'articleController@get_user');
 Route::get('kitchen/reload', 'kitchenController@reload');
 Route::get('productcode/{param_a}/show/{param_b}', 'productcodeController@show_code');
 Route::get('logincode/{param_a}', 'userController@check_logincode');
+Route::get('warehouse/{param_a}/product', 'warehouseController@get_product')->middleware('auth');
+Route::get('productwarehouse/{param_a}', 'productwarehouseController@show')->middleware('auth');
+Route::get('productwarehouse/{param_a}/count', 'productwarehouseController@show_quantity')->middleware('auth');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
-// Route::post('article/product', 'measureproductController@save')->middleware('auth');
-Route::post('product/{param}/count', 'productController@update_quantity')->middleware('auth');
+//Route::post('article/product', 'measureproductController@save')->middleware('auth');
+//Route::post('product/{param}/count', 'productController@update_quantity')->middleware('auth');
 Route::post('creditnote/{param}/nullify', 'creditnoteController@nullify')->middleware('auth');
 Route::post('depletion/{param}/article', 'depletionController@depletionByArticle')->middleware('auth');
 Route::post('/table_upd/', 'tableController@renovate')->middleware('auth');
@@ -73,11 +76,14 @@ Route::post('/user_role/{param_a}/delete', 'userController@delete_role');
 Route::post('/purchase/convert', 'productinputController@convert_directpurchase');
 Route::post('/commanddatalastrequest/', 'commanddataController@add_tolastrequest');
 Route::post('/acregister/filter', 'acregisterController@filter');
+Route::post('/productwarehouse/add_product', 'productwarehouseController@add_product');
+Route::post('productwarehouse/{param}/count', 'productwarehouseController@update_quantity')->middleware('auth');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');
 Route::delete('dataproductinput/{param}', 'productinputController@delete_data')->middleware('auth');
 Route::delete('/article/product', 'articleproductController@delete');
+Route::delete('productwarehouse/{param}', 'productwarehouseController@delete')->middleware('auth');
 
 Route::put('request/{param}/client/table', 'requestController@update_rel')->middleware('auth');
 Route::put('request/{param}/close', 'requestController@close')->middleware('auth');
@@ -93,6 +99,7 @@ Route::put('commanddata/{param}/discount', 'commanddataController@discount')->mi
 Route::put('purchase/{param}/ticket', 'productinputController@upd_ticket')->middleware('auth');
 Route::put('purchase/{param}/date', 'productinputController@upd_date')->middleware('auth');
 Route::put('user_password/{param}', 'userController@upd_password')->middleware('auth');
+Route::put('productwarehouse/{param}', 'productwarehouseController@update')->middleware('auth');
 
 
 

@@ -1851,22 +1851,20 @@ class class_warehouse {
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-
-
-
   async filter(str) {
     if (document.getElementById('warehouseTypefilter').value === '0') {
       var filtered = await cls_warehouse.look_for(str);
       var content = cls_warehouse.generate_list(filtered)
-      document.getElementById('container_warehouse').innerHTML = content;
-    }else{
+      document.getElementById('container_warehouselist').innerHTML = content;
+      document.getElementById('container_productlist').innerHTML = '';
+    } else {
       var filtered = await cls_productwarehouse.look_for(str);
       var content = cls_productwarehouse.generate_list(filtered)
-      document.getElementById('container_warehouse').innerHTML = content;
+      document.getElementById('container_productlist').innerHTML = content;
+      document.getElementById('container_warehouselist').innerHTML = '';
     }
   }
-
-  look_for(str, origin) {
+  look_for(str) {
     return new Promise(resolve => {
       clearTimeout(this.timer);
       this.timer = setTimeout(function () {
@@ -1890,9 +1888,8 @@ class class_warehouse {
     var content = '<ul class="list-group">';
     filtered.map((warehouse) => {
       var bg_status = (warehouse.tx_warehouse_status === 0) ? 'text-bg-secondary' : '';
-
       content += `
-        <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start ${bg_status}" onclick="cls_warehouse.show('${warehouse.ai_warehouse_id}')">
+        <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start ${bg_status}" onclick="cls_warehouse.show_product('${warehouse.ai_warehouse_id}')">
           <div class="ms-2 me-auto">
             <div class="fw-bold"><h5>${warehouse.tx_warehouse_value}</h5></div>
             <small>Codigo: ${warehouse.tx_warehouse_number}</small>
@@ -1902,6 +1899,382 @@ class class_warehouse {
     })
     content += '</ul>';
     return content;
+  }
+  show(warehouse_id){
+    var url = '/warehouse/' + warehouse_id;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        console.log(obj.data)
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  show_product(warehouse_id) {
+    var url = '/warehouse/' + warehouse_id + '/product';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var content = cls_productwarehouse.generate_list(obj.data.all);
+        document.getElementById('container_productlist').innerHTML = content;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+}
+
+class class_productwarehouse{
+  add_product(){
+    var select_warehouse = '<option value="">Seleccione</option>';
+    cls_warehouse.warehouse_list.map((warehouse) => { select_warehouse += `<option value="${warehouse.ai_warehouse_id}">${warehouse.tx_warehouse_value}</option>`;})
+
+
+    var content = `
+      <form id="form_add_productwarehouse" autocomplete="off">
+        <div class="row">
+          <div class="col-6">
+            <label for="warehouse_toasign">Bodega</label>
+            <select id="warehouse_toasign" class="form-select">
+              ${select_warehouse}
+            </select>
+          </div>
+          <div class="col-6">
+            <label for="quantity_toasign">Cantidad</label>
+            <input type="text" id="quantity_toasign" class="form-control" placeholder="Cantidad a Asignar">
+          </div>
+          <div class="col-6">
+            <label for="minimunquantity_toasign">M&iacute;nimo</label>
+            <input type="text" id="minimunquantity_toasign" class="form-control" placeholder="Cantidad M&iacute;nima">
+          </div>
+          <div class="col-6">
+            <label for="maximunquantity_toasign">M&aacute;ximo</label>
+            <input type="text" id="maximunquantity_toasign" class="form-control" placeholder="Cantidad M&aacute;xima">
+          </div>
+        </div>
+      </form>
+      <div class="row">
+        <div class="col-12">
+          <div class="input-group my-3 pt-2">
+            <input type="text" id="filter_product" class="form-control" placeholder="Buscar producto por nombre o código." onkeyup="cls_productwarehouse.filter_product(this.value)">
+            <button class="btn btn-outline-secondary" type="button" id="" onclick="cls_productwarehouse.filter_product(document.getElementById('filter_warehouse').value)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="modal_container_productlist" class="col-12">
+        </div>
+
+      </div>
+    `;
+
+    document.getElementById('productwarehouseModal_title').innerHTML = 'Asignar Producto';
+    document.getElementById('productwarehouseModal_content').innerHTML = content;
+    document.getElementById('productwarehouseModal_footer').innerHTML = `
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+    `;
+
+    const modal_win = new bootstrap.Modal('#productwarehouseModal', {})
+    modal_win.show();
+
+  }
+  async filter_product(str) {
+    var filtered = await cls_product.look_for(str);
+    var content = cls_productwarehouse.generate_productlist(filtered)
+    document.getElementById('modal_container_productlist').innerHTML = content;
+  }
+  generate_productlist(filtered) {
+    var content = '<ul class="list-group">';
+    filtered.map((product) => {
+      if (product.tx_product_status === 1) {
+        content += `
+          <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_productwarehouse.select_product('${product.ai_product_id}')">
+            <div class="ms-2 me-auto">
+              <div class="fw-bold"><h5>${product.tx_product_value}</h5></div>
+              <small>Codigo: ${product.tx_product_code}</small>
+            </div>
+          </li>
+        `;
+      }
+    })
+    content += '</ul>';
+    return content;
+  }
+  select_product(product_id){
+    cls_general.validate_form(document.getElementById('form_add_productwarehouse'));
+    var sel_warehouse = document.getElementById('warehouse_toasign');
+    var minimun = document.getElementById('minimunquantity_toasign').value;
+    var maximun = document.getElementById('maximunquantity_toasign').value;
+
+    if (cls_general.is_empty_var(sel_warehouse.value) === 0) {
+      return swal("Debe seleccionar alguna bodega.");
+    }
+    var quantity = document.getElementById('quantity_toasign').value;
+    if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(minimun) === 0 || cls_general.is_empty_var(maximun) === 0) {
+      return swal("Debe ingresar las cantidades.");
+    }
+    if (isNaN(quantity) || isNaN(minimun) || isNaN(maximun)) {
+      return swal("Los numeros ingresados deben ser enteros.");
+    }
+   
+    var url = '/productwarehouse/add_product';
+    var method = 'POST';
+    var body = JSON.stringify({ a: quantity, b: sel_warehouse.value, c: product_id, d: minimun, e: maximun });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        sel_warehouse.value = '';
+        document.getElementById('quantity_toasign').value = '';
+        document.getElementById('minimunquantity_toasign').value = '';
+        document.getElementById('maximunquantity_toasign').value = '';
+        cls_warehouse.productwarehouse_list = obj.data.all;
+        cls_warehouse.filter(document.getElementById('filter_warehouse').value);
+        const modal_win = bootstrap.Modal.getInstance('#productwarehouseModal');
+        if (modal_win) {
+          modal_win.hide();
+        }
+        cls_general.shot_toast_bs(obj.message);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  look_for(str) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_warehouse.productwarehouse_list;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          var ocurrencys = 0;
+          for (const a in needles) {
+            if (haystack[i]['tx_productwarehouse_description'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_product_code'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+        resolve(raw_filtered)
+      }, 1000)
+    });
+  }
+  generate_list(filtered) {
+    var content = '<ul class="list-group">';
+    filtered.map((product) => {
+      content += `
+
+        <li class="list-group-item d-flex justify-content-between align-items-center"  onclick="cls_productwarehouse.show('${product.ai_productwarehouse_id}')">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold"><h5>${product.tx_productwarehouse_description}</h5></div>
+            <small>Codigo: ${product.tx_product_code}</small>
+          </div>
+          <span class="badge bg-primary rounded-pill">${product.tx_warehouse_value}</span>
+        </li>
+      `;
+    })
+    content += '</ul>';
+    return content;
+  }
+  show(productwarehouse_id) {
+    var url = '/productwarehouse/' + productwarehouse_id;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_productwarehouse.render_modal(obj.data.info);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  render_modal(info){
+    var content = `
+      <form id="form_edit_productwarehouse" onsubmit="event.preventDefault(); cls_productwarehouse.update(${info.ai_productwarehouse_id})" autocomplete="off">
+        <div class="row">
+          <div class="col-12 text-center py-2">
+            <h5>${info.tx_productwarehouse_description}</h5>
+          </div>
+          <div class="col-md-4 d-grid gap-2">
+            <label for="" class="form-label m_0">Conteo</label>
+            <button type="button" class="btn btn-info" onclick="cls_productwarehouse.count_product(${info.ai_productwarehouse_id})" >${cls_general.val_dec(info['tx_productwarehouse_quantity'], 2, 1, 1)}</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6">
+            <label for="minimunquantity_toasign">M&iacute;nimo</label>
+            <input type="text" id="minimunquantity_toasign" class="form-control" placeholder="Cantidad M&iacute;nima" value="${info.tx_productwarehouse_minimun}" onfocus="cls_general.validFranz(this.id, ['number'], '.')">
+          </div>
+          <div class="col-6">
+            <label for="maximunquantity_toasign">M&aacute;ximo</label>
+            <input type="text" id="maximunquantity_toasign" class="form-control" placeholder="Cantidad M&aacute;xima" value="${info.tx_productwarehouse_maximun}" onfocus="cls_general.validFranz(this.id, ['number'], '.')">
+          </div>
+          <div class="col-12 text-center py-2">
+            <button type="submit" class="btn btn-success">Guardar</button>&nbsp;
+            <button type="button" class="btn btn-danger" onclick="cls_productwarehouse.delete(this, ${info.ai_productwarehouse_id})">Eliminar</button>
+          </div>
+        </div>
+      </form>    
+    `;
+
+    document.getElementById('productwarehouseModal_title').innerHTML = 'Producto en '+info.tx_warehouse_value;
+    document.getElementById('productwarehouseModal_content').innerHTML = content;
+    document.getElementById('productwarehouseModal_footer').innerHTML = `
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+    `;
+
+    const modal_win = new bootstrap.Modal('#productwarehouseModal', {})
+    modal_win.show();
+
+  }
+  count_product(productwarehouse_id) {
+    var url = '/productwarehouse/' + productwarehouse_id + '/count'; var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var list = '<ul class="list-group list-group-flush">';
+        obj.data.count_list.map(x => list += `
+          <li class="list-group-item">Antes: ${x.tx_productcount_before} Despues: ${x.tx_productcount_after} (${x.created_at})</li>
+        `)
+        list += '</ul>';
+        var content = `
+          <div class="row">
+            <div class="col-lg-12">
+              <h4>Conteo</h4>
+              <div class="input-group mb-3">
+                <input type="text" id="productQuantity" class="form-control" placeholder="Ingrese la cantidad" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 10, toast = 0)" onkeyup="cls_general.limitText(this, 10, toast = 0)">
+                <button class="btn btn-success" type="button" id="btn_addCountProduct" onclick="cls_productwarehouse.updateQuantity('${productwarehouse_id}')">Agregar</button>
+              </div>
+            </div>
+            <div id="container_countlist" class="col-lg-12">
+              <h5>Conteos Anteriores</h5>
+              ${list}
+            </div>
+          </div>
+        `;
+        var content_bottom = `
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        `;
+
+        document.getElementById('productwarehouseModal_title').innerHTML = 'Contar';
+        document.getElementById('productwarehouseModal_content').innerHTML = content;
+        document.getElementById('productwarehouseModal_footer').innerHTML = content_bottom;
+        setTimeout(() => {
+          document.getElementById('productQuantity').focus();
+        }, 500);
+      }
+      cls_general.shot_toast_bs(obj.message);
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  updateQuantity(productwarehouse_id) {
+    var quantity = document.getElementById('productQuantity').value;
+    if (cls_general.is_empty_var(quantity) === 0 || isNaN(quantity)) {
+      cls_general.shot_toast_bs("Debe ingresar un numero.", { bg: "text-bg-warning" })
+    }
+    var url = '/productwarehouse/' + productwarehouse_id + '/count'; var method = 'POST';
+    var body = JSON.stringify({ a: quantity });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        const modal_win = bootstrap.Modal.getInstance('#productwarehouseModal');
+        if (modal_win) {
+          modal_win.hide();
+        }
+        cls_productwarehouse.render_modal(obj.data.info);
+      }
+      cls_general.shot_toast_bs(obj.message);
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+
+  update(productwarehouse_id){
+    cls_general.validate_form(document.getElementById('form_edit_productwarehouse'));
+    var minimun = document.getElementById('minimunquantity_toasign').value;
+    var maximun = document.getElementById('maximunquantity_toasign').value;
+
+    if (cls_general.is_empty_var(minimun) === 0 || cls_general.is_empty_var(maximun) === 0) {
+      return swal("Debe llenar los campos marcados.");
+    }
+    if (isNaN(minimun) === 0 || isNaN(maximun) === 0) {
+      return swal("Debe ingresar numeros enteros.");
+    }
+    var url = '/productwarehouse/' + productwarehouse_id;
+    var method = 'PUT';
+    var body = JSON.stringify({ a: productwarehouse_id, c: minimun, d: maximun });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('minimunquantity_toasign').value = '';
+        document.getElementById('maximunquantity_toasign').value = '';
+        cls_warehouse.productwarehouse_list = obj.data.all;
+        cls_warehouse.filter(document.getElementById('filter_warehouse').value);
+        const modal_win = bootstrap.Modal.getInstance('#productwarehouseModal');
+        if (modal_win) {
+          modal_win.hide();
+        }
+        cls_general.shot_toast_bs(obj.message);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+
+  delete(btn, productwarehouse_id){
+    swal({
+      title: "¿Desea eliminar este producto de la bodega?",
+      text: "Esto podría afectar las recetas.",
+      icon: "info",
+
+      buttons: {
+        si: {
+          text: "Si, cerrarlo",
+          className: "btn btn-success btn-lg"
+        },
+        no: {
+          text: "No",
+          className: "btn btn-warning btn-lg",
+        },
+      },
+      dangerMode: true,
+    })
+    .then((ans) => {
+      switch (ans) {
+        case 'si':
+          cls_general.disable_submit(btn);
+          var url = '/productwarehouse/' + productwarehouse_id;
+          var method = 'DELETE';
+          var body = '';
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              cls_warehouse.productwarehouse_list = obj.data.all;
+              cls_warehouse.filter(document.getElementById('filter_warehouse').value);
+              const modal_win = bootstrap.Modal.getInstance('#productwarehouseModal');
+              if (modal_win) {
+                modal_win.hide();
+              }
+              cls_general.shot_toast_bs(obj.message);
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+            }
+          }
+          cls_general.async_laravel_request(url, method, funcion, body);
+        break;
+        case 'no':
+
+        break;
+      }
+    });
   }
 
 }

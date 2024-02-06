@@ -23,7 +23,8 @@ class warehouseController extends Controller
         $rs_warehouse_active = tm_warehouse::where('tx_warehouse_status',1)->get();
         $rs_warehouse = tm_warehouse::all();
 
-        $rs_productwarehouse = tm_productwarehouse::orderby('productwarehouse_ai_warehouse_id')->orderby('tx_productwarehouse_description')->get();
+        //$rs_productwarehouse = tm_productwarehouse::orderby('productwarehouse_ai_warehouse_id')->orderby('tx_productwarehouse_description')->get();
+        $rs_productwarehouse = tm_productwarehouse::select('tm_productwarehouses.ai_productwarehouse_id','tm_productwarehouses.tx_productwarehouse_description','tm_productwarehouses.tx_productwarehouse_quantity','tm_productwarehouses.tx_productwarehouse_minimun','tm_productwarehouses.tx_productwarehouse_maximun','tm_products.tx_product_code','tm_warehouses.tx_warehouse_value')->join('tm_warehouses','tm_warehouses.ai_warehouse_id','tm_productwarehouses.productwarehouse_ai_warehouse_id')->join('tm_products','tm_products.ai_product_id', 'tm_productwarehouses.productwarehouse_ai_product_id')->orderby('productwarehouse_ai_warehouse_id')->orderby('tx_productwarehouse_description')->get();
 
         return ['active' => $rs_warehouse_active, 'all' => $rs_warehouse, 'productwarehouse' => $rs_productwarehouse];
     }
@@ -112,5 +113,13 @@ class warehouseController extends Controller
     public function destroy($id)
     {
         //
+    }
+    public function get_product($id)
+    {
+        //$qry = tm_productwarehouse::where('productwarehouse_ai_warehouse_id',$id);
+        $qry = tm_productwarehouse::select('tm_productwarehouses.ai_productwarehouse_id','tm_productwarehouses.tx_productwarehouse_description','tm_productwarehouses.tx_productwarehouse_quantity','tm_productwarehouses.tx_productwarehouse_minimun','tm_productwarehouses.tx_productwarehouse_maximun','tm_products.tx_product_code','tm_warehouses.tx_warehouse_value')->join('tm_warehouses','tm_warehouses.ai_warehouse_id','tm_productwarehouses.productwarehouse_ai_warehouse_id')->join('tm_products','tm_products.ai_product_id', 'tm_productwarehouses.productwarehouse_ai_product_id')->orderby('productwarehouse_ai_warehouse_id')->orderby('tx_productwarehouse_description')->where('productwarehouse_ai_warehouse_id',$id);
+
+        return response()->json(['status'=>'success','data'=>['all'=>$qry->get()]]);
+
     }
 }

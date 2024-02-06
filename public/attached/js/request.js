@@ -852,7 +852,7 @@ class class_command{
           <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
           <select class="form-select" name="show" id="ingredient_${i}" alt="${raw_ingredient[0].to_go}">`;
         raw_ingredient.map((ingredient) => {
-          content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+          content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id},${ingredient.warehouse}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
         })
         content_recipe += `</select></div>`;
       }else{
@@ -861,7 +861,7 @@ class class_command{
             <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
             <select class="form-select" name="noshow" id="ingredient_${i}" alt="${raw_ingredient[0].to_go}">`;
               raw_ingredient.map((ingredient) => {
-                content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+                content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id},${ingredient.warehouse}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
               })
         content_recipe += `</select></div>`;
       }
@@ -1017,6 +1017,7 @@ class class_command{
       'discount_rate' : document.getElementById('articleDiscountrate').value,
       'recipe': raw_recipe
     });
+    console.log(cls_command.command_list)
     const Modal = bootstrap.Modal.getInstance('#commandModal');
     Modal.hide();
     cls_command.render_articleselected();
@@ -1072,9 +1073,7 @@ class class_command{
       raw_price.push({price: article.price, discount: article.discount_rate, tax: article.tax_rate, quantity: article.quantity})
       
     })
-    console.log(raw_price);
     var price_sale = cls_general.calculate_sale(raw_price);
-    console.log(price_sale);
     content += '</ul>';
     return { 'content': content, 'price_sale': price_sale };
   }

@@ -95,6 +95,21 @@
       </div>
     </div>
   </div>
+  <!-- Modal -->
+  <div class="modal fade" id="productwarehouseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="productwarehouseModal_title"></h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="productwarehouseModal_content" class="modal-body">
+        </div>
+        <div id="productwarehouseModal_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
 
 
 	<div id="container_stock" class="row">
@@ -126,7 +141,7 @@
                   </button>
                 </div>
               </div>
-              <div class="col-md-6 col-lg-4">
+              <div class="col-md-6 col-lg-2">
                 <div class="input-group my-3">
                   <label class="input-group-text" for="warehouseTypefilter">Tipo</label>
                   <select id="warehouseTypefilter" class="form-select">
@@ -135,12 +150,20 @@
                   </select>
                 </div>
               </div>
-              <div class="col-md-6 col-lg-2 mt-2">
-                <button type="button" class="btn btn-lg btn-primary" onclick="cls_warehouse.create()">Crear Bodega</button>
+              <div class="col-md-6 col-lg-4 mt-2">
+                <button type="button" class="btn btn-lg btn-primary" onclick="cls_warehouse.create()">Crear Bodega</button> &nbsp;
+                <button type="button" class="btn btn-lg btn-primary" onclick="cls_productwarehouse.add_product()">Asignar Producto</button>
               </div>
             </div>
             <div class="row">
               <div id="container_warehouse" class="col-sm-12">
+                <div class="row">
+                  <div id="container_warehouselist" class="col-6">
+                  </div>
+                  <div id="container_productlist" class="col-6">
+                  </div>                  
+                </div>
+
               </div>
             </div>
           </div>
@@ -257,6 +280,7 @@
     var raw_warehouse = JSON.parse('<?php echo json_encode($data['warehouse_list']) ?>');
     var raw_productwarehouse = JSON.parse('<?php echo json_encode($data['productwarehouse_list']) ?>');
 		var cls_warehouse = new class_warehouse(raw_warehouse,raw_productwarehouse);
+    var cls_productwarehouse = new class_productwarehouse;
 
 		var raw_provider = JSON.parse('<?php echo json_encode($data['provider_list']) ?>');
 		var cls_provider = new class_provider(raw_provider);

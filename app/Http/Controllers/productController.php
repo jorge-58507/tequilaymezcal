@@ -10,6 +10,7 @@ use App\tm_productcount;
 use App\tm_articleproduct;
 use App\tm_dataproductinput;
 use App\tm_datarequisition;
+use App\tm_warehouse;
 
 // use App\tm_dataproductoutput;
 // use App\tm_dataproductinputdevolution;
@@ -98,8 +99,8 @@ class productController extends Controller
         $rs_measure = tm_product::select('tm_measures.ai_measure_id','tm_products.tx_product_slug','tm_measures.tx_measure_value','rel_measure_products.tx_measure_product_relation','rel_measure_products.ai_measure_product_id')->join('rel_measure_products','rel_measure_products.measure_product_ai_product_id','=','tm_products.ai_product_id')
         ->join('tm_measures','rel_measure_products.measure_product_ai_measure_id','=','tm_measures.ai_measure_id')->where('tx_product_slug',$slug)->where('tx_measure_status',1)->get();
         $rs_dataproductinput = tm_dataproductinput::select('tm_providers.tx_provider_value','tm_dataproductinputs.created_at','tm_dataproductinputs.tx_dataproductinput_price','tm_dataproductinputs.tx_dataproductinput_discountrate','tm_dataproductinputs.tx_dataproductinput_taxrate','tm_dataproductinputs.dataproductinput_ai_measurement_id','tm_productinputs.tx_productinput_date')->join('tm_productinputs','tm_productinputs.ai_productinput_id','tm_dataproductinputs.dataproductinput_ai_productinput_id')->join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->where('dataproductinput_ai_product_id',$rs_product['ai_product_id'])->where('tx_productinput_status',1)->orderby('tm_productinputs.tx_productinput_date', 'DESC')->get();
-
-        return response()->json(['status'=>'success','data'=>['product'=>$rs_product, 'measure_list'=>$rs_measure, 'dataproductinput' => $rs_dataproductinput ]]);
+        $rs_warehouse = tm_warehouse::join('tm_productwarehouses','tm_productwarehouses.productwarehouse_ai_warehouse_id','tm_warehouses.ai_warehouse_id')->join('tm_products','tm_products.ai_product_id','tm_productwarehouses.productwarehouse_ai_product_id')->where('ai_product_id',$rs_product['ai_product_id'])->get();
+        return response()->json(['status'=>'success','data'=>['product'=>$rs_product, 'measure_list'=>$rs_measure, 'dataproductinput' => $rs_dataproductinput, 'warehouse' => $rs_warehouse ]]);
     }
 
     /**
@@ -209,7 +210,7 @@ class productController extends Controller
         $rs_product = $this->getAll();
         return response()->json(['status'=>'success','message'=>$message,'data'=>['all'=>$rs_product]]);
     }
-
+    /*
     public function show_quantity($product_slug){
         $rs_product = tm_product::where('tx_product_slug',$product_slug)->first();
         $rs = tm_productcount::where('productcount_ai_product_id',$rs_product['ai_product_id'])->limit(10)->get();
@@ -232,28 +233,36 @@ class productController extends Controller
         return response()->json(['status'=>'success','message'=>'Conteo Actualizado.','data'=>['product'=>$rs_product]]);
 
     }
+    */
     public function minus_byArticle($article_list,$consumption){
         foreach ($article_list as $a => $article) {
             foreach ($article['recipe'] as $ingredient) {
                 foreach ($ingredient as $reduced) {
                     $raw_explode = explode(",",$reduced);
+                        //0 => 1, 1 => Unidad 2 => product_id, 3=> bodega, 4 => se muestra o no en comanda 5 => togo
+                    $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                    ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                    ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
 
+                    $qry_productwarehouse = tm_productwarehouse::select('tm_productwarehouses.tx_productwarehouse_quantity')->where('productwarehouse_ai_product_id',)->where('productwarehouse_ai_warehouse_id');
                     if ($consumption === 'Local') {
-                        if (!empty($raw_explode[4])) {
-                            if ($raw_explode[4] != 'togo') {
-                                $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
-                                ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
-                                ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                        if (!empty($raw_explode[5])) {
+                            if ($raw_explode[5] != 'togo') {
+                                // $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                                // ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                                // ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
                                 
                                 if ($rs_measureproduct['tx_product_discountable'] == 1) {
-                                    $quantity = $rs_measureproduct['tx_product_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
-                                    $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                                    $rs_productwarehouse = $qry_productwarehouse->first();
+                                    $quantity = $rs_productwarehouse['tx_productwarehouse_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+                                    // $product = tm_product::where('ai_product_id',$raw_explode[2])->update(['tx_product_quantity' => $quantity]);
+                                    $product = tm_productwarehouse::where('productwarehouse_ai_product_id',$raw_explode[2])->update(['tx_productwarehouse_quantity' => $quantity]);
                                 }
                             }
                         }else{
-                            $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
-                            ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
-                            ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                            // $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                            // ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                            // ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
                             
                             if ($rs_measureproduct['tx_product_discountable'] == 1) {
                                 $quantity = $rs_measureproduct['tx_product_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
@@ -261,9 +270,9 @@ class productController extends Controller
                             }
                         }
                     }else{
-                        $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
-                        ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
-                        ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
+                        // $rs_measureproduct = rel_measure_product::select('tm_products.tx_product_quantity','tm_products.tx_product_discountable','rel_measure_products.tx_measure_product_relation')
+                        // ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
+                        // ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
                         
                         if ($rs_measureproduct['tx_product_discountable'] == 1) {
                             $quantity = $rs_measureproduct['tx_product_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);

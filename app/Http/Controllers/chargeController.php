@@ -260,109 +260,109 @@ class chargeController extends Controller
                                                 // ############ RECIBO  ############
         
         /* Start the printer */
-        //$logo = EscposImage::load("./attached/image/logo_print2.png", 30);
-        // $printer = new Printer($connector);
+        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
+        $printer = new Printer($connector);
         
         // PRINT TOP DATE
-        //$printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        //$printer -> text(date('d-m-Y')."\n");
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> text(date('d-m-Y')."\n");
 
         /* Print top logo */
-        //$printer -> setJustification(Printer::JUSTIFY_CENTER);
-        //$printer -> bitImage($logo);
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> bitImage($logo);
         
         /* Name of shop */
-        //$printer -> text("Cancino Nuñez, S.A.\n");
-        //$printer -> text("155732387-2-2023 DV 14.\n");
-        //$printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        //$printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
-        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        //$printer -> text("DOCUMENTO NO FISCAL\n");
-        //$printer -> selectPrintMode();
-        //$printer -> feed();
+        $printer -> text("Cancino Nuñez, S.A.\n");
+        $printer -> text("155732387-2-2023 DV 14.\n");
+        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> feed();
         
         /* Title of receipt */
-        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-        //$printer -> setEmphasis(true);
-        //$printer -> text("RECIBO DE FACTURACIÓN #".$number."\n");
-        //$printer -> setEmphasis(false);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("RECIBO DE FACTURACIÓN #".$number."\n");
+        $printer -> setEmphasis(false);
 
         /* Client Info */
-        //$printer -> selectPrintMode();
-        //$printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
-        //$printer -> text("Cliente: ".$client_name."\n");
-        //$printer -> text("RUC: ".$client_ruc."\n");
-        //$printer -> feed(2);
+        $printer -> selectPrintMode();
+        $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
+        $printer -> text("Cliente: ".$client_name."\n");
+        $printer -> text("RUC: ".$client_ruc."\n");
+        $printer -> feed(2);
         
         /* Items */
-        //$printer -> setJustification(Printer::JUSTIFY_CENTER);
-        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        //$printer -> text("DOCUMENTO NO FISCAL\n");
-        //$printer -> selectPrintMode();
-        //$printer -> setJustification(Printer::JUSTIFY_LEFT);
-        //$printer -> text("Articulos Relacionados.\n");
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> setJustification(Printer::JUSTIFY_LEFT);
+        $printer -> text("Articulos Relacionados.\n");
 
-        //$content_observation = '';
-        //$last_observation = '';
-        //$command_id = 0 ;
-        //foreach ($raw_item as $item) {
-        //    if ($item['tx_commanddata_status'] === 1) {  
-        //        $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
-        //        $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
-        //        if (!empty($raw_item[$key+1])) {
-        //            if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
-        //                $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-        //            }
-        //        }else{
-        //            $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-        //        }
-        //    }
-        //}
+        $content_observation = '';
+        $last_observation = '';
+        $command_id = 0 ;
+        foreach ($raw_item as $item) {
+           if ($item['tx_commanddata_status'] === 1) {  
+               $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
+               $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+               if (!empty($raw_item[$key+1])) {
+                   if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
+                       $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+                   }
+               }else{
+                   $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+               }
+           }
+        }
 
-        //$printer -> feed(2);
-        //$printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        //$printer -> setEmphasis(true);
-        //$printer -> text("Subtotal. B/ ".number_format($subtotal,2)."\n");
-        //$printer -> setEmphasis(false);
+        $printer -> feed(2);
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("Subtotal. B/ ".number_format($subtotal,2)."\n");
+        $printer -> setEmphasis(false);
         
         /* Tax and total */
-        //$printer -> text("Descuento. B/ ".number_format($discount,2)."\n");
-        //$printer -> text("ITBMS. B/ ".number_format($tax,2)."\n");
-        //$printer -> text("Propina B/ ".number_format($tip,2)."\n");
-        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        //$printer -> text("TOTAL. B/ ".number_format($total,2)."\n");
-        //$printer -> selectPrintMode();
-        //$printer -> feed(1);
-        //$printer -> text("Pagos Relacionados.\n");
-        //foreach ($raw_payment as $payment) {
-        //    $printer -> text($payment['tx_paymentmethod_value'].": ".number_format($payment['tx_payment_amount'],2)."\n");
-        //}
-        //$printer -> text("Cambio: ".number_format($change,2)."\n");
-        //$printer -> text("Cajera: ".$user_name."\n");
+        $printer -> text("Descuento. B/ ".number_format($discount,2)."\n");
+        $printer -> text("ITBMS. B/ ".number_format($tax,2)."\n");
+        $printer -> text("Propina B/ ".number_format($tip,2)."\n");
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("TOTAL. B/ ".number_format($total,2)."\n");
+        $printer -> selectPrintMode();
+        $printer -> feed(1);
+        $printer -> text("Pagos Relacionados.\n");
+        foreach ($raw_payment as $payment) {
+           $printer -> text($payment['tx_paymentmethod_value'].": ".number_format($payment['tx_payment_amount'],2)."\n");
+        }
+        $printer -> text("Cambio: ".number_format($change,2)."\n");
+        $printer -> text("Cajera: ".$user_name."\n");
 
-        //$printer -> setJustification(Printer::JUSTIFY_CENTER);
-        //if ($birthday_congrats === 1) {
-        //    $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        //    $printer -> text("FELICIDADES\n");
-        //    $printer -> text("EN TU CUMPLEAÑOS"."\n");
-        //    $printer -> selectPrintMode();
-        //    $printer -> text("De parte de Jade Café"."\n");
-        //    $printer -> text("le obsequiamos un Café."."\n");
-        //}
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        if ($birthday_congrats === 1) {
+           $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+           $printer -> text("FELICIDADES\n");
+           $printer -> text("EN TU CUMPLEAÑOS"."\n");
+           $printer -> selectPrintMode();
+           $printer -> text("De parte de Jade Café"."\n");
+           $printer -> text("le obsequiamos un Café."."\n");
+        }
         /* Footer */
-        //$printer -> feed(2);
-        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        //$printer -> text("DOCUMENTO NO FISCAL\n");
-        //$printer -> selectPrintMode();
-        //$printer -> text("Gracias por su compra en Jade Café\n");
-        //$printer -> text("Lo esperamos pronto.\n");
-        //$printer -> feed(2);
+        $printer -> feed(2);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("DOCUMENTO NO FISCAL\n");
+        $printer -> selectPrintMode();
+        $printer -> text("Gracias por su compra en Jade Café\n");
+        $printer -> text("Lo esperamos pronto.\n");
+        $printer -> feed(2);
         
         /* Cut the receipt and open the cash drawer */
-        //$printer -> cut();
-        //$printer -> pulse();
+        $printer -> cut();
+        $printer -> pulse();
         
-        //$printer -> close();
+        $printer -> close();
     }
 
     public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats, $tip){

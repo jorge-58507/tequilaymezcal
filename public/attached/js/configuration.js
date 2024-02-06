@@ -511,10 +511,6 @@ class class_product{
               <label for="productReference" class="form-label">Referencia</label>
               <input type="text" class="form-control" id="productReference" value="${productReference}" onfocus="cls_general.validFranz(this.id, ['word','number'])" onkeyup="cls_general.limitText(this, 150, toast = 0)" onkeyup="cls_general.limitText(this, 150, toast = 0)">
             </div>
-            <div class="col-md-4 d-grid gap-2">
-              <label for="" class="form-label m_0">Conteo</label>
-              <button type="button" class="btn btn-info" onclick="cls_product.count_product('${product['tx_product_slug']}')" >${cls_general.val_dec(product['tx_product_quantity'],2,1,1)}</button>
-            </div>
           </div>
         </div>
         <div class="row">
@@ -531,7 +527,7 @@ class class_product{
             <input type="text" class="form-control" id="productDiscountrate" value="${product['tx_product_discountrate']}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 3, toast = 0)" onkeyup="cls_general.limitText(this, 3, toast = 0)">
           </div>
         </div>
-        <div class="row">
+        <div class="row" style="display: none">
           <div class="col-lg-6 col-md-12">
             <label for="productMinimun" class="form-label">M&iacute;nimo</label>
             <input type="text" class="form-control" id="productMinimum" value="${product['tx_product_minimum']}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 9, toast = 0)" onkeyup="cls_general.limitText(this, 9, toast = 0)">
@@ -908,60 +904,6 @@ class class_product{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
 
-  }
-  count_product(product_slug){
-    var url = '/product/' + product_slug + '/count'; var method = 'GET';
-    var body = '';
-    var funcion = function (obj) {
-      if (obj.status === 'success') {
-        var list = '<ul class="list-group list-group-flush">';
-        obj.data.count_list.map(x => list += `
-          <li class="list-group-item">Antes: ${x.tx_productcount_before} Despues: ${x.tx_productcount_after} (${x.created_at})</li>
-        `)
-        list += '</ul>';
-        var content = `
-          <div class="row">
-            <div class="col-lg-12">
-              <h4>Conteo</h4>
-              <div class="input-group mb-3">
-                <input type="text" id="productQuantity" class="form-control" placeholder="Ingrese la cantidad" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 10, toast = 0)" onkeyup="cls_general.limitText(this, 10, toast = 0)">
-                <button class="btn btn-success" type="button" id="btn_addCountProduct" onclick="cls_product.updateQuantity('${product_slug}')">Agregar</button>
-              </div>
-            </div>
-            <div id="container_countlist" class="col-lg-12">
-              <h5>Conteos Anteriores</h5>
-              ${list}
-            </div>
-          </div>
-        `;
-        var content_bottom = `
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          <button type="button" class="btn btn-info" onclick="cls_product.render_modal()">Volver</button>
-        `;
-
-        document.getElementById('productModal_title').innerHTML = 'Contar';
-        document.getElementById('productModal_content').innerHTML = content;
-        document.getElementById('productModal_footer').innerHTML = content_bottom;
-      }
-      cls_general.shot_toast_bs(obj.message);
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
-  }
-  updateQuantity(product_slug){
-    var quantity = document.getElementById('productQuantity').value;
-    if (cls_general.is_empty_var(quantity) === 0 || isNaN(quantity)) {
-      cls_general.shot_toast_bs("Debe ingresar un numero.",{bg: "text-bg-warning"})
-    }
-    var url = '/product/' + product_slug + '/count'; var method = 'POST';
-    var body = JSON.stringify({a: quantity});
-    var funcion = function (obj) {
-      if (obj.status === 'success') {
-        cls_product.info = obj['data']['product'];
-        cls_product.render_modal();
-      }
-      cls_general.shot_toast_bs(obj.message);
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
   }
 }
 class class_productcategory{
@@ -1638,11 +1580,11 @@ class class_articleproduct{
         <span>Debe agregar el ingrediente. Seleccione la cantidad, el producto y la medida. En caso de que el ingrediente pueda variar sabores agregar todos los productos que puedan conformar el ingrediente.</span>
       </div>
       <hr/>
-      <div class="col-12 col-md-2">
+      <div class="col-12 col-md-4">
         <label for="recipeQuantity" class="form-label">Cantidad</label>
         <input type="text" class="form-control" id="recipeQuantity" onfocus="cls_general.validFranz(this.id, ['number'],'.')">
       </div>
-      <div class="col-12 col-md-3 pt-3">
+      <div class="col-12 col-md-4 pt-3">
         <div class="form-check form-switch py-3">
           <input class="form-check-input" type="checkbox" role="switch" id="recipeTogo">
           <label class="form-check-label" for="recipeTogo">Para llevar</label>
@@ -1652,7 +1594,9 @@ class class_articleproduct{
         <label for="recipeProduct" class="form-label">Producto</label>
         <select name="recipeProduct" id="recipeProduct" class="form-select" onchange="cls_articleproduct.set_recipemeasure(this.value)"><option value='' disabled selected>Seleccione</option>${option_product}</select>
       </div>
-      <div id="container_recipemeasure" class="col-12 col-md-3">
+      <div id="container_recipemeasure" class="col-12 col-md-4">
+      </div>
+      <div id="container_recipewarehouse" class="col-12 col-md-4">
       </div>
       <div class="col-sm-12 text-center pt-1">
         <button type="button" class="btn btn-primary" onclick="cls_articleproduct.add_ingredient()">Aceptar</button>
@@ -1677,6 +1621,9 @@ class class_articleproduct{
     const modal = new bootstrap.Modal('#articleproductModal', {})
     modal.show();
 
+    setTimeout(() => {
+      document.getElementById('recipeQuantity').focus();
+    }, 800);
   }
   set_recipemeasure(product_slug){
     var url = '/product/' + product_slug;
@@ -1691,6 +1638,15 @@ class class_articleproduct{
           <label for="recipeMeasure" class="form-label">Medida</label>
           <select name="recipeMeasure" id="recipeMeasure" class="form-select">${option_measure}</select>
         `;
+
+        var option_warehouse = ''; //SELECT DE LA BODEGA
+        obj.data.warehouse.map((depot) => { option_warehouse += `<option value="${depot.ai_warehouse_id}">${depot.tx_warehouse_value}</option>`; })
+        document.getElementById('container_recipewarehouse').innerHTML = `
+          <label for="recipeWarehouse" class="form-label">Bodega</label>
+          <select name="recipeWarehouse" id="recipeWarehouse" class="form-select">${option_warehouse}</select>
+        `;
+
+
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
@@ -1701,6 +1657,7 @@ class class_articleproduct{
     var quantity = document.getElementById('recipeQuantity').value;
     var product = document.getElementById("recipeProduct");
     var measure = document.getElementById("recipeMeasure");
+    var warehouse = document.getElementById("recipeWarehouse");
     var togo = (document.getElementById('recipeTogo').checked === true) ? 1 : 0;
 
     if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(product.value) === 0 || cls_general.is_empty_var(measure.value) === 0) {
@@ -1711,6 +1668,8 @@ class class_articleproduct{
       product_value: product.options[product.selectedIndex].text,
       measure_id: measure.value,
       measure_value: measure.options[measure.selectedIndex].text,
+      warehouse: warehouse.value,
+      warehouse_value: warehouse.options[measure.selectedIndex].text,
       quantity: quantity,
       to_go: togo
     });
@@ -1722,7 +1681,7 @@ class class_articleproduct{
     cls_articleproduct.articleproduct_ingredient.map((ingredient,index)=> {
       content += `
       <li class="list-group-item d-flex justify-content-between align-items-center" >
-        ${ingredient.quantity} - ${ingredient.product_value} (${ingredient.measure_value})
+        ${ingredient.quantity} - ${ingredient.product_value} (${ingredient.measure_value}) en ${ingredient.warehouse_value}
         <button class="btn btn-warning" type="button" onclick="cls_articleproduct.delete_ingredient(${index})">
           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
             <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
@@ -1753,7 +1712,7 @@ class class_articleproduct{
       var togo = (cls_general.is_empty_var(articleproduct[0].to_go) === 0 || articleproduct[0].to_go === 0) ? '' : '(Para Llevar)';
       content += (articleproduct.length === 1) ? `
       <li class="list-group-item d-flex justify-content-between align-items-center">
-        ${articleproduct[0].quantity} (${articleproduct[0].measure_value}) - ${articleproduct[0].product_value}  ${togo}
+        ${articleproduct[0].quantity} (${articleproduct[0].measure_value}) - ${articleproduct[0].product_value} en ${articleproduct[0].warehouse_value}  ${togo}
         <button class="btn btn-warning" type="button" onclick="cls_articleproduct.delete_selected(${index})">
           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
             <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
@@ -1762,7 +1721,7 @@ class class_articleproduct{
       </li >
       ` : `
       <li class="list-group-item d-flex justify-content-between align-items-center">
-        ${articleproduct.map((product) => { return `${product.quantity} (${product.measure_value}) - ${product.product_value} ` })}   ${togo}
+        ${articleproduct.map((product) => { return `${product.quantity} (${product.measure_value}) - ${product.product_value} en ${product.warehouse_value}` })}   ${togo}
         <button class="btn btn-warning" type="button" onclick="cls_articleproduct.delete_selected(${index})">
           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
             <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path>
@@ -1829,9 +1788,7 @@ class class_articleproduct{
         <td></td>
         <td>`;
       ingredient.map((product) => {
-        console.log(product.to_go);
         togo = (cls_general.is_empty_var(product.to_go) === 0 || product.to_go === 0) ? '' : '(Para Llevar)';
-        console.log(togo);
         tbody_price += `
         ${product.quantity} (${product.measure_value}) ${product.product_value}, ` ;
       })

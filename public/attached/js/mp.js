@@ -164,6 +164,15 @@ class general_funct {
     }
     return valid;
   }
+  validate_form(form){
+    for (let x = 0; x < form.length; x++) {
+      if (cls_general.is_empty_var(form[x].value) === 0) {
+        form[x].className += " is-invalid was-validated form-control:invalid";
+      }else{
+        form[x].classList.remove("is-invalid", "was-validated", "form-control:invalid");
+      }
+    }
+  }
   isEmpty(field,set_class=true) {
     if (field.value.length === 0 || /^\s+$/.test(field.value)) {
       if (set_class) {  this.set_invalid([field]);  }
