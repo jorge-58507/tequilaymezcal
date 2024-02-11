@@ -141,7 +141,7 @@
                 </div>
             </div>
             {{-- MODAL ACCESSCONTROL --}}
-            <div class="modal fade" id="accessControlModal" tabindex="-1">
+            <div class="modal fade modal-xl" id="accessControlModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
                     <div class="modal-header">
@@ -149,7 +149,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" id="accessControlModal_body">
-                        <div class="row h_100">
+                        <div class="row h_200">
                             <div class="col-6 text-center pb-3">
                                 <button type="button" id="btn_set_in" class="btn btn-lg btn-success" onclick="cls_controlaccess.set_in(this)">Entrada</button>
                             </div>
@@ -161,6 +161,9 @@
                             </div>
                             <div class="col-6 text-center">
                                 <button type="button" id="btn_set_breakout" class="btn btn-lg btn-info" onclick="cls_controlaccess.set_breakout(this)">Entrada Almuerzo</button>
+                            </div>
+                            <div class="col-12 text-center pt-3">
+                                <button type="button" id="btn_set_verify" class="btn btn-lg btn-secondary" onclick="cls_controlaccess.set_verify(this)">Verificar</button>
                             </div>
                             <div class="col-12" style="opacity: 0;">
                                 <form action="" name="form_controlaccess_IN" onsubmit="event.preventDefault(); cls_controlaccess.in()">
@@ -175,12 +178,13 @@
                                 <form action="" name="form_controlaccess_BREAKOUT" onsubmit="event.preventDefault(); cls_controlaccess.breakout()">
                                     <input type="text" id="controlaccess_BREAKOUT" name="controlaccess_BREAKOUT" class="form-control" value="BREAKOUT">
                                 </form>
+                                <form action="" name="form_controlaccess_VERIFY" onsubmit="event.preventDefault(); cls_controlaccess.verify()">
+                                    <input type="text" id="controlaccess_VERIFY" name="controlaccess_VERIFY" class="form-control" value="VERIFY">
+                                </form>
                             </div>
                         </div>
-                        
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                     </div>
                 </div>

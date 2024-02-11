@@ -48,10 +48,12 @@ Route::get('provider/{param}/requisition', 'requisitionController@get_requisitio
 Route::get('userlog/{param}', 'articleController@get_user');
 Route::get('kitchen/reload', 'kitchenController@reload');
 Route::get('productcode/{param_a}/show/{param_b}', 'productcodeController@show_code');
+Route::get('productcode/{param_a}/warehouse/{param_b}', 'productwarehouseController@show_productcode');
 Route::get('logincode/{param_a}', 'userController@check_logincode');
 Route::get('warehouse/{param_a}/product', 'warehouseController@get_product')->middleware('auth');
 Route::get('productwarehouse/{param_a}', 'productwarehouseController@show')->middleware('auth');
 Route::get('productwarehouse/{param_a}/count', 'productwarehouseController@show_quantity')->middleware('auth');
+// Route::get('acregister/{param}/show', 'acregisterController@show_register')->middleware('auth');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
 //Route::post('article/product', 'measureproductController@save')->middleware('auth');
@@ -132,6 +134,7 @@ Route::resource('productcode', 'productcodeController')->middleware('auth');
 Route::resource('directpurchase', 'directpurchaseController')->middleware('auth');
 Route::resource('acregister', 'acregisterController');
 Route::resource('warehouse', 'warehouseController');
+Route::resource('inventorycohort', 'inventorycohortController')->middleware('auth');
 
 // PRINT
 Route::get('print_cashregister/{param}', 'cashregisterController@print_rollpaper_cashregister');
@@ -152,6 +155,7 @@ Route::get('print_reportproductinputbyprovider/{param_a}/{param_b}', 'printContr
 Route::get('print_reportdepletion/{param_a}/{param_b}', 'printController@print_reportdepletion');
 Route::get('print_reportcommanddatanulled/{param_a}/{param_b}', 'printController@print_reportcommanddatanulled');
 Route::get('print_reportacregister/{param_a}/{param_b}/{param_c}', 'printController@print_reportacregister');
+Route::get('print_inventorycohort/{param_a}', 'printController@print_inventorycohort');
 
 
 Auth::routes();

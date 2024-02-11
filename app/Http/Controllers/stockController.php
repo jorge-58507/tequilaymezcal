@@ -40,6 +40,8 @@ class stockController extends Controller
         $rs_paymentprovider = $paymentproviderController->getAll();
         $warehouseController = new warehouseController;
         $rs_warehouse = $warehouseController->getAll();
+        $inventorycohortController = new inventorycohortController;
+        $rs_inventorycohort = $inventorycohortController->getAll();
 
         $rs_productinput = tm_productinput::join('tm_providers','tm_providers.ai_provider_id','tm_productinputs.productinput_ai_provider_id')->wherein('tx_productinput_status',[1,2])->get();
         $rs_paymentmethod = tm_paymentmethod::where('tx_paymentmethod_status',1)->get();
@@ -55,7 +57,8 @@ class stockController extends Controller
             'processed_productinput' => $rs_productinput,
             'paymentprovider_list' => $rs_paymentprovider['all'],
             'warehouse_list' => $rs_warehouse['all'],
-            'productwarehouse_list'  => $rs_warehouse['productwarehouse']
+            'productwarehouse_list'  => $rs_warehouse['productwarehouse'],
+            'inventorycohort_list' => $rs_inventorycohort['all']
         ];
     }
 

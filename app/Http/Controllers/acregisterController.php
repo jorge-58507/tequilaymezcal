@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\tm_acregister;
 use Illuminate\Http\Request;
 use App\tm_logincode;
+use App\user;
 use DateTime;
 
 class acregisterController extends Controller
@@ -45,14 +46,20 @@ class acregisterController extends Controller
             return response()->json(['status' => 'failed', 'message' => 'Tarjeta no registrada.']);
         }
         $rs_logincode = $qry_logincode->first();
-
+            // AL GUARDAR SI LA FECHA Y EL REGISTRO COINCIDEN NO GUARDAR EL REGISTRO
+        $check_dup = tm_acregister::where('tx_acregister_type',$type)->where('created_at','like','%'.date('Y-m-d').'%');
+        if ($check_dup->count() > 0) {
+            $check_dup->update(['tx_acregister_status' => 0]);
+        }
         $tm_acregister = new tm_acregister;
         $tm_acregister->acregister_ai_logincode_id = $rs_logincode['ai_logincode_id'];
         $tm_acregister->tx_acregister_type = $type;
         $tm_acregister->tx_acregister_status = 1;
         $tm_acregister->save();
 
-        return response()->json(['status' => 'success', 'message' => 'Registro guardado.']);
+        // Answer
+        $rs_user = user::where('email',$rs_logincode['tx_logincode_user'])->first();
+        return response()->json(['status' => 'success', 'message' => 'Registro guardado.', 'data' => $rs_user]);
 
     }
 
@@ -62,9 +69,16 @@ class acregisterController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($code)
     {
-        //
+        $qry_logincode = tm_logincode::join('users','users.email','tm_logincodes.tx_logincode_user')->where('tx_logincode_value', $code);
+        if ($qry_logincode->count() === 0) {
+            return response()->json(['status' => 'failed', 'message' => 'Tarjeta no registrada.']);
+        }
+        $rs_logincode = $qry_logincode->first();
+
+        $rs = tm_acregister::where('acregister_ai_logincode_id',$rs_logincode['ai_logincode_id'])->limit(50)->orderby('created_at','DESC')->get();
+        return response()->json(['status' => 'success', 'message' => '', 'data' => ['register' => $rs, 'info' => $rs_logincode]]);
     }
 
     /**
@@ -98,7 +112,13 @@ class acregisterController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $qry = tm_acregister::where('ai_acregister_id',$id);
+        if ($qry->count() === 0) {
+            return response()->json(['status' => 'failed', 'message' => 'No existe.']);
+        }
+
+        $qry->update(['tx_acregister_status' => 0]);
+        return response()->json(['status' => 'success', 'message' => 'Eliminado correctamente.']);
     }
 
     public function report($from, $to, $user_id='')
@@ -110,7 +130,8 @@ class acregisterController extends Controller
             $rs = tm_acregister::select('tm_acregisters.created_at','users.name','users.id','tm_acregisters.tx_acregister_type')
             ->join('tm_logincodes','tm_logincodes.ai_logincode_id','tm_acregisters.acregister_ai_logincode_id')
             ->join('users','users.email','tm_logincodes.tx_logincode_user')
-            ->where('tm_acregisters.created_at','>=',$c_from)->where('tm_acregisters.created_at','<=',$c_to)->where('users.id',$user_id)
+            ->where('tm_acregisters.created_at','>=',$c_from)->where('tm_acregisters.created_at','<=',$c_to)
+            ->where('tm_acregisters.tx_acregister_status',1)->where('users.id',$user_id)
             ->orderby('users.name','ASC')
             ->orderby('tm_acregisters.created_at','ASC')
             ->get();
@@ -119,6 +140,7 @@ class acregisterController extends Controller
             ->join('tm_logincodes','tm_logincodes.ai_logincode_id','tm_acregisters.acregister_ai_logincode_id')
             ->join('users','users.email','tm_logincodes.tx_logincode_user')
             ->where('tm_acregisters.created_at','>=',$c_from)->where('tm_acregisters.created_at','<=',$c_to)
+            ->where('tm_acregisters.tx_acregister_status',1)
             ->orderby('users.name','ASC')
             ->orderby('tm_acregisters.created_at','ASC')
             ->get();
@@ -129,7 +151,7 @@ class acregisterController extends Controller
         $report = [];
         $raw_person = [];
         $raw_date = [];
-        $asistance = 1;
+        $asistance = 0;
         $person_counter = [];
         foreach ($rs as $key => $register) {
             //verificar si estoy en el ultimo elemento ->hacer todo el proceso y agregar
@@ -140,6 +162,7 @@ class acregisterController extends Controller
             $raw_date['date'] = date('d-m-Y', strtotime($register['created_at']));
             $raw_date['user_id'] = $register['id'];
             $raw_date['name'] = $register['name'];
+
             switch ($register['tx_acregister_type']) {
                 case 1:
                     $raw_date['in']       = date('H:i:s', strtotime($register['created_at']));
@@ -158,9 +181,9 @@ class acregisterController extends Controller
                     break;
             }
             //Verificar Asistencia, tiempototal y tiempoextra
-            if (!empty($raw_date['in']) && !empty($raw_date['out'])) { 
+            if (!empty($raw_date['in']) && !empty($raw_date['out'])) {
                 $raw_date['asistance'] = 'Si';
-                $raw_date['counter'] = $asistance++;
+                $raw_date['counter'] = $asistance++;                
                 
                 //Tiempo total
                 $interval_totaltime = $this->diff_time($raw_date['in'],$raw_date['out']);   
@@ -178,6 +201,7 @@ class acregisterController extends Controller
                 }
             }else{
                 $raw_date['asistance'] = 'No';
+                $raw_date['counter'] = $asistance;
             }
             //Verificar tiempo de almuerzo
             if (!empty($raw_date['breakin']) && !empty($raw_date['breakout'])) {  

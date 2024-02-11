@@ -281,10 +281,17 @@ class requestController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        $printer -> text("Cancino Nuñez, S.A.\n");
-        $printer -> text("155732387-2-2023 DV 14.\n");
-        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        // $printer -> text("Cancino Nuñez, S.A.\n");
+        // $printer -> text("155732387-2-2023 DV 14.\n");
+        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        $optionController = new optionController;
+        $rs_option = $optionController->getOption();
+
+        $printer -> text($rs_option['SOCIETY']."\n");
+        $printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
+        $printer -> text($rs_option['DIRECCION']."\n");
+        $printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("PRECUENTA\n");
         $printer -> text("DOCUMENTO NO FISCAL\n");

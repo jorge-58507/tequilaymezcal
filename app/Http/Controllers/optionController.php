@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\tm_option;
 
 class optionController extends Controller
 {
@@ -15,7 +16,16 @@ class optionController extends Controller
     {
         //
     }
+    public function getOption()
+    {
+        $rs = tm_option::all();
+        $raw_option = [];
+        foreach ($variable as $key => $value) {
+            $raw_option[$value['tx_option_title']] = $value['tx_option_value'];
+        }
 
+        return $raw_option;
+    }
     /**
      * Show the form for creating a new resource.
      *

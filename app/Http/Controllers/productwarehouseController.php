@@ -107,4 +107,34 @@ class productwarehouseController extends Controller
         return response()->json(['status'=>'success','message'=>'Producto eliminado.', 'data' => ['all' => $rs_productwarehouse]]);
     }
 
+    public function show_productcode($str,$warehouse_id){
+        $productcodeController = new productcodeController;
+        $rs_productcode = $productcodeController->show_productcode($str);
+
+        // SI NO EXISTE EL CODIGO EN PRODUCTCODE
+        if (empty($rs_productcode)) {
+            return response()->json(['status'=>'confirm_productcode','message'=>'No existe el código.', 'data' => ['warehouse_id' => $warehouse_id]]);
+        }
+
+        // CHECK SI NO EXISTE EN WAREHOUSE
+        $qry = tm_productwarehouse::where('productwarehouse_ai_product_id',$rs_productcode['product_id'])->where('productwarehouse_ai_warehouse_id',$warehouse_id);
+        if ($qry->count() === 0) {
+            $user = auth()->user();
+
+            $tm_productwarehouse = new tm_productwarehouse;
+            $tm_productwarehouse->productwarehouse_ai_user_id       = $user->id;
+            $tm_productwarehouse->productwarehouse_ai_product_id    = $rs_productcode['product_id'];
+            $tm_productwarehouse->productwarehouse_ai_warehouse_id  = $warehouse_id;
+            $tm_productwarehouse->tx_productwarehouse_description   = $rs_productcode['description'];
+            $tm_productwarehouse->tx_productwarehouse_quantity      = 0;
+            $tm_productwarehouse->tx_productwarehouse_minimun       = 0;
+            $tm_productwarehouse->tx_productwarehouse_maximun       = 10000;
+            $tm_productwarehouse->save();
+        }
+
+
+
+        return response()->json(['status'=>'success','message'=>'', 'data' => ['productcode' => $rs_productcode]]);
+    }
+
 }

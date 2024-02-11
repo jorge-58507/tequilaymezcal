@@ -127,11 +127,28 @@ class productcodeController extends Controller
 
     public function show_code($str,$provider_slug)
     {
+        $rs_productcode = $this->show_productcode($str);
+
+        if (!empty($rs_productcode)) {
+            return response()->json(['status'=>'success','message'=>'', 'data' => ['productcode' => $rs_productcode]]);
+        }else{
+            $rs_provider = tm_provider::where('tx_provider_slug',$provider_slug)->first();
+            $rs_requisition = tm_requisition::select('tm_requisitions.tx_requisition_number','tm_measures.tx_measure_value','tm_datarequisitions.ai_datarequisition_id','tm_datarequisitions.datarequisition_ai_requisition_id','tm_datarequisitions.datarequisition_ai_product_id','tm_datarequisitions.tx_datarequisition_description','tm_datarequisitions.tx_datarequisition_quantity','tm_datarequisitions.tx_datarequisition_price','tm_datarequisitions.tx_datarequisition_discountrate','tm_datarequisitions.tx_datarequisition_taxrate','tm_datarequisitions.tx_datarequisition_total')
+            ->join('tm_datarequisitions','tm_datarequisitions.datarequisition_ai_requisition_id','tm_requisitions.ai_requisition_id')
+            ->join('tm_measures','tm_measures.ai_measure_id','tm_datarequisitions.datarequisition_ai_measurement_id')
+            ->where('requisition_ai_provider_id',$rs_provider['ai_provider_id'])
+            ->where('tx_requisition_status',0)->get();
+            return response()->json(['status'=>'failed','message'=>'No existe el código.','data' => ['requisition' => $rs_requisition]]);
+        }
+
+    }
+
+    public function show_productcode($str)
+    {
         $qry_productcode = tm_productcode::join('tm_products','tm_products.ai_product_id','tm_productcodes.productcode_ai_product_id')
         ->join('tm_measures','tm_measures.ai_measure_id','tm_productcodes.productcode_ai_measure_id')
         ->where('tx_productcode_value',$str);
         if ($qry_productcode->count() > 0) {
-
             $rs_productcode = $qry_productcode->first();
             $rs_product = tm_product::where('ai_product_id',$rs_productcode['productcode_ai_product_id'])->first();
             $rs_measure = tm_measure::where('ai_measure_id',$rs_productcode['productcode_ai_measure_id'])->first();
@@ -145,18 +162,10 @@ class productcodeController extends Controller
                 'quantity' => $rs_productcode['tx_productcode_quantity'],
                 'productcode_id' => $rs_productcode['ai_productcode_id']
             ];
-            return response()->json(['status'=>'success','message'=>'', 'data' => ['productcode' => $data]]);
-
+            return $data;
         }else{
-            $rs_provider = tm_provider::where('tx_provider_slug',$provider_slug)->first();
-            $rs_requisition = tm_requisition::select('tm_requisitions.tx_requisition_number','tm_measures.tx_measure_value','tm_datarequisitions.ai_datarequisition_id','tm_datarequisitions.datarequisition_ai_requisition_id','tm_datarequisitions.datarequisition_ai_product_id','tm_datarequisitions.tx_datarequisition_description','tm_datarequisitions.tx_datarequisition_quantity','tm_datarequisitions.tx_datarequisition_price','tm_datarequisitions.tx_datarequisition_discountrate','tm_datarequisitions.tx_datarequisition_taxrate','tm_datarequisitions.tx_datarequisition_total')
-            ->join('tm_datarequisitions','tm_datarequisitions.datarequisition_ai_requisition_id','tm_requisitions.ai_requisition_id')
-            ->join('tm_measures','tm_measures.ai_measure_id','tm_datarequisitions.datarequisition_ai_measurement_id')
-            ->where('requisition_ai_provider_id',$rs_provider['ai_provider_id'])
-            ->where('tx_requisition_status',0)->get();
-            return response()->json(['status'=>'failed','message'=>'No existe el código.','data' => ['requisition' => $rs_requisition]]);
+            return false;
         }
-
     }
 
 }

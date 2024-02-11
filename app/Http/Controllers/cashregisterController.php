@@ -260,7 +260,9 @@ class cashregisterController extends Controller
 				$total_giftcard['active'] += $ttl_giftcard;
 			}
 		}
-
+        $optionController = new optionController;
+        $rs_option = $optionController->getOption();
+        
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
         
@@ -277,10 +279,15 @@ class cashregisterController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        $printer -> text("Cancino Nuñez, S.A.\n");
-        $printer -> text("155732387-2-2023 DV 14.\n");
-        $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        // $printer -> text("Cancino Nuñez, S.A.\n");
+        // $printer -> text("155732387-2-2023 DV 14.\n");
+        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+
+        $printer -> text($rs_option['SOCIETY']."\n");
+        $printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
+        $printer -> text($rs_option['DIRECCION']."\n");
+        $printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
         $printer -> feed();
         
         /* Title of receipt */

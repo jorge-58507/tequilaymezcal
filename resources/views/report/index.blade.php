@@ -58,7 +58,7 @@
 
 @section('javascript')
 	<script src="{{ asset('attached/js/report.js') }}"></script>
-	{{-- <script src="{{ asset('attached/js/sweetalert.js') }}"></script> --}}
+	<script src="{{ asset('attached/js/sweetalert.js') }}"></script>
 	
 	<script type="text/javascript">
 		var cls_report = new class_report();

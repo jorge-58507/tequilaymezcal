@@ -10,6 +10,7 @@ use App\tm_dataproductinput;
 use App\tm_measure;
 use App\tm_product;
 use App\tm_depletion;
+use App\tm_inventory;
 
 
 class printController extends Controller
@@ -40,6 +41,9 @@ class printController extends Controller
 		foreach ($raw_page['content'] as $key => $value) {
 			$content .= ($value != end($raw_page['content'])) ? $value.'<span style="page-break-after: always"></span>' : $value;
 		}
+		$optionController = new optionController;
+		$rs_option = $optionController->getOption();
+
 		$output = '
 			<link type="text/css" rel="stylesheet" href="attached/css/print.css"  media="screen,projection"/>
 			<link type="text/css" rel="stylesheet" href="attached/css/bootstrap.css"  media="screen,projection">
@@ -55,7 +59,7 @@ class printController extends Controller
 					<div class="text-center col-sm-3 col_25" style="height: 160px; float: left;">&nbsp;</div>
 					<div class="text-center col-sm-6 col_25" style="height: 160px; float: left;">
 						<img width="115px" height="115px" src="./attached/image/logo_print2.png">
-						<p style="font-size: 10pt;">Cancino Nuñez, S.A.</p>
+						<p style="font-size: 10pt;">'.$rs_option['SOCIETY'].'</p>
 					</div>
 					<div class="text-center col-sm-3 col_25" style="height: 160px; float: left; text-align: right;">'.date('d-m-Y',strtotime($raw_page['date'])).'</div>
 			</div>
@@ -1951,14 +1955,6 @@ class printController extends Controller
 		return $pdf->stream();
 	}
 
-
-
-
-
-
-
-
-
 	public function print_reportacregister ($from,$to,$user_id){
 		$acregisterController = new acregisterController;
 		$user_id = ($user_id === 'empty') ? '' : $user_id;
@@ -2113,5 +2109,59 @@ class printController extends Controller
 	}
 
 
+	public function print_inventorycohort ($id){
+		$rs = tm_inventory::select('tm_inventories.ai_inventory_id','users.name','tm_inventories.created_at','tm_warehouses.tx_warehouse_value')->join('users','users.id','tm_inventories.inventory_ai_user_id')->join('tm_warehouses','tm_warehouses.ai_warehouse_id','tm_inventories.inventory_ai_warehouse_id')->orderby('tm_inventories.created_at','DESC')->where('ai_inventory_id',$id)->first();
+		$inventorydataController = new inventorydataController;
+		$rs_data = $inventorydataController->get_by_inventory($id);
+
+		$content = '
+			<br/>
+			<h3>Conteo en: '.$rs['tx_warehouse_value'].', el dia '.date('d-m-Y',strtotime($rs['created_at'])).' a las '.date('h:i:s A',strtotime($rs['created_at'])).'</h3>
+			<table class="table table-bordered table-condensed table-striped table-print">
+				<thead style="border: solid">
+					<tr>
+						<th class="col-sm-6">Descripción</th>
+						<th class="col-sm-2">Cantidad</th>
+						<th class="col-sm-4">Medida</th>
+					</tr>
+				</thead>
+				<tbody>
+    	';
+		foreach($rs_data as $product) {
+			$content .= '
+				<tr>
+					<td style="text-align: center;">'.$product['tx_inventorydata_description'].'</td>
+					<td>'.$product['tx_inventorydata_quantity'].'</td>
+					<td style="text-align: center;">'.$product['tx_measure_value'].'</td>
+				</tr>
+			';
+		}
+		$content .= '
+				</tbody>
+				<tfoot style="border:solid;">
+					<tr>
+						<td colspan="3">
+							&nbsp;
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+			<h3>Elaborado por '.$rs['name'].'</h3>
+
+		';
+		
+		$content_bottom = '';
+
+		$raw_page = [
+			'date' => date('d-m-Y'),
+			'title'=>'Cohorte de Inventario' ,
+			'content'=>[$content],
+			'bottom'=>$content_bottom,
+			'title_page'=>"Cohorte de inventario"
+		];
+		$pdf = \App::make('dompdf.wrapper');
+		$pdf->loadHTML($this->full_page($raw_page));
+		return $pdf->stream();
+	}
 
 }

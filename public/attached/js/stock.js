@@ -2278,3 +2278,432 @@ class class_productwarehouse{
   }
 
 }
+
+
+class class_inventorycohort
+{
+  constructor(inventorycohort_list){
+    this.inventorycohort_list = [];
+    this.saved_list = inventorycohort_list;
+  }
+  create_inventorycohort() {
+    var select_warehouse = '<option value="">Seleccione</option>';
+    cls_warehouse.warehouse_list.map((warehouse) => { select_warehouse += `<option value="${warehouse.ai_warehouse_id}">${warehouse.tx_warehouse_value}</option>`; })
+
+    var content = `
+      <div class="col-md-12">
+        <div class="row">
+          <div class="col-12 col-lg-6">
+            <label for="warehouseInventorycohort" class="form-label">Bodega</label>
+            <select id="warehouseInventorycohort" class="form-select" onchange="document.getElementById('filterproductInventorycohort').focus()">
+              ${select_warehouse}
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div id="" class="col-sm-12 pt-4">
+            <input type="text" id="filterproductInventorycohort" class="form-control" value="" placeholder="Buscar por C&oacute;digo">
+          </div>
+          <div id="product_selected" class="col-sm-12 v_scrollable pt-3" style="height: 40vh">
+            <table id="tbl_productselected" class="table table-striped table-bordered">
+              <thead>
+                <tr class="text-center bg-secondary">
+                  <th scope="col-sm-6">Descripci&oacute;n</th>
+                  <th scope="col-sm-2">Cantidad</th>
+                  <th scope="col-sm-4"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="text-center bg-secondary">
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12 text-center pt-2">
+            <button type="button" class="btn btn-warning" onclick="window.location.href = '/stock';">Volver</button>
+            &nbsp;
+            <button id="processInventorycohort" type="button" class="btn btn-primary">Procesar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('container_inventory').innerHTML = content;
+    document.getElementById('processInventorycohort').addEventListener('click', () => { cls_general.disable_submit(document.getElementById('processInventorycohort')); cls_inventorycohort.process_inventorycohort() });
+    document.getElementById('filterproductInventorycohort').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        if (cls_general.is_empty_var(document.getElementById('warehouseInventorycohort').value) === 0) {
+          cls_general.shot_toast_bs('Debe seleccionar alguna bodega.', { bg: 'text-bg-warning' }); return false;
+        }
+        cls_inventorycohort.get_productcode(document.getElementById('filterproductInventorycohort').value, document.getElementById('warehouseInventorycohort').value)
+      }
+    });
+  }
+
+  get_productcode(str, warehouse_id) {
+    if (cls_general.is_empty_var(str) === 0) {
+      return false;
+    }
+    var url = '/productcode/' + str + '/warehouse/' + warehouse_id;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var info = obj.data.productcode;
+        cls_inventorycohort.add_inventorycohort(info)
+        var data_inventorycohort = cls_inventorycohort.generate_inventorycohort_list(cls_inventorycohort.inventorycohort_list)
+        var content = `
+          <table id="tbl_productselected" class="table table-striped table-bordered">
+            <thead>
+              <tr class="text-center bg-secondary">
+                <th scope="col-sm-4">Descripci&oacute;n</th>
+                <th scope="col-sm-2">Cantidad</th>
+                <th scope="col-sm-2">Medida</th>
+                <th scope="col-sm-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data_inventorycohort}
+            </tbody>
+          </table>
+        `;
+        document.getElementById('product_selected').innerHTML = content;
+      } else {
+        if (obj.status === 'confirm_productcode') {
+
+          var content = `
+            <div class="row">
+              <div class="col-12">
+                <input type="text" class="form-control" id="filter_product" placeholder="Buscar producto">
+              </div>
+              <div id="container_productlist" class="col-12">
+              </div>
+            </div>
+          `;
+          document.getElementById('productcodeModal_content').innerHTML = content;
+          document.getElementById('container_productlist').innerHTML = cls_productcode.generate_productlist(cls_product.productlist,warehouse_id);
+          const modal = new bootstrap.Modal('#productcodeModal', {})
+          modal.show();
+
+          document.getElementById('filter_product').addEventListener('keyup', () => {
+            cls_productcode.filter_productlist(document.getElementById('filter_product').value);
+          });
+
+        }else{
+          cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        }
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_inventorycohort_list(raw_product) {
+    var content = '';
+    raw_product.map((product, index) => {
+      content += `
+        <tr class="text-center">
+          <td class="truncate-text">${product.description}</td>
+          <td class="truncate-text">${product.quantity}</td>
+          <td class="truncate-text">${product.measure_value}</td>
+          <td>
+            <button type="button" onclick="cls_inventorycohort.delete_inventorycohort(${index})" class="btn btn-danger">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
+              </svg>
+            </button>
+          </td>
+      </tr>`;
+    })
+    return content;
+  }
+  add_inventorycohort(info) {
+    var index = cls_inventorycohort.inventorycohort_list.findIndex((list) => { return list.product_id === info.product_id })
+    if (index === -1) { //VERIFICA QUE EL METODO INGRESADO EXISTA
+      cls_inventorycohort.inventorycohort_list.push({
+        code: info.code,
+        product_id: info.product_id,
+        description: info.description,
+        measure_id: info.measure_id,
+        measure_value: info.measure_value,
+        quantity: parseFloat(info.quantity),
+        productcode_id: info.productcode_id
+      })
+    } else {
+      cls_inventorycohort.inventorycohort_list[index].quantity += info.quantity;
+    }
+    document.getElementById('filterproductInventorycohort').value = '';
+  }
+  delete_inventorycohort(index) {
+    cls_inventorycohort.inventorycohort_list.splice(index, 1);
+    var data_inventorycohort = cls_inventorycohort.generate_inventorycohort_list(cls_inventorycohort.inventorycohort_list)
+    var content = `
+          <table id="tbl_productselected" class="table table-striped table-bordered">
+            <thead>
+              <tr class="text-center bg-secondary">
+                <th scope="col-sm-4">Descripci&oacute;n</th>
+                <th scope="col-sm-2">Cantidad</th>
+                <th scope="col-sm-2">Medida</th>
+                <th scope="col-sm-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data_inventorycohort}
+            </tbody>
+          </table>
+        `;
+    document.getElementById('product_selected').innerHTML = content;
+  }
+  process_inventorycohort() {
+    var warehouse_id = document.getElementById('warehouseInventorycohort').value;
+    if (cls_general.is_empty_var(warehouse_id) === 0) {
+      cls_general.shot_toast_bs('Seleccione un proveedor.', { bg: 'text-bg-warning' }); return false;
+    }
+    if (cls_inventorycohort.inventorycohort_list.length === 0) {
+      cls_general.shot_toast_bs('Debe ingresar productos.', { bg: 'text-bg-warning' }); return false;
+    }
+
+    var url = '/inventorycohort/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: cls_inventorycohort.inventorycohort_list, b: warehouse_id });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_inventorycohort.inventorycohort_list = [];
+        var data_inventorycohort = cls_inventorycohort.generate_inventorycohort_list(cls_inventorycohort.inventorycohort_list)
+        var content = `
+          <table id="tbl_productselected" class="table table-striped table-bordered">
+            <thead>
+              <tr class="text-center bg-secondary">
+                <th scope="col-sm-4">Descripci&oacute;n</th>
+                <th scope="col-sm-2">Cantidad</th>
+                <th scope="col-sm-2">Medida</th>
+                <th scope="col-sm-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data_inventorycohort}
+            </tbody>
+          </table>
+        `;
+        document.getElementById('product_selected').innerHTML = content;
+        document.getElementById('warehouseInventorycohort').value = '';
+
+        cls_inventorycohort.saved_list = obj.data.list;
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_saved_list(filtered){
+    var content = '<ul class="list-group">';
+    filtered.map((inventorycohort) => {
+      content += `
+        <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_inventorycohort.show('${inventorycohort.ai_inventory_id}')">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold"><h5>${inventorycohort.tx_warehouse_value}</h5> Elaborado por: ${inventorycohort.name}</div>
+            <small>Fecha: ${cls_general.datetime_converter(inventorycohort.created_at)} ${cls_general.time_converter(inventorycohort.created_at,1) }</small>
+          </div>
+        </li>
+      `;
+    })
+    content += '</ul>';
+    return content;
+  }
+  async filter(str) {
+    var filtered = await cls_inventorycohort.look_for(str);
+    var content = cls_inventorycohort.generate_saved_list(filtered)
+    document.getElementById('container_inventorycohort').innerHTML = content;
+  }
+  look_for(str) {
+    return new Promise(resolve => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () {
+        var haystack = cls_inventorycohort.saved_list;
+        var needles = str.split(' ');
+        var raw_filtered = [];
+        for (var i in haystack) {
+          var ocurrencys = 0;
+          for (const a in needles) {
+            var split_hay = haystack[i]['created_at'].split(' ');
+            var needle = cls_general.datetime_converter(needles[a])
+            if (split_hay[0].toLowerCase().indexOf(needle.toLowerCase()) > -1) { ocurrencys++ }
+          }
+          if (ocurrencys === needles.length) {
+            raw_filtered.push(haystack[i]);
+          }
+        }
+        resolve(raw_filtered)
+      }, 1000)
+    });
+  }
+
+  show(inventorycohort_id){
+    var url = '/inventorycohort/' + inventorycohort_id;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var tbl_content = cls_inventorycohort.generate_inventorydata(obj.data.productlist);
+        var content = `
+          <div class="row">
+            <div class="col-sm-12 text-center text-truncate">
+              <h5>Elaborado por ${obj.data.info.name}</h5>
+              <input type="hidden" name="" id="id_inventorycohort" class="form-control" value="${obj.data.info.ai_inventory_id}">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <table id="tbl_productselected" class="table table-striped table-bordered">
+                <thead>
+                  <tr class="text-center bg-secondary">
+                    <th scope="col-sm-4">Descripci&oacute;n</th>
+                    <th scope="col-sm-2">Cantidad</th>
+                    <th scope="col-sm-2">Medida</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tbl_content}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+        document.getElementById('inventorycohortModal_title').innerHTML = `${obj.data.info.tx_warehouse_value} ${cls_general.datetime_converter(obj.data.info.created_at)} ${cls_general.time_converter(obj.data.info.created_at, 1) }`;
+        document.getElementById('inventorycohortModal_content').innerHTML = content;
+        document.getElementById('inventorycohortModal_footer').innerHTML = `
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          &nbsp;
+          <button id="btn_printinventorycohort" type="button" class="btn btn-primary">Imprimir</button>
+        `;
+
+        const modal_win = new bootstrap.Modal('#inventorycohortModal', {})
+        modal_win.show();
+
+        document.getElementById('btn_printinventorycohort').addEventListener('click', () => { 
+          cls_general.print_html('/print_inventorycohort/' + inventorycohort_id);
+         });
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_inventorydata(raw_product) {
+    var content = '';
+    raw_product.map((product, index) => {
+      content += `
+        <tr class="text-center">
+          <td class="truncate-text">${product.tx_inventorydata_description}</td>
+          <td class="truncate-text">${product.tx_inventorydata_quantity}</td>
+          <td class="truncate-text">${product.tx_measure_value}</td>
+      </tr>`;
+    })
+    return content;
+  }
+}
+
+class class_productcode
+{
+  generate_productlist(raw_product,warehouse_id){
+    var content = '<div class=""><span>Listado de productos</span></div><div class="h_400 v_scrollable"><ul class="list-group">';
+    raw_product.map((product) => {
+      let bg = (product.tx_product_status === 1) ? '' : 'text-bg-secondary';
+      content += `<li class="list-group-item cursor_pointer fs_20 text-truncate ${bg}" onclick="cls_productcode.show_productcode('${product.tx_product_slug}',${warehouse_id})" title="${product.tx_product_value}">${product.tx_product_value}</li>`;
+    })
+    return content += '</ul></div>';
+  }
+  async filter_productlist(str) {
+    var filtered = await cls_product.look_for(str, 'filter');
+    document.getElementById('container_productlist').innerHTML = cls_productcode.generate_productlist(filtered);
+  }
+  show_productcode(product_slug,warehouse_id) {
+    var url = '/product/' + product_slug;
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var opt_productMeasure = '';
+        obj.data.measure_list.map((measure) => {
+          opt_productMeasure += `<option value="${measure.ai_measure_id}">${measure.tx_measure_value} (${measure.tx_measure_product_relation})</option>`;
+        })
+
+        var content = `
+          <div class="row">
+            <div class="col-sm-12 text-center text-truncate">
+              <h5>Cod. ${obj.data.product.tx_product_code} - ${obj.data.product.tx_product_value}</h5>
+              <input type="hidden" name="" id="productId_productcode" class="form-control" value="${obj.data.product.ai_product_id}">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12 col-lg-4">
+              <label for="productMeasure_productcode">Medida</label>
+              <select name="" id="productMeasure_productcode" class="form-select">
+                ${opt_productMeasure}
+              </select>
+            </div>
+            <div class="col-12 col-lg-4">
+              <label for="productQuantity_productcode">Multiplo</label>
+              <input type="text" name="" id="productQuantity_productcode" class="form-control">
+            </div>
+            <div class="col-12 col-lg-4">
+              <label for="code_productcode">C&oacute;digo</label>
+              <input type="text" name="" id="code_productcode" class="form-control" value="${document.getElementById('filterproductInventorycohort').value}">
+            </div>
+          </div>
+        `;
+        document.getElementById('productcodeModal_content').innerHTML = content;
+        document.getElementById('productcodeModal_footer').innerHTML = `
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          &nbsp;
+          <button id="btn_saveproductcode" type="button" class="btn btn-primary">Procesar</button>
+        `;
+        setTimeout(() => {
+          document.getElementById('productQuantity_productcode').focus();
+        }, 500);
+        document.getElementById('btn_saveproductcode').addEventListener('click', () => { cls_productcode.save_productcode(warehouse_id) });
+
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  save_productcode(warehouse_id) {
+    var productid = document.getElementById('productId_productcode').value;
+    var measure = document.getElementById('productMeasure_productcode').value;
+    var code = document.getElementById('code_productcode').value;
+    var quantity = document.getElementById('productQuantity_productcode').value;
+
+    if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(measure) === 0 || cls_general.is_empty_var(code) === 0 || cls_general.is_empty_var(productid) === 0) {
+      cls_general.shot_toast_bs('Faltan datos', { bg: 'text-bg-warning' }); return false;
+    }
+    if (isNaN(quantity)) {
+      cls_general.shot_toast_bs('Debe ingresar una cantidad valida.', { bg: 'text-bg-warning' }); return false;
+    }
+    var url = '/productcode/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: productid, b: measure, c: code, d: cls_general.val_dec(quantity, 2, 1, 1) });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('productId_productcode').value        = '';
+        document.getElementById('productMeasure_productcode').value   = '';
+        document.getElementById('code_productcode').value             = '';
+        document.getElementById('productQuantity_productcode').value  = '';
+
+        const modal_win = bootstrap.Modal.getInstance('#productcodeModal');
+        if (modal_win) {
+          modal_win.hide();
+        }
+        cls_inventorycohort.get_productcode(code,warehouse_id);
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+}

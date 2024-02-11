@@ -145,7 +145,7 @@
             <div id="toast_container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
             {{-- MODAL ACCESSCONTROL --}}
-            <div class="modal fade" id="accessControlModal" tabindex="-1">
+            <div class="modal fade modal-xl" id="accessControlModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
                     <div class="modal-header">
