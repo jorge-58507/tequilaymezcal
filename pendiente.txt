@@ -1,4 +1,5 @@
 PAGINA WEB DE TEQUILA
+en asignar producto a bodega poner en la tabla la medida minima del producto
 
 cohorte de inventario 100/200 => se debe crear la interfaz donde se realiza un cohorte muy similar al directpurchase, crear tm_inventory (id, bodega) y tm_datainventory (id, inventory_id, producto_id, measure_id, productcode_id, producto_description, quantity)
 

@@ -1940,7 +1940,13 @@ class class_productwarehouse{
       <form id="form_add_productwarehouse" autocomplete="off">
         <div class="row">
           <div class="col-6">
-            <label for="warehouse_toasign">Bodega</label>
+            <label for="warehouse_fromasign">Bodega Origen</label>
+            <select id="warehouse_fromasign" class="form-select">
+              ${select_warehouse}
+            </select>
+          </div>
+          <div class="col-6">
+            <label for="warehouse_toasign">Bodega Destino</label>
             <select id="warehouse_toasign" class="form-select">
               ${select_warehouse}
             </select>
@@ -2011,27 +2017,43 @@ class class_productwarehouse{
   }
   select_product(product_id){
     cls_general.validate_form(document.getElementById('form_add_productwarehouse'));
-    var sel_warehouse = document.getElementById('warehouse_toasign');
+    var sel_warehouse_from = document.getElementById('warehouse_fromasign');
+    var sel_warehouse_to = document.getElementById('warehouse_toasign');
     var minimun = document.getElementById('minimunquantity_toasign').value;
     var maximun = document.getElementById('maximunquantity_toasign').value;
 
-    if (cls_general.is_empty_var(sel_warehouse.value) === 0) {
+    if (cls_general.is_empty_var(sel_warehouse_to.value) === 0) {
       return swal("Debe seleccionar alguna bodega.");
     }
+    if (cls_general.is_empty_var(sel_warehouse_from.value) === 0) {
+      return swal("Debe seleccionar alguna bodega.");
+    }
+
     var quantity = document.getElementById('quantity_toasign').value;
-    if (cls_general.is_empty_var(quantity) === 0 || cls_general.is_empty_var(minimun) === 0 || cls_general.is_empty_var(maximun) === 0) {
+    if (cls_general.is_empty_var(quantity) === 0 ) {
       return swal("Debe ingresar las cantidades.");
     }
-    if (isNaN(quantity) || isNaN(minimun) || isNaN(maximun)) {
+    if (cls_general.is_empty_var(minimun) === 1) {
+      if (isNaN(minimun)) {
+        return swal("Los numeros ingresados deben ser enteros.");
+      }
+    }
+    if (cls_general.is_empty_var(maximun) === 1) {
+      if (isNaN(maximun)) {
+        return swal("Los numeros ingresados deben ser enteros.");
+      }
+    }
+    if (isNaN(quantity)) {
       return swal("Los numeros ingresados deben ser enteros.");
     }
    
     var url = '/productwarehouse/add_product';
     var method = 'POST';
-    var body = JSON.stringify({ a: quantity, b: sel_warehouse.value, c: product_id, d: minimun, e: maximun });
+    var body = JSON.stringify({ a: quantity, b: sel_warehouse_to.value, c: product_id, d: minimun, e: maximun, f: sel_warehouse_from.value, });
     var funcion = function (obj) {
       if (obj.status === 'success') {
-        sel_warehouse.value = '';
+        sel_warehouse_to.value = '';
+        sel_warehouse_from.value = '';
         document.getElementById('quantity_toasign').value = '';
         document.getElementById('minimunquantity_toasign').value = '';
         document.getElementById('maximunquantity_toasign').value = '';

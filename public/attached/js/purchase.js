@@ -1801,8 +1801,6 @@ class class_productcode
         document.getElementById('providerDirectpurchase').value = '';
 
         cls_directpurchase.saved_list = obj.data.list;
-        // document.getElementById('container_directpurchase').innerHTML = cls_directpurchase.generate_directpurchase_saved(cls_directpurchase.saved_list);
-
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });

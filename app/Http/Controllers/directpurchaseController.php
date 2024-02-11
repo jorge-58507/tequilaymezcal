@@ -9,6 +9,7 @@ use App\tm_provider;
 use App\tm_productcode;
 use App\rel_measure_product;
 use App\tm_product;
+use App\tm_productwarehouse;
 
 class directpurchaseController extends Controller
 {
@@ -73,8 +74,11 @@ class directpurchaseController extends Controller
             $qry_product = tm_product::where('ai_product_id',$product['product_id']);
             $rs_product = $qry_product->first();
             if ($rs_product['tx_product_discountable'] === 1) {
-                $ttl_quantity += $rs_product['tx_product_quantity'];
-                $qry_product->update(['tx_product_quantity' => $ttl_quantity]);
+                $qry_productwarehouse = tm_productwarehouse::where('productwarehouse_ai_product_id',$product['product_id'])->where('productwarehouse_ai_warehouse_id',1);
+                $rs_productwarehouse = $qry_productwarehouse->first();
+
+                $ttl_quantity += $rs_productwarehouse['tx_productwarehouse_quantity'];
+                $qry_productwarehouse->update(['tx_productwarehouse_quantity' => $ttl_quantity]);
             }
         }
 
