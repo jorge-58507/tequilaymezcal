@@ -1951,7 +1951,7 @@ class class_productwarehouse{
               ${select_warehouse}
             </select>
           </div>
-          <div class="col-6">
+          <div class="col-12">
             <label for="quantity_toasign">Cantidad</label>
             <input type="text" id="quantity_toasign" class="form-control" placeholder="Cantidad a Asignar">
           </div>
@@ -2095,7 +2095,7 @@ class class_productwarehouse{
     filtered.map((product) => {
       content += `
 
-        <li class="list-group-item d-flex justify-content-between align-items-center"  onclick="cls_productwarehouse.show('${product.ai_productwarehouse_id}')">
+        <li class="list-group-item d-flex justify-content-between align-items-center cursor_pointer"  onclick="cls_productwarehouse.show('${product.ai_productwarehouse_id}')">
           <div class="ms-2 me-auto">
             <div class="fw-bold"><h5>${product.tx_productwarehouse_description}</h5></div>
             <small>Codigo: ${product.tx_product_code}</small>
@@ -2113,20 +2113,30 @@ class class_productwarehouse{
     var body = '';
     var funcion = function (obj) {
       if (obj.status === 'success') {
-        cls_productwarehouse.render_modal(obj.data.info);
+        cls_productwarehouse.render_modal(obj.data);
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  render_modal(info){
+  render_modal(productwarehouse){
+    var transfer_list = ``;
+    productwarehouse.transfer_list.map((line) => {
+      transfer_list += `
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold fs_12">${cls_general.datetime_converter(line.created_at)}</div>
+            <small>${line.tx_warehouse_value}</small>
+          </div>
+          <span class="badge bg-primary rounded-pill">${line.tx_warehousetransfer_quantity}</span>
+        </li>
+      `;
+    })
+    var info = productwarehouse.info;
     var content = `
       <form id="form_edit_productwarehouse" onsubmit="event.preventDefault(); cls_productwarehouse.update(${info.ai_productwarehouse_id})" autocomplete="off">
         <div class="row">
-          <div class="col-12 text-center py-2">
-            <h5>${info.tx_productwarehouse_description}</h5>
-          </div>
           <div class="col-md-4 d-grid gap-2">
             <label for="" class="form-label m_0">Conteo</label>
             <button type="button" class="btn btn-info" onclick="cls_productwarehouse.count_product(${info.ai_productwarehouse_id})" >${cls_general.val_dec(info['tx_productwarehouse_quantity'], 2, 1, 1)}</button>
@@ -2146,10 +2156,20 @@ class class_productwarehouse{
             <button type="button" class="btn btn-danger" onclick="cls_productwarehouse.delete(this, ${info.ai_productwarehouse_id})">Eliminar</button>
           </div>
         </div>
+        <div class="row">
+          <hr>
+          <div class="col-12 pt-2 text-end">
+            <h5>Transferencias a bodega</h5>
+            <ol class="list-group pt-2">
+              ${transfer_list}
+            </ol>
+          </div>
+        </div>
+
       </form>    
     `;
 
-    document.getElementById('productwarehouseModal_title').innerHTML = 'Producto en '+info.tx_warehouse_value;
+    document.getElementById('productwarehouseModal_title').innerHTML = info.tx_productwarehouse_description+' en '+info.tx_warehouse_value;
     document.getElementById('productwarehouseModal_content').innerHTML = content;
     document.getElementById('productwarehouseModal_footer').innerHTML = `
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
