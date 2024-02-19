@@ -1,3 +1,14 @@
+Stickers=>      Si el cliente no es contado al comprar cada 6 dolar equivale a 1 punto, y existen productos creados especialmente que tienen precios mezclados con puntos
+        Cliente ->      Un campo en la tabla tm_clients donde guardar los puntos que lleva acumulado el cliente
+        Puntos  ->      Una tabla donde registrar cada punto que se le agrega al acumulado
+        Precios ->      Crear un campo en la tabla tm_article donde se indique la cantidad de puntos que debe tener el cliente acumulado
+        Al guardar tm_payment cada 6 dolares se convierten en un punto y se procede a actualizar el acumulado y registrar en la tabla
+        En la tabla payment registrar el acumulado de los puntos
+        En la pantalla para configurar articulo guardar la cantidad de puntos que se requieren
+        En el cierre de caja mostrar cuantos puntos se cambiaron
+        En el recibo mostrar cuantos puntos tiene el cliente
+
+
 PAGINA WEB DE TEQUILA
 en asignar producto a bodega poner en la tabla la medida minima del producto
 

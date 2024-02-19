@@ -2974,7 +2974,7 @@ class class_payment{
     cls_payment.giftcard.map((pay) => { received += parseFloat(pay.amount) })
     var total = cls_general.val_dec(cls_charge.charge_request.total,2,1,1);
     total = parseFloat(total);
-    if (total <= received) {
+    if (total < received) {
       cls_general.shot_toast_bs('Ya se complet&oacute; el pago.', { bg: 'text-bg-warning' }); return false;
     } else {
       if ((received + amount) > total) {

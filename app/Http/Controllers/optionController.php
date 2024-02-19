@@ -20,7 +20,7 @@ class optionController extends Controller
     {
         $rs = tm_option::all();
         $raw_option = [];
-        foreach ($variable as $key => $value) {
+        foreach ($rs as $key => $value) {
             $raw_option[$value['tx_option_title']] = $value['tx_option_value'];
         }
 

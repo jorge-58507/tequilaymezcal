@@ -943,7 +943,7 @@ class class_command{
         </div>
       `;
 
-      document.getElementById('commandModal_title').innerHTML = 'Agregar Art&iacute;culo';
+      document.getElementById('commandModal_title').innerHTML = 'Agregar Art&iacute;culo (' + obj.data.article.tx_article_point + ') puntos';
       document.getElementById('commandModal_content').innerHTML = content;
       document.getElementById('commandModal_footer').innerHTML = footer;
 
@@ -972,7 +972,7 @@ class class_command{
         <select class="form-select" id="articlePrice">`;
         raw.map((price) => {
           var p = parseFloat(price);
-          if (price > 0.1) {
+          if (!isNaN(p)) {
             content += `<option value="${p}">${p.toFixed(2)}</option>`;
           }
         })

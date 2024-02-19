@@ -14,6 +14,7 @@ use App\tm_client;
 use App\tm_giftcard;
 use App\tm_article;
 use App\tm_option;
+use App\tm_point;
 
 require '../vendor/autoload.php';
 
@@ -96,6 +97,7 @@ class chargeController extends Controller
         $rs_request = $qry_request->first();
         $commandController = new commandController;
         $raw_commanddata = $commandController->getByRequest($rs_request['ai_request_id']);
+        $point_price = 0;
         $raw_price = []; //[{PRICE,discount,tax, quantity}]
         foreach ($raw_commanddata as $key => $value) {
             if ($value['tx_commanddata_status'] === 1) {
@@ -106,8 +108,16 @@ class chargeController extends Controller
                     'quantity' =>  $value['tx_commanddata_quantity']
                 ]);
             }
+            $point_price += $value['tx_article_point'];
         }
-        
+        // Verificar disponibilidad de puntos
+        $qry_client = tm_client::where('ai_client_id',$rs_request['request_ai_client_id']);
+        $rs_client = $qry_client->first();
+
+        if ($rs_client['tx_client_point'] < $point_price) {
+            return response()->json(['status'=>'failed','message'=>'El cliente no dispone de suficientes puntos.']);
+        }
+       
         $price_sale = $this->calculate_sale($raw_price);
         $received = 0;
         foreach ($raw_payment as $key => $payment) {
@@ -151,6 +161,27 @@ class chargeController extends Controller
             $rs_giftcard = $qry_giftcard->first();
             $qry_giftcard->update(['tx_giftcard_amount' => ($rs_giftcard['tx_giftcard_amount'] - $payment['amount'])]);
         }
+
+        if ($rs_client['ai_client_id'] != 1) {
+            // Remocion de puntos
+            $qry_client->update(['tx_client_point' => $rs_client['tx_client_point'] - $point_price]);
+    
+            // Agregado de puntos
+            $rs_client = $qry_client->first();
+            $point_before = $rs_client['tx_client_point'];
+            $point_quantity = round($price_sale['subtotal']/6, 0, PHP_ROUND_HALF_DOWN);
+            $point_after = $point_before + $point_quantity;
+            $qry_client->update(['tx_client_point' => $point_after]);
+    
+            $tm_point = new tm_point;
+            $tm_point->point_ai_cliente_id      = $rs_client['ai_client_id'];
+            $tm_point->point_ai_charge_id       = $charge_id;
+            $tm_point->tx_point_quantitybefore  = $point_before;
+            $tm_point->tx_point_quantity        = $point_quantity;
+            $tm_point->tx_point_quantityafter   = $point_after;
+            $tm_point->save();
+        }
+
         $charge_data = $this->showIt($charge_slug);
 
         if ($charge_data['charge']['tx_client_birthday'] != '1970-01-01') {
@@ -158,12 +189,12 @@ class chargeController extends Controller
         }else{
             $birthday_congrats = 0;
         }
-        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip']);
+        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point']);
 
         return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
 
-    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats,$tip){
+    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats,$tip,$point=0){
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
@@ -368,6 +399,12 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
+        if ($point > 0) {
+            $printer -> setEmphasis(true);
+            $printer -> text("Ud. lleva acumulados ".$point." puntos\n");
+            $printer -> text("con 24 podrá canjearlos por productos seleccionados.\n");
+            $printer -> setEmphasis(false);
+        }
         $printer -> text("Gracias por su compra en Jade Café\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
@@ -379,7 +416,7 @@ class chargeController extends Controller
         $printer -> close();
     }
 
-    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats, $tip){
+    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats, $tip, $point=0){
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
 
@@ -497,6 +534,12 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
+        if ($point > 0) {
+            $printer -> setEmphasis(true);
+            $printer -> text("Ud. lleva acumulados ".$point." puntos\n");
+            $printer -> text("con 24 podrá canjearlos por productos seleccionados.\n");
+            $printer -> setEmphasis(false);
+        }
         $printer -> text("Gracias por su compra en jade Café\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
@@ -538,7 +581,7 @@ class chargeController extends Controller
     }
 
     public function showIt($slug){
-        $qry = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_clients.tx_client_direction','tm_clients.tx_client_telephone','tm_clients.tx_client_email','tm_clients.tx_client_birthday',
+        $qry = tm_charge::select('tm_clients.tx_client_name','tm_clients.tx_client_point','tm_clients.tx_client_cif','tm_clients.tx_client_dv','tm_clients.tx_client_direction','tm_clients.tx_client_telephone','tm_clients.tx_client_email','tm_clients.tx_client_birthday',
         'tm_tables.tx_table_value',
         'users.name as user_name',
         'tm_charges.ai_charge_id','tm_charges.charge_ai_user_id','tm_charges.charge_ai_cashregister_id','tm_charges.charge_ai_paydesk_id','tm_charges.tx_charge_number','tm_charges.tx_charge_nontaxable',

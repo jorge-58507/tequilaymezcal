@@ -201,6 +201,7 @@ class articleController extends Controller
                 'tx_article_kitchen' => $kitchen,
                 'tx_article_taxrate' => $request->input('articleTaxrate'),
                 'tx_article_discountrate' => $request->input('articleDiscountrate'),
+                'tx_article_point' => $request->input('articlePoint'),
                 'tx_article_thumbnail' => $filename
             ]);
         }

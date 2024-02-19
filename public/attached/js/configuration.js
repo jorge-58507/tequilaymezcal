@@ -1201,14 +1201,22 @@ class class_article {
                 </div>
               </div>
               <div class="row pb-2">
-                <div class="col-sm-12 col-md-6 col-lg-3">
+                <div class="col-sm-12 col-md-6 col-lg-4">
                   <label for="articleTaxrate" class="form-label">% Impuesto</label>
                   <input type="text" class="form-control" id="articleTaxrate" name="articleTaxrate" value="${article.tx_article_taxrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
                 </div>
-                <div class="col-sm-12 col-md-6 col-lg-3">
+                <div class="col-sm-12 col-md-6 col-lg-4">
                   <label for="articleDiscountrate" class="form-label">% Descuento</label>
                   <input type="text" class="form-control" id="articleDiscountrate" name="articleDiscountrate" value="${article.tx_article_discountrate}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
                 </div>
+
+                
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                  <label for="articlePoint" class="form-label">Puntos</label>
+                  <input type="text" class="form-control" id="articlePoint" name="articlePoint" value="${article.tx_article_point}" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_general.limitText(this, 2, toast = 0)" onkeyup="cls_general.limitText(this, 2, toast = 0)"  >
+                </div>
+                
+                
                 <div class="col-sm-12 col-md-6 col-lg-3 d-grid gap-2 pt-3">
                   <button type="button" class="btn btn-info" onclick="cls_article.price('${article_slug}','${article.tx_article_value}')">Precio</button>
                 </div>
@@ -1263,6 +1271,7 @@ class class_article {
     var promotion = (document.getElementById('articlePromotion').checked) ? 1 : 0;
     var taxrate = document.getElementById('articleTaxrate').value;
     var discountrate = document.getElementById('articleDiscountrate').value;
+    var point = document.getElementById('articlePoint').value;
     var status = (document.getElementById('articleStatus').checked) ? 1 : 0;
     var article_option = document.getElementById('articleOption').value;
 
@@ -1287,7 +1296,10 @@ class class_article {
       cls_general.shot_toast_bs('Ingrese la tasa de descuento.', { bg: 'text-bg-warning' });
       return false;
     }
-    
+    if (cls_general.is_empty_var(point) === 0) {
+      cls_general.shot_toast_bs('Ingrese la cantidad de puntos requeridos.', { bg: 'text-bg-warning' });
+      return false;
+    }
     var option = cls_article.encode_articleoption(article_option);// Verificar la constitucion de options, condicionales debe tener : y al menos 1 coma
     if (option === false) { return false; }
     var product_selected = cls_articleproduct.articleproduct_selected;
@@ -1323,7 +1335,7 @@ class class_article {
         }
       });
     }else{
-      cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate);
+      cls_article.run_update(article_id, description, code, category, promotion, option, status, product_selected, taxrate, discountrate, point);
     }
   }
   run_update() {
@@ -1880,14 +1892,13 @@ class class_price{
     var pTwo = document.getElementById('priceTwo').value;
     var pThree = document.getElementById('priceThree').value;
     var presentation_id = document.getElementById('pricePresentation').value;
-    // if (cls_articleproduct.articleproduct_selected.length === 0) {
-    //   cls_general.shot_toast_bs('Debe ingresar la receta del artículo.', { bg: 'text-bg-warning' }); return false;
-    // }
 
     if (cls_general.is_empty_var(presentation_id) === 0) {
       cls_general.shot_toast_bs('Debe seleccionar la presentaci&oacute;n.', { bg: 'text-bg-warning' }); return false;
     }
-
+    if (cls_general.is_empty_var(pOne) === 0) {
+      cls_general.shot_toast_bs('Debe ingresar el primer precio.', { bg: 'text-bg-warning' }); return false;
+    }
     var url = '/price/'; 
     var method = 'POST';
     var body = JSON.stringify({ a: pOne, b: pTwo, c: pThree, e: article_slug, f: presentation_id, g: cls_articleproduct.articleproduct_selected });

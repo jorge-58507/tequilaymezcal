@@ -67,7 +67,8 @@ class priceController extends Controller
         if ($check_dup > 0) {
             return response()->json(['status'=>'failed','message'=>'Estos precios ya existen.']);
         }
-        if ($pOne < 0.01 && $pTwo < 0.01 && $pThree < 0.01) {
+        // if ($pOne < 0.01 && $pTwo < 0.01 && $pThree < 0.01) {
+        if ($pOne < 0.00 && $pTwo < 0.00 && $pThree < 0.00) {
             return response()->json(['status'=>'failed','message'=>'Los precios estan vacios.']);
         }
         // DESACTIVAR LOS PRECIOS ANTERIORES
@@ -85,11 +86,6 @@ class priceController extends Controller
         $tm_price->tx_price_date = date('Y-m-d');
         $tm_price->save();
 
-        // tm_articleproduct::where('articleproduct_ai_article_id',$rs_article['ai_article_id'])->where('articleproduct_ai_presentation_id',$presentation_id)->delete();
-        // $articleproductController = new articleproductController;
-        // foreach ($raw_recipe as $recipe) {
-        //     $articleproductController->save($rs_article['ai_article_id'],$presentation_id,$recipe);
-        // }
         // ANSWER
         $rs_price = $this->byArticle($article_slug);
         return response()->json(['status'=>'success','message'=>'Precios agregados.','data'=>['price'=>$rs_price]]);
