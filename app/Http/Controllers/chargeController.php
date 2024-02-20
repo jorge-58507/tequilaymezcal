@@ -164,7 +164,7 @@ class chargeController extends Controller
     }
 
     public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats,$tip){
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -360,7 +360,7 @@ class chargeController extends Controller
            $printer -> text("FELICIDADES\n");
            $printer -> text("EN TU CUMPLEAÑOS"."\n");
            $printer -> selectPrintMode();
-           $printer -> text("De parte de Jade Café"."\n");
+           $printer -> text("De parte de Tequila y Mezcal"."\n");
            $printer -> text("le obsequiamos un Café."."\n");
         }
         /* Footer */
@@ -368,7 +368,7 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
-        $printer -> text("Gracias por su compra en Jade Café\n");
+        $printer -> text("Gracias por su compra en Tequila & Mezcal\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
         
@@ -380,7 +380,7 @@ class chargeController extends Controller
     }
 
     public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change,$user_name, $birthday_congrats, $tip){
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -488,7 +488,7 @@ class chargeController extends Controller
             $printer -> text("FELICIDADES\n");
             $printer -> text("EN TU CUMPLEAÑOS"."\n");
             $printer -> selectPrintMode();
-            // $printer -> text("De parte de Jade Café"."\n");
+            // $printer -> text("De parte de Tequila & Mezcal"."\n");
             // $printer -> text("le obsequiamos un Café."."\n");
         }
 
@@ -497,7 +497,7 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
-        $printer -> text("Gracias por su compra en jade Café\n");
+        $printer -> text("Gracias por su compra en Tequila & Mezcal\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
         
@@ -760,7 +760,7 @@ class chargeController extends Controller
 
     public function print_test(){
         
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -846,7 +846,7 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
-        $printer -> text("Gracias por su compra en jade Café\n");
+        $printer -> text("Gracias por su compra en Tequila & Mezcal\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
         
