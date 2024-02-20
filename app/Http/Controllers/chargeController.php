@@ -201,99 +201,99 @@ class chargeController extends Controller
         /* Information for the receipt */
         
         // ############ COMANDA  ############
+         
+        // Start the printer
 
-        /* Start the printer */
-        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
-        // $printer = new Printer($connector);
+        // $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
         
-        // PRINT TOP DATE
-        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        $printer -> text(date('d-m-Y')."\n");
+        // // PRINT TOP DATE
+        // $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        // $printer -> text(date('d-m-Y')."\n");
 
-        /* Print top logo */
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
-        $printer -> bitImage($logo);
+        // //  Print top logo
+        // $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        // $printer -> bitImage($logo);
         
-        /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
-        $optionController = new optionController;
-        $rs_option = $optionController->getOption();
+        // // Name of shop
+        // // $printer -> text("Cancino Nuñez, S.A.\n");
+        // // $printer -> text("155732387-2-2023 DV 14.\n");
+        // // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
+        // // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
+        // $optionController = new optionController;
+        // $rs_option = $optionController->getOption();
 
-        $printer -> text($rs_option['SOCIETY']."\n");
-        $printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
-        $printer -> text($rs_option['DIRECCION']."\n");
-        $printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
-        $printer -> feed();
+        // $printer -> text($rs_option['SOCIETY']."\n");
+        // $printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
+        // $printer -> text($rs_option['DIRECCION']."\n");
+        // $printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
+        // $printer -> feed();
         
-        /* Title of receipt */
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-        $printer -> setEmphasis(true);
-        $printer -> text("Facturación #".$number."\n");
-        $printer -> setEmphasis(false);
+        // // Title of receipt 
+        // $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        // $printer -> setEmphasis(true);
+        // $printer -> text("Facturación #".$number."\n");
+        // $printer -> setEmphasis(false);
 
-        /* Client Info */
-        $printer -> selectPrintMode();
-        $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
-        $printer -> text("Cliente: ".$client_name."\n");
-        $printer -> text("RUC: ".$client_ruc."\n");
+        // // Client Info 
+        // $printer -> selectPrintMode();
+        // $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
+        // $printer -> text("Cliente: ".$client_name."\n");
+        // $printer -> text("RUC: ".$client_ruc."\n");
 
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer -> text("COMANDA\n");
-        $printer -> selectPrintMode();
-        $printer -> setJustification(Printer::JUSTIFY_LEFT);
+        // $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        // $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        // $printer -> text("COMANDA\n");
+        // $printer -> selectPrintMode();
+        // $printer -> setJustification(Printer::JUSTIFY_LEFT);
 
-        $printer -> feed(2);
+        // $printer -> feed(2);
         
-        /* Items */
-        $printer -> text("Articulos de la Comanda.\n");
+        // //  Items
+        // $printer -> text("Articulos de la Comanda.\n");
 
-        $content_observation = '';
-        $last_observation = '';
-        $command_id = 0 ;
-        // foreach ($raw_item as $item) {
-        foreach ($raw_item as $key => $item) {
-            if ($item['tx_commanddata_status'] === 1) {  
+        // $content_observation = '';
+        // $last_observation = '';
+        // $command_id = 0 ;
+        // // foreach ($raw_item as $item) {
+        // foreach ($raw_item as $key => $item) {
+        //     if ($item['tx_commanddata_status'] === 1) {  
 
-                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']);
-                $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-                $printer -> setEmphasis(true);
-                $printer -> text(" (".$item['tx_presentation_value'].")\n");
-                $printer -> setEmphasis(false);
-                $printer -> selectPrintMode();
+        //         $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']);
+        //         $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        //         $printer -> setEmphasis(true);
+        //         $printer -> text(" (".$item['tx_presentation_value'].")\n");
+        //         $printer -> setEmphasis(false);
+        //         $printer -> selectPrintMode();
 
-                $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-                $printer -> setEmphasis(true);
-                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
-                $printer -> setEmphasis(false);
-                $printer -> selectPrintMode();
+        //         $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        //         $printer -> setEmphasis(true);
+        //         $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+        //         $printer -> setEmphasis(false);
+        //         $printer -> selectPrintMode();
 
-                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
-                foreach ($raw_recipe as $ingredient) {
-                    foreach ($ingredient as $k => $formule) {
-                        $splited_formule = explode(",",$formule);
-                        if ($splited_formule[3] === 'show') {
-                            $ing = explode(")",$k,2);
-                            $printer -> text('   -'.$ing[1]."\n");
-                        }
-                    }
-                }
+        //         $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+        //         foreach ($raw_recipe as $ingredient) {
+        //             foreach ($ingredient as $k => $formule) {
+        //                 $splited_formule = explode(",",$formule);
+        //                 if ($splited_formule[3] === 'show') {
+        //                     $ing = explode(")",$k,2);
+        //                     $printer -> text('   -'.$ing[1]."\n");
+        //                 }
+        //             }
+        //         }
 
-                if (!empty($raw_item[$key+1])) {
-                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
-                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-                    }
-                }else{
-                    $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-                }
-            }
-        }
+        //         if (!empty($raw_item[$key+1])) {
+        //             if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
+        //                 $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+        //             }
+        //         }else{
+        //             $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
+        //         }
+        //     }
+        // }
 
-        /* Cut the receipt */
-        $printer -> cut();
+        // // Cut the receipt
+        // $printer -> cut();
 
                                                 // ############ RECIBO  ############
         
@@ -350,7 +350,7 @@ class chargeController extends Controller
         $content_observation = '';
         $last_observation = '';
         $command_id = 0 ;
-        foreach ($raw_item as $item) {
+        foreach ($raw_item as $key => $item) {
            if ($item['tx_commanddata_status'] === 1) {  
                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
