@@ -319,7 +319,7 @@ class chargeController extends Controller
         $content_observation = '';
         $last_observation = '';
         $command_id = 0 ;
-        foreach ($raw_item as $item) {
+        foreach ($raw_item as $key => $item) {
            if ($item['tx_commanddata_status'] === 1) {  
                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
