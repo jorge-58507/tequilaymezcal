@@ -17,6 +17,7 @@ class class_kitchen
         nr_bar.push(notready);
       }
     })
+
     var content_kitchen = cls_command.generate_notready_list(nr_kitchen);
     var content_bar = cls_command.generate_notready_list(nr_bar);
     document.getElementById('container_notready_kitchen').innerHTML = content_kitchen;
@@ -55,7 +56,6 @@ class class_command
     var array_command = [];
     ready.map((command) => {
       array_command.push(command);
-      // if (command_id != command.ai_command_id && command_id > 0) {
       if (command_id != command.ai_command_id || command_id === 0) {
         raw_ready.push(array_command);
         array_command = [];
@@ -201,7 +201,7 @@ class class_command
                   raw_recipe.map((ingredient) => {
                     for (const x in ingredient) {
                       var raw_ingredient = ingredient[x].split(',');
-                      if (raw_ingredient[3] === 'show') {
+                      if (raw_ingredient[4] === 'show') {
                         recipe_list += `<li class="card-text">${x}</li>`;
                       }
                     }
@@ -218,7 +218,7 @@ class class_command
                   raw_recipe.map((ingredient) => {
                     for (const x in ingredient) {
                       var raw_ingredient = ingredient[x].split(',');
-                      if (raw_ingredient[3] === 'noshow') {
+                      if (raw_ingredient[4] === 'noshow') {
                       recipe_list += `<li class="card-text">${x}</li>`;
                       }
                     }
@@ -400,10 +400,6 @@ class class_commanddata{
               cls_kitchen.render_notready();
               cls_kitchen.render_ready();
               btn.style.display = 'none';
-              // const Modal = bootstrap.Modal.getInstance('#inspectCommandModal');
-              // if (Modal != null) {
-                // Modal.hide();
-              // }
               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
             } else {
               cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
@@ -417,5 +413,4 @@ class class_commanddata{
       }
     });
   }
-
 }
