@@ -46,16 +46,19 @@
                   </div>
                 </nav>
                 <div class="tab-content" id="nav-tabContent">
-                  <div class="tab-pane fade show active" id="" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+                  
+                  <div class="tab-pane fade show active" id="tab_notready_kitchen" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
                     <div id="container_notready_kitchen" class="row">
                         COCINA
                     </div>
                   </div>
+
                   <div class="tab-pane fade" id="tab_notready_bar" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
                     <div id="container_notready_bar" class="row">        
                         BAR
                     </div>
                   </div>
+
                 </div>
               </div>
           </div>
@@ -86,7 +89,7 @@
 
     const cls_command = new class_command;
 		document.addEventListener('DOMContentLoaded', function() {
-      cls_kitchen.index();
+      // cls_kitchen.index();
       cls_kitchen.render_notready();
       cls_kitchen.render_ready();
 

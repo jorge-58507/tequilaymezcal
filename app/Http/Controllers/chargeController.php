@@ -351,6 +351,7 @@ class chargeController extends Controller
         $last_observation = '';
         $command_id = 0 ;
         foreach ($raw_item as $key => $item) {
+        foreach ($raw_item as $key => $item) {
            if ($item['tx_commanddata_status'] === 1) {  
                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
@@ -391,7 +392,7 @@ class chargeController extends Controller
            $printer -> text("FELICIDADES\n");
            $printer -> text("EN TU CUMPLEAÑOS"."\n");
            $printer -> selectPrintMode();
-           $printer -> text("De parte de Jade Café"."\n");
+           $printer -> text("De parte de Tequila y Mezcal"."\n");
            $printer -> text("le obsequiamos un Café."."\n");
         }
         /* Footer */
@@ -435,10 +436,6 @@ class chargeController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
@@ -525,7 +522,7 @@ class chargeController extends Controller
             $printer -> text("FELICIDADES\n");
             $printer -> text("EN TU CUMPLEAÑOS"."\n");
             $printer -> selectPrintMode();
-            // $printer -> text("De parte de Jade Café"."\n");
+            // $printer -> text("De parte de Tequila & Mezcal"."\n");
             // $printer -> text("le obsequiamos un Café."."\n");
         }
 
@@ -803,7 +800,7 @@ class chargeController extends Controller
 
     public function print_test(){
         
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -889,7 +886,7 @@ class chargeController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
-        $printer -> text("Gracias por su compra en jade Café\n");
+        $printer -> text("Gracias por su compra en Tequila & Mezcal\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
         

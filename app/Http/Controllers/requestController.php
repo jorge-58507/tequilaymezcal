@@ -263,7 +263,7 @@ class requestController extends Controller
         $user = Auth()->user();
 
 
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */

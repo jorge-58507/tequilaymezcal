@@ -122,7 +122,7 @@ class creditnoteController extends Controller
     }
 
     public function print_creditnote($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $retention, $tax, $total){
-        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
 
         /* Information for the receipt */
@@ -204,7 +204,7 @@ class creditnoteController extends Controller
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
         $printer -> text("DOCUMENTO NO FISCAL\n");
         $printer -> selectPrintMode();
-        $printer -> text("Gracias por su compra en Jade Café\n");
+        $printer -> text("Gracias por su compra en Tequila & Mezcal\n");
         $printer -> text("Lo esperamos pronto.\n");
         $printer -> feed(2);
         
