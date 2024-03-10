@@ -53,6 +53,7 @@ Route::get('logincode/{param_a}', 'userController@check_logincode');
 Route::get('warehouse/{param_a}/product', 'warehouseController@get_product')->middleware('auth');
 Route::get('productwarehouse/{param_a}', 'productwarehouseController@show')->middleware('auth');
 Route::get('productwarehouse/{param_a}/count', 'productwarehouseController@show_quantity')->middleware('auth');
+Route::get('client/{param_a}/purchase', 'clientController@show_purchaselist')->middleware('auth');
 // Route::get('acregister/{param}/show', 'acregisterController@show_register')->middleware('auth');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
