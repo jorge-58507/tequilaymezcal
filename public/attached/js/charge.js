@@ -4488,7 +4488,7 @@ class class_client{
         </div>
         <div class="col-md-12 col-lg-6 pb-1">
           <label for="clientFilter" class="form-label">Buscar Cliente</label>
-          <input type="text" id="clientFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'])" onkeyup="cls_client.filter_modal(this.value)">
+          <input type="text" id="clientFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['word','number'], '-')" onkeyup="cls_client.filter_modal(this.value)">
         </div>
         <div id="container_clientfiltered" class="col-sm-12 h_300 v_scrollable"></div>
       </div>

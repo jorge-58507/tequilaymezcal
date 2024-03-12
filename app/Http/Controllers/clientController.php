@@ -20,7 +20,7 @@ class clientController extends Controller
         return response()->json(['status'=>'success','data'=>['all'=>$rs]]);
     }
     public function getAll(){
-        $rs = tm_client::all();
+        $rs = tm_client::get();
         return $rs;
     }
     /**

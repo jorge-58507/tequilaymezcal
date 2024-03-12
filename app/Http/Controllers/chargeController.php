@@ -169,7 +169,7 @@ class chargeController extends Controller
             // Agregado de puntos
             $rs_client = $qry_client->first();
             $point_before = $rs_client['tx_client_point'];
-            $point_quantity = round($price_sale['subtotal']/6, 0, PHP_ROUND_HALF_DOWN);
+            $point_quantity = round(($price_sale['subtotal']+$price_sale['st_notaxable'])/6, 0, PHP_ROUND_HALF_DOWN);
             $point_after = $point_before + $point_quantity;
             $qry_client->update(['tx_client_point' => $point_after]);
     
@@ -189,7 +189,7 @@ class chargeController extends Controller
         }else{
             $birthday_congrats = 0;
         }
-        $this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point']);
+        //$this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point']);
 
         return response()->json(['status'=>'success','message'=>'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
@@ -310,10 +310,6 @@ class chargeController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
@@ -354,6 +350,18 @@ class chargeController extends Controller
            if ($item['tx_commanddata_status'] === 1) {  
                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+               
+                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+                foreach ($raw_recipe as $ingredient) {
+                    foreach ($ingredient as $k => $formule) {
+                        $splited_formule = explode(",",$formule);
+                        if ($splited_formule[4] === 'show') {
+                            $ing = explode(")",$k,2);
+                            $printer -> text('   -'.$ing[1]."\n");
+                        }
+                    }
+                }
+
                if (!empty($raw_item[$key+1])) {
                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
