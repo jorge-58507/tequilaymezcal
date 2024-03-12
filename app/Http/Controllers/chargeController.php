@@ -485,16 +485,16 @@ class chargeController extends Controller
                 $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                 $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
 
-                // $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
-                // foreach ($raw_recipe as $ingredient) {
-                //     foreach ($ingredient as $k => $formule) {
-                //         $splited_formule = explode(",",$formule);
-                //         if ($splited_formule[3] === 'show') {
-                //             $ing = explode(")",$k,2);
-                //             $printer -> text('   -'.$ing[1]."\n");
-                //         }
-                //     }
-                // }
+                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
+                foreach ($raw_recipe as $ingredient) {
+                    foreach ($ingredient as $k => $formule) {
+                        $splited_formule = explode(",",$formule);
+                        if ($splited_formule[4] === 'show') {
+                            $ing = explode(")",$k,2);
+                            $printer -> text('   -'.$ing[1]."\n");
+                        }
+                    }
+                }
                 if (!empty($raw_item[$key+1])) {
                     if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
                         $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
