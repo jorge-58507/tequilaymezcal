@@ -861,9 +861,9 @@ class class_command{
           <div class="col-md-12 col-lg-6 display_none">
             <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
             <select class="form-select" name="noshow" id="ingredient_${i}" alt="${raw_ingredient[0].to_go}">`;
-              raw_ingredient.map((ingredient) => {
-                content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id},${ingredient.warehouse}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
-              })
+            raw_ingredient.map((ingredient) => {
+              content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id},${ingredient.warehouse}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+            })
         content_recipe += `</select></div>`;
       }
     })
