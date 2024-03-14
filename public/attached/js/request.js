@@ -1948,7 +1948,7 @@ class class_client{
   generate_modal_clientlist(filtered){
     var content = '<ul class="list-group">';
     filtered.map((client) => {
-      content += `<li class="list-group-item cursor_pointer" onclick="cls_command.set_client('${client.tx_client_slug}','${client.tx_client_name}',${client.tx_client_exempt}, '${client.tx_client_birthday}')">${client.tx_client_name} - ${client.tx_client_cif}</li>`;
+      content += `<li class="list-group-item cursor_pointer" onclick="cls_command.set_client('${client.tx_client_slug}','${client.tx_client_name}',${client.tx_client_exempt}, '${client.tx_client_birthday}')">${client.tx_client_name} - ${client.tx_client_cif} (${client.tx_client_point} p)</li>`;
     })
     content += '</ul>';
     return content;
