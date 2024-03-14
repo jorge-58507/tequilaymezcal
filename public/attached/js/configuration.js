@@ -1997,13 +1997,13 @@ class class_client {
         var needles = str.split(' ');
         var raw_filtered = [];
         for (var i in haystack) {
-          if (i == limit) { break; }
           var ocurrencys = 0;
           for (const a in needles) {
             if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
           }
           if (ocurrencys === needles.length) {
             raw_filtered.push(haystack[i]);
+            if (raw_filtered.length == limit) { break; }
           }
         }
         resolve(raw_filtered)
