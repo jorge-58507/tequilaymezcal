@@ -274,7 +274,7 @@ class requestController extends Controller
         
         // PRINT TOP DATE
         $printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        $printer -> text(date('d-m-Y')."\n");
+        $printer -> text(date('d-m-Y h:i:s')."\n");
 
         /* Print top logo */
         $printer -> setJustification(Printer::JUSTIFY_CENTER);
