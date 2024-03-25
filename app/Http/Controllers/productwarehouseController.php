@@ -30,21 +30,13 @@ class productwarehouseController extends Controller
             $minimun = (!empty($request->input('d'))) ? $request->input('d') : 0;
             $maximun = (!empty($request->input('e'))) ? $request->input('e') : 10000;
 
-            $tm_productwarehouse = new tm_productwarehouse;
-            $tm_productwarehouse->productwarehouse_ai_user_id       = $user->id;
-            $tm_productwarehouse->productwarehouse_ai_product_id    = $request->input('c');
-            $tm_productwarehouse->productwarehouse_ai_warehouse_id  = $request->input('b');
-            $tm_productwarehouse->tx_productwarehouse_description   = $rs_product['tx_product_value'];
-            $tm_productwarehouse->tx_productwarehouse_quantity      = $request->input('a');
-            $tm_productwarehouse->tx_productwarehouse_minimun       = $minimun;
-            $tm_productwarehouse->tx_productwarehouse_maximun       = $maximun;
-            $tm_productwarehouse->save();
+            $productwarehouse_id = $this->save($request->input('c'), $request->input('b'), $rs_product['tx_product_value'], $request->input('a'), $minimun, $maximun);
 
             // GUARDAR WAREHOUSETRANSFER
             $tm_warehousetransfer = new tm_warehousetransfer;
             $tm_warehousetransfer-> warehousetransfer_ai_user_id                = $user->id;
             $tm_warehousetransfer-> warehousetransfer_ai_product_id             = $request->input('c');
-            $tm_warehousetransfer-> warehousetransfer_ai_productwarehouse_id    = $tm_productwarehouse->ai_productwarehouse_id;
+            $tm_warehousetransfer-> warehousetransfer_ai_productwarehouse_id    = $productwarehouse_id;
             $tm_warehousetransfer-> tx_warehousetransfer_quantity               = $request->input('a');
             $tm_warehousetransfer-> tx_warehousetransfer_origin                 = $request->input('f');
             $tm_warehousetransfer-> tx_warehousetransfer_originquantity         = $rs_fromwarehouse['tx_productwarehouse_quantity'];
@@ -84,6 +76,24 @@ class productwarehouseController extends Controller
         }
         
 
+    }
+
+    public function save($product_id, $warehouse_id, $description, $quantity, $minimun, $maximun){
+
+        $user = Auth()->user();
+
+        $tm_productwarehouse = new tm_productwarehouse;
+        $tm_productwarehouse->productwarehouse_ai_user_id       = $user->id;
+        $tm_productwarehouse->productwarehouse_ai_product_id    = $product_id;
+        $tm_productwarehouse->productwarehouse_ai_warehouse_id  = $warehouse_id;
+        $tm_productwarehouse->tx_productwarehouse_description   = $description;
+        $tm_productwarehouse->tx_productwarehouse_quantity      = $quantity;
+        $tm_productwarehouse->tx_productwarehouse_minimun       = $minimun;
+        $tm_productwarehouse->tx_productwarehouse_maximun       = $maximun;
+        $tm_productwarehouse->save();
+
+
+        return $tm_productwarehouse->ai_productwarehouse_id;
     }
 
     public function show($id){

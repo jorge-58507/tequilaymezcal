@@ -196,6 +196,7 @@
         <script src="{{ asset('attached/js/bootstrap.min.js') }}"></script>
         <script src="{{ asset('attached/js/mp.js') }}"></script>
         <script src="{{ asset('attached/js/controlaccess.js') }}"></script>
+        <script src="{{ asset('attached/js/sweetalert.js') }}"></script>
         
         <script src="{{ asset('attached/js/jquery-ui.min_edit.js')}}"></script>
         <link href="{{ asset('attached/dist/css/jquery-ui.css')}}" rel="stylesheet">

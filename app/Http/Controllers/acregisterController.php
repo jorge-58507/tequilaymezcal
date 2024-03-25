@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\tm_acregister;
 use Illuminate\Http\Request;
 use App\tm_logincode;
-use App\user;
+use App\User;
 use DateTime;
 
 class acregisterController extends Controller
@@ -47,7 +47,7 @@ class acregisterController extends Controller
         }
         $rs_logincode = $qry_logincode->first();
             // AL GUARDAR SI LA FECHA Y EL REGISTRO COINCIDEN NO GUARDAR EL REGISTRO
-        $check_dup = tm_acregister::where('tx_acregister_type',$type)->where('created_at','like','%'.date('Y-m-d').'%');
+        $check_dup = tm_acregister::where('tx_acregister_type',$type)->where('acregister_ai_logincode_id',$rs_logincode['ai_logincode_id'])->where('created_at','like','%'.date('Y-m-d').'%');
         if ($check_dup->count() > 0) {
             $check_dup->update(['tx_acregister_status' => 0]);
         }
