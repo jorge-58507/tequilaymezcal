@@ -46,10 +46,17 @@ class acregisterController extends Controller
             return response()->json(['status' => 'failed', 'message' => 'Tarjeta no registrada.']);
         }
         $rs_logincode = $qry_logincode->first();
-            // AL GUARDAR SI LA FECHA Y EL REGISTRO COINCIDEN NO GUARDAR EL REGISTRO
-        $check_dup = tm_acregister::where('tx_acregister_type',$type)->where('acregister_ai_logincode_id',$rs_logincode['ai_logincode_id'])->where('created_at','like','%'.date('Y-m-d').'%');
+        // AL GUARDAR SI LA FECHA Y EL REGISTRO COINCIDEN NO GUARDAR EL REGISTRO
+        $check_dup = tm_acregister::where('tx_acregister_type',$type)->where('acregister_ai_logincode_id',$rs_logincode['ai_logincode_id'])->where('created_at','like','%'.date('Y-m-d').'%')->orderby('ai_acregister_id','DESC');
         if ($check_dup->count() > 0) {
-            $check_dup->update(['tx_acregister_status' => 0]);
+            if ($type != 4) { 
+                $check_dup->update(['tx_acregister_status' => 0]);
+            }else{
+                $rs_dup = $check_dup->first();
+                if (date('H',strtotime($rs_dup['created_at'])) > 3) { //SI EL REGISTRO LA HORA ES MENOR A LA 3 AM NO DESACTIVAR
+                    $check_dup->update(['tx_acregister_status' => 0]);
+                }
+            }
         }
         $tm_acregister = new tm_acregister;
         $tm_acregister->acregister_ai_logincode_id = $rs_logincode['ai_logincode_id'];
@@ -159,7 +166,9 @@ class acregisterController extends Controller
             //sino verificar si cambia la fecha -> agregar el date y recavar la nueva informacion
 
             //Agregar informacion del registro
-            $raw_date['date'] = date('d-m-Y', strtotime($register['created_at']));
+            if ($key === 0) {
+                $raw_date['date'] = date('d-m-Y', strtotime($register['created_at']));
+            }
             $raw_date['user_id'] = $register['id'];
             $raw_date['name'] = $register['name'];
 
@@ -181,12 +190,17 @@ class acregisterController extends Controller
                     break;
             }
             //Verificar Asistencia, tiempototal y tiempoextra
+            
             if (!empty($raw_date['in']) && !empty($raw_date['out'])) {
                 $raw_date['asistance'] = 'Si';
                 $raw_date['counter'] = $asistance++;                
                 
                 //Tiempo total
-                $interval_totaltime = $this->diff_time($raw_date['in'],$raw_date['out']);   
+                if (date('H', strtotime($raw_date['out'])) < 3) {
+                    $interval_totaltime = $this->diff_time(date('d-m-Y H:i:s', strtotime($raw_date['date'].' '.$raw_date['in'])),date('d-m-Y H:i:s', strtotime($raw_date['date'].' '.$raw_date['out']." +1 day")));   
+                }else{
+                    $interval_totaltime = $this->diff_time($raw_date['in'],$raw_date['out']);   
+                }
                 $raw_date['totaltime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
 
                 //Tiempo extra
@@ -209,8 +223,16 @@ class acregisterController extends Controller
                 $raw_date['breaktime'] = date('H:i:s', strtotime($interval_breaktime->format('%H:%i')));
             }
 
-
             if ($key === count($rs)-1) { //ESTOY EN EL ULTIMO ELEMENTO
+                if ($register['tx_acregister_type'] === 4 && date('H', strtotime($rs[$key]['created_at'])*1) < 3) {
+                    if (date('d-m-Y', strtotime($register['created_at'])) === date('d-m-Y', strtotime($rs[$key]['created_at']." +1 day"))) {
+                        $raw_date['out']      = date('H:i:s', strtotime($register['created_at']));
+                        if (!empty($raw_date['in']) && !empty($raw_date['out'])) {
+                            $raw_date['asistance'] = 'Si';
+                            $raw_date['counter'] = $asistance++;                
+                        }
+                    }                              
+                }
                 $raw_person[$register['id']][] = $raw_date;
                 $report[] = $raw_person;
                 $interval_totalday->d -= $raw_date['counter']-1;
@@ -218,6 +240,16 @@ class acregisterController extends Controller
             }else{
                 //Verifica si el usuario cambia el proximo ciclo
                 if ($register['id'] != $rs[$key+1]['id']) { // -El usuario cambiará
+                    if ($register['tx_acregister_type'] === 4 && (date('H', strtotime($register['created_at']))*1) < 3) {
+                        if (date('d-m-Y', strtotime($register['created_at'])) === date('d-m-Y', strtotime($raw_date['date']." +1 day"))) {
+                            $raw_date['out']      = date('H:i:s', strtotime($register['created_at']));
+                            if (!empty($raw_date['in']) && !empty($raw_date['out'])) {
+                                $raw_date['asistance'] = 'Si';
+                                $raw_date['counter'] = $asistance++;                
+                            }
+                        }
+                    }
+
                     $raw_person[$register['id']][] = $raw_date;
                     $report[] = $raw_person;
                     $interval_totalday->d -= $raw_date['counter']-1;
@@ -227,12 +259,29 @@ class acregisterController extends Controller
                     $raw_person = [];
                     $asistance = 1;
                     $interval_totalday = $this->diff_time($c_from,$c_to);
+
+                    $raw_date['date'] = date('d-m-Y', strtotime($rs[$key+1]['created_at']));
                 }else{
-                    //Verifica si la fecha cambia
+                    //Verifica si la fecha cambiara
                     if (!empty($raw_date['date'])) { 
                         if ($raw_date['date'] != date('d-m-Y', strtotime($rs[$key+1]['created_at']))) { //Cambiara la fecha
-                            $raw_person[$register['id']][] = $raw_date;
-                            $raw_date = [];
+                            if (date('d-m-Y', strtotime($rs[$key+1]['created_at'])) === date('d-m-Y', strtotime($raw_date['date']." +1 day"))) {
+                                if ($rs[$key+1]['tx_acregister_type'] === 4 && (date('H', strtotime($rs[$key+1]['created_at']))*1) < 3) {
+                                    $raw_date['out']      = date('H:i:s', strtotime($rs[$key+1]['created_at']));
+                                    if (!empty($raw_date['in']) && !empty($raw_date['out'])) {
+                                        $raw_date['asistance'] = 'Si';
+                                        $raw_date['counter'] = $asistance++;                
+                                    }
+                                }else{
+                                    $raw_person[$register['id']][] = $raw_date;
+                                    $raw_date = [];
+                                    $raw_date['date'] = date('d-m-Y', strtotime($rs[$key+1]['created_at']));
+                                }
+                            }else{
+                                $raw_person[$register['id']][] = $raw_date;
+                                $raw_date = [];
+                                $raw_date['date'] = date('d-m-Y', strtotime($rs[$key+1]['created_at']));
+                            }
                         }
                     }
                 }
