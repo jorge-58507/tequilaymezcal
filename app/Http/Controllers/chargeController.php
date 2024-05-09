@@ -172,58 +172,59 @@ class chargeController extends Controller
         // ############ COMANDA  ############
 
         /* Start the printer */
-        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
+        //$logo = EscposImage::load("./attached/image/logo_print2.png", 30);
         // $printer = new Printer($connector);
         
         // PRINT TOP DATE
-        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        $printer -> text(date('d-m-Y')."\n");
+        //$printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        //$printer -> text(date('d-m-Y')."\n");
 
         /* Print top logo */
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
-        $printer -> bitImage($logo);
+        //$printer -> setJustification(Printer::JUSTIFY_CENTER);
+        //$printer -> bitImage($logo);
         
         /* Name of shop */
         // $printer -> text("Cancino Nuñez, S.A.\n");
         // $printer -> text("155732387-2-2023 DV 14.\n");
         // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
         // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
-        $optionController = new optionController;
-        $rs_option = $optionController->getOption();
+        //$optionController = new optionController;
+        //$rs_option = $optionController->getOption();
 
-        $printer -> text($rs_option['SOCIETY']."\n");
-        $printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
-        $printer -> text($rs_option['DIRECCION']."\n");
-        $printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
-        $printer -> feed();
+        //$printer -> text($rs_option['SOCIETY']."\n");
+        //$printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
+        //$printer -> text($rs_option['DIRECCION']."\n");
+        //$printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
+        //$printer -> feed();
         
         /* Title of receipt */
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-        $printer -> setEmphasis(true);
-        $printer -> text("Facturación #".$number."\n");
-        $printer -> setEmphasis(false);
+        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        //$printer -> setEmphasis(true);
+        //$printer -> text("Facturación #".$number."\n");
+        //$printer -> setEmphasis(false);
 
         /* Client Info */
-        $printer -> selectPrintMode();
-        $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
-        $printer -> text("Cliente: ".$client_name."\n");
-        $printer -> text("RUC: ".$client_ruc."\n");
+        //$printer -> selectPrintMode();
+        //$printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
+        //$printer -> text("Cliente: ".$client_name."\n");
+        //$printer -> text("RUC: ".$client_ruc."\n");
 
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer -> text("COMANDA\n");
-        $printer -> selectPrintMode();
-        $printer -> setJustification(Printer::JUSTIFY_LEFT);
+        //$printer -> setJustification(Printer::JUSTIFY_CENTER);
+        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        //$printer -> text("COMANDA\n");
+        //$printer -> selectPrintMode();
+        //$printer -> setJustification(Printer::JUSTIFY_LEFT);
 
-        $printer -> feed(2);
+        //$printer -> feed(2);
         
         /* Items */
-        $printer -> text("Articulos de la Comanda.\n");
+        //$printer -> text("Articulos de la Comanda.\n");
 
-        $content_observation = '';
-        $last_observation = '';
-        $command_id = 0 ;
+        //$content_observation = '';
+        //$last_observation = '';
+        //$command_id = 0 ;
         // foreach ($raw_item as $item) {
+        /*
         foreach ($raw_item as $key => $item) {
             if ($item['tx_commanddata_status'] === 1) {  
 
@@ -260,9 +261,9 @@ class chargeController extends Controller
                 }
             }
         }
-
+        */
         /* Cut the receipt */
-        $printer -> cut();
+        //$printer -> cut();
 
                                                 // ############ RECIBO  ############
         
