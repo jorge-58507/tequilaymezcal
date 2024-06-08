@@ -280,10 +280,6 @@ class chargeController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
@@ -324,7 +320,11 @@ class chargeController extends Controller
            if ($item['tx_commanddata_status'] === 1) {  
                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
-               if (!empty($raw_item[$key+1])) {
+                if ($item['tx_commanddata_discountrate'] != 0.00) {
+                    $printer->text("Ahorro " . number_format(($item['tx_commanddata_discountrate'] * ($item['tx_commanddata_quantity'] * $item['tx_commanddata_price'])) / 100, 2) . "\n");
+                }
+
+                if (!empty($raw_item[$key+1])) {
                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
                    }
