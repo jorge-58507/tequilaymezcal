@@ -321,7 +321,7 @@ class chargeController extends Controller
                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
                 if ($item['tx_commanddata_discountrate'] != 0.00) {
-                    $printer->text("Ahorro -" . number_format(($item['tx_commanddata_discountrate'] * ($item['tx_commanddata_quantity'] * $item['tx_commanddata_price'])) / 100, 2) . "\n");
+                    $printer->text("Descuento -" . number_format(($item['tx_commanddata_discountrate'] * ($item['tx_commanddata_quantity'] * $item['tx_commanddata_price'])) / 100, 2) . "\n");
                 }
 
                 if (!empty($raw_item[$key+1])) {
