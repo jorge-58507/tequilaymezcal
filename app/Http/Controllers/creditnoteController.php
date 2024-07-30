@@ -121,6 +121,60 @@ class creditnoteController extends Controller
         return response()->json(['status'=>'success','message'=>'Nota de Cr&eacute;dito procesada.','data'=>['creditnote'=>$rs_creditnote]]);
     }
 
+    public function fe_creditnote($reason = 'Anulacion', $number = "0000000001") {
+        $optionController = new optionController;
+        $rs_option = $optionController->getOption();
+
+        $location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
+        $t_company = $rs_option['FE_USER'];
+        $t_pass = $rs_option['FE_PASSWORD'];
+
+        $request = "
+            <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tem=\"http://tempuri.org/\" xmlns:ser=\"http://schemas.datacontract.org/2004/07/Services.Model\">
+                <soapenv:Header/>
+                <soapenv:Body>
+                    <tem:AnulacionDocumento>
+                        <tem:tokenEmpresa>" . $t_company . "</tem:tokenEmpresa>
+                        <tem:tokenPassword>" . $t_pass . "</tem:tokenPassword>
+                        <tem:motivoAnulacion>" . $reason . "</tem:motivoAnulacion>
+                        <tem:datosDocumento>
+                            <ser:codigoSucursalEmisor>0000</ser:codigoSucursalEmisor>
+                            <ser:numeroDocumentoFiscal>" . $number . "</ser:numeroDocumentoFiscal>
+                            <ser:puntoFacturacionFiscal>505</ser:puntoFacturacionFiscal>
+                            <ser:serialDispositivo>00000000</ser:serialDispositivo>
+                            <ser:tipoDocumento>01</ser:tipoDocumento>
+                            <ser:tipoEmision>01</ser:tipoEmision>
+                        </tem:datosDocumento>
+                    </tem:AnulacionDocumento>
+                </soapenv:Body>
+            </soapenv:Envelope>
+        ";
+
+
+
+        $action = "AnulacionDocumento";
+        $header = [
+            'Method: POST',
+            'Connection: Keep-Alive',
+            'User-Agent: PHP-SOAP-CURL',
+            'Content-Type: text/xml;charset=UTF-8',
+            'SOAPAction: "http://tempuri.org/IService/AnulacionDocumento"'
+        ];
+
+        $ch = curl_init($location);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+        $response = curl_exec($ch);
+        $err_status = curl_errno($ch);
+        return $response;
+    }
+
+
+
     public function print_creditnote($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $retention, $tax, $total){
         $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
