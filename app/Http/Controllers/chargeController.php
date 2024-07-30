@@ -205,7 +205,7 @@ class chargeController extends Controller
         );
         $xml = simplexml_load_string(str_replace(["s:", "a:", "i:"], "", $response));
         $xml = json_decode(json_encode($xml), true);
-        echo $xml['Body']['EnviarResponse']['EnviarResult']['resultado'];
+        $responseFE = $xml['Body']['EnviarResponse']['EnviarResult'];
 
 
 
@@ -214,12 +214,17 @@ class chargeController extends Controller
         } else {
             $birthday_congrats = 0;
         }
+
         //$this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point']);
-        $this->print_fe($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point']);
+        if ($responseFE['resultado'] === 'error') {
+            return response()->json(['status' => 'failed', 'message' => $responseFE['mensaje']]);
+        }else{
+            $this->print_fe($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point'],$response);
+        }
 
         return response()->json(['status' => 'success', 'message' => 'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
-    public function print_fe($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point = 0)
+    public function print_fe($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point = 0,$response)
     {
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
@@ -251,20 +256,22 @@ class chargeController extends Controller
         /* Title of receipt */
         $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
         $printer->setEmphasis(true);
-        $printer->text("RECIBO DE FACTURACIÓN #" . $number . "\n");
+        $printer->text("COMPROBANTE AUXILIAR DE FACTUA ELECTRONICA" . "\n");
         $printer->setEmphasis(false);
 
         /* Client Info */
         $printer->selectPrintMode();
-        $printer->text(date('d-m-Y h:i:s', strtotime($date)) . "\n");
-        $printer->text("Cliente: " . $client_name . "\n");
+        $printer->text("Fecha: ". date('d-m-Y h:i:s', strtotime($date)) . "\n");
+        $printer->text("N. Doc: ". $number);
+        $printer->text("Cajera: " . $user_name . "\n");
+        $printer->text("Razon Social: " . $client_name . "\n");
         $printer->text("RUC: " . $client_ruc . "\n");
         $printer->feed(2);
 
         /* Items */
         $printer->setJustification(Printer::JUSTIFY_CENTER);
         $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer->text("DOCUMENTO NO FISCAL\n");
+        $printer->text("TIQUETE \n");
         $printer->selectPrintMode();
         $printer->setJustification(Printer::JUSTIFY_LEFT);
         $printer->text("Articulos Relacionados.\n");
@@ -317,7 +324,6 @@ class chargeController extends Controller
             $printer->text($payment['tx_paymentmethod_value'] . ": " . number_format($payment['tx_payment_amount'], 2) . "\n");
         }
         $printer->text("Cambio: " . number_format($change, 2) . "\n");
-        $printer->text("Cajera: " . $user_name . "\n");
 
         $printer->setJustification(Printer::JUSTIFY_CENTER);
         if ($birthday_congrats === 1) {
@@ -330,9 +336,6 @@ class chargeController extends Controller
         }
         /* Footer */
         $printer->feed(2);
-        $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer->text("DOCUMENTO NO FISCAL\n");
-        $printer->selectPrintMode();
         if ($point > 0) {
             $printer->setEmphasis(true);
             $printer->text("Ud. lleva acumulados " . $point . " puntos\n");
@@ -343,6 +346,20 @@ class chargeController extends Controller
         $printer->text("Lo esperamos pronto.\n");
         $printer->feed(2);
 
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->qrCode($response['qr']);
+        $printer->feed(1);
+        $printer->setEmphasis(true);
+        $printer->text("Autorizado. \n");
+        $printer->setEmphasis(false);
+        $printer->text($response['cufe']." \n");
+        $printer->feed(1);
+        $printer->setEmphasis(true);
+        $printer->text("Fecha Recepción DGI. \n");
+        $printer->setEmphasis(false);
+        $printer->text($response['fechaRecepcionDGI'] . " \n");
+        $printer->text("Documento validado por The Factory HKA, S.A. con RUC Quien es proveedor autorizado calificado bajo la resolución No. ___ del ____ \n");
+        $printer->feed(1);
         /* Cut the receipt and open the cash drawer */
         $printer->cut();
         $printer->pulse();
@@ -776,7 +793,7 @@ class chargeController extends Controller
         */
         $xml = simplexml_load_string(str_replace(["s:","a:","i:"],"",$response));
         $xml = json_decode(json_encode($xml),true);
-        echo $xml['Body']['EnviarResponse']['EnviarResult']['resultado'];
+        echo json_encode($xml['Body']['EnviarResponse']['EnviarResult']);
     }
     public function fe_send(
             $number = '00000002',
@@ -788,7 +805,7 @@ class chargeController extends Controller
             $client_name = 'Contado',
             $client_direction = 'Penonome',
             $client_telephone = '65070175',
-            $client_email = 'jorgesaldar@gmail.com',
+            $client_email = 'jadecoffeshop@gmail.com',
             $raw_item,
             $net_total = 0.00,
             $total_tax = 0.00,
@@ -797,8 +814,9 @@ class chargeController extends Controller
             $raw_payment,
             $change = 0.00,
 
-            $client_country = 'Venezuela'
-        ) {
+            $client_country = 'Panama'
+        ) 
+    {
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
