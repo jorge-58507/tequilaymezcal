@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Auth;
 use Illuminate\Http\Request;
-use App\user;
+use App\User;
 use App\role;
 use App\role_user;
 use App\tm_logincode;

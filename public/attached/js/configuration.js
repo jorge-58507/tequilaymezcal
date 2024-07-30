@@ -1997,13 +1997,13 @@ class class_client {
         var needles = str.split(' ');
         var raw_filtered = [];
         for (var i in haystack) {
-          if (i == limit) { break; }
           var ocurrencys = 0;
           for (const a in needles) {
             if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
           }
           if (ocurrencys === needles.length) {
             raw_filtered.push(haystack[i]);
+            if (raw_filtered.length == limit) { break; }
           }
         }
         resolve(raw_filtered)
@@ -2048,13 +2048,17 @@ class class_client {
                 <label for="clientTelephone" class="form-label">Teléfono</label>
                 <input type="text" id="clientTelephone" class="form-control" onfocus="cls_general.validFranz(this.id, ['number'],' -')" onkeyup="cls_general.limitText(this,20,1)" onblur="cls_general.limitText(this,20,1)" value="${telephone}">
               </div>
-              <div class="col-md-12 col-lg-6">
+              <div class="col-12 col-lg-4">
                 <label for="clientEmail" class="form-label">Correo E.</label>
                 <input type="email" id="clientEmail" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word','punctuation'],'_-@')" onkeyup="cls_general.limitText(this,50,1)" onblur="cls_general.limitText(this,50,1)" value="${email}">
               </div>
-              <div class="col-md-12 col-lg-6">
+              <div class="col-12 col-lg-4">
                 <label for="clientBirthday" class="form-label">F. Nacimiento</label>
                 <input type="email" id="clientBirthday" class="form-control" value="${cls_general.datetime_converter(birthday)}" readonly>
+              </div>
+              <div class="col-12 col-lg-4">
+                <label for="clientPoint" class="form-label">Puntos Acumulados</label>
+                <input type="email" id="clientPoint" class="form-control" value="${client.tx_client_point}" readonly>
               </div>
               <div class="col-md-12">
                 <label for="clientDirection" class="form-label">Dirección</label>
@@ -2092,7 +2096,9 @@ class class_client {
             <button type="button" class="btn btn-warning" onclick="cls_general.disable_submit(this); cls_client.delete('${client.tx_client_slug}');">Eliminar Cliente</button>
             <button type="button" class="btn btn-secondary" onclick="cls_client.render()">Volver</button>
             <button type="button" class="btn btn-success" onclick="cls_general.disable_submit(this); cls_client.update('${client.tx_client_slug}')">Guardar Cliente</button>
+            <button type="button" class="btn btn-info" onclick="cls_general.disable_submit(this); cls_client.show_purchase('${client.tx_client_slug}')">Mostrar Compras</button>
           </div>
+          <div class="col-12" id="div_purchase">adsda</div>
         </div>
       `;
       document.getElementById('container').innerHTML = content + content_bottom;
@@ -2311,6 +2317,55 @@ class class_client {
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  show_purchase(client_slug){
+    var url = '/client/' + client_slug + '/purchase'; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        document.getElementById('div_purchase').innerHTML = cls_client.generate_purchaselist(obj.data.purchaselist)
+      } else {
+        cls_general.shot_toast_bs(obj['message'], { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  generate_purchaselist(data){
+    var total = 0;
+    var raw_article = [];
+    data.map((line) => {
+      total += line.tx_commanddata_price;
+      var check = raw_article.findIndex((article) => { return article.commanddata_ai_article_id === line.commanddata_ai_article_id })
+      if (check === -1) {
+        raw_article.push(line);
+      }else{
+        raw_article[check]['tx_commanddata_quantity'] += line.tx_commanddata_quantity;
+      }
+    })
+    
+    var list = '<div class="list-group">';
+    raw_article.map((line) => {
+      list += `<a href = "#" class="list-group-item list-group-item-action">${line.tx_commanddata_quantity} ${line.tx_commanddata_description} (B/. ${line.tx_commanddata_price.toFixed(2)})</a>`;
+    })
+    list += '</div>';
+    
+
+    var content = `
+    <div class="row">
+      <div class="col-2 pb-3">
+        <label for="" class="form-label">Total Vendido</label>
+        <input type="text" id="clientEmail" class="form-control" value="B/. ${total.toFixed(2)}">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <span>Listado de Compras</span>
+        ${list}
+      </div>
+    </div>
+    `
+    return content;
   }
 }
 class class_payment {

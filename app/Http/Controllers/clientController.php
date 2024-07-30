@@ -20,7 +20,7 @@ class clientController extends Controller
         return response()->json(['status'=>'success','data'=>['all'=>$rs]]);
     }
     public function getAll(){
-        $rs = tm_client::all();
+        $rs = tm_client::get();
         return $rs;
     }
     /**
@@ -181,5 +181,21 @@ class clientController extends Controller
             $rs_clientlist = $this->getAll();
             return response()->json(['status'=>'success','message'=>'Se desactivó el cliente.','data'=>['client_list'=>$rs_clientlist]]);
         }
+    }
+
+    public function show_purchaselist($client_slug)
+    {
+        $qry = tm_client::where("tx_client_slug",$client_slug);
+        if ($qry->count() === 0) {
+            return response()->json(['status'=>'failed','message'=>'No existe.']);
+        }
+
+        $rs = $qry->first();
+        $rs_request = tm_request::select('tm_charges.tx_charge_total','tm_commanddatas.tx_commanddata_quantity','tm_commanddatas.commanddata_ai_article_id','tm_commanddatas.tx_commanddata_price','tm_commanddatas.tx_commanddata_description')->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')
+        ->join('tm_commanddatas','tm_commanddatas.commanddata_ai_command_id','tm_commands.ai_command_id')
+        ->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')
+        ->where('tm_requests.request_ai_client_id',$rs['ai_client_id'])->where('tm_commanddatas.tx_commanddata_status',1)->get();
+
+        return response()->json(['status'=>'success','message'=>'','data'=>['purchaselist'=>$rs_request]]);
     }
 }

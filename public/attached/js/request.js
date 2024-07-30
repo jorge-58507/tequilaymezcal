@@ -861,9 +861,9 @@ class class_command{
           <div class="col-md-12 col-lg-6 display_none">
             <label for="ingredient_${i}">${i + 1}.- Ingrediente</label>
             <select class="form-select" name="noshow" id="ingredient_${i}" alt="${raw_ingredient[0].to_go}">`;
-              raw_ingredient.map((ingredient) => {
-                content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id},${ingredient.warehouse}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
-              })
+            raw_ingredient.map((ingredient) => {
+              content_recipe += `<option value="${ingredient.quantity},${ingredient.measure_id},${ingredient.product_id},${ingredient.warehouse}">${ingredient.quantity} (${ingredient.measure_value}) ${ingredient.product_value}</option>`;
+            })
         content_recipe += `</select></div>`;
       }
     })
@@ -1948,7 +1948,7 @@ class class_client{
   generate_modal_clientlist(filtered){
     var content = '<ul class="list-group">';
     filtered.map((client) => {
-      content += `<li class="list-group-item cursor_pointer" onclick="cls_command.set_client('${client.tx_client_slug}','${client.tx_client_name}',${client.tx_client_exempt}, '${client.tx_client_birthday}')">${client.tx_client_name} - ${client.tx_client_cif}</li>`;
+      content += `<li class="list-group-item cursor_pointer" onclick="cls_command.set_client('${client.tx_client_slug}','${client.tx_client_name}',${client.tx_client_exempt}, '${client.tx_client_birthday}')">${client.tx_client_name} - ${client.tx_client_cif} (${client.tx_client_point} p)</li>`;
     })
     content += '</ul>';
     return content;
@@ -1969,7 +1969,7 @@ class class_client{
         </div>
         <div class="col-md-12 col-lg-6 pb-1">
           <label for="clientFilter" class="form-label">Buscar Cliente</label>
-          <input type="text" id="clientFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'])" onkeyup="cls_client.filter_modal(this.value)">
+          <input type="text" id="clientFilter" class="form-control" onfocus="cls_general.validFranz(this.id, ['number','word'], '-')" onkeyup="cls_client.filter_modal(this.value)">
         </div>
         <div id="container_clientfiltered" class="col-sm-12 h_300 v_scrollable"></div>
       </div>
