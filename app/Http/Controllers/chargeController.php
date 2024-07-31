@@ -219,12 +219,12 @@ class chargeController extends Controller
         if ($responseFE['resultado'] === 'error') {
             return response()->json(['status' => 'failed', 'message' => $responseFE['mensaje']]);
         }else{
-            $this->print_fe($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point'],$response);
+            $this->print_fe($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point'],$responseFE);
         }
 
         return response()->json(['status' => 'success', 'message' => 'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
-    public function print_fe($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point = 0,$response)
+    public function print_fe($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point, $response)
     {
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
@@ -256,7 +256,7 @@ class chargeController extends Controller
         /* Title of receipt */
         $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
         $printer->setEmphasis(true);
-        $printer->text("COMPROBANTE AUXILIAR DE FACTUA ELECTRONICA" . "\n");
+        $printer->text("COMPROBANTE AUXILIAR DE FACTURA ELECTRONICA" . "\n");
         $printer->setEmphasis(false);
 
         /* Client Info */
@@ -358,7 +358,7 @@ class chargeController extends Controller
         $printer->text("Fecha Recepción DGI. \n");
         $printer->setEmphasis(false);
         $printer->text($response['fechaRecepcionDGI'] . " \n");
-        $printer->text("Documento validado por The Factory HKA, S.A. con RUC Quien es proveedor autorizado calificado bajo la resolución No. ___ del ____ \n");
+        $printer->text("Documento validado por The Factory HKA Corp. con RUC 155596713-2-2015 Quien es proveedor autorizado calificado bajo la resolución No. 201-9719 del 12/10/2021 \n");
         $printer->feed(1);
         /* Cut the receipt and open the cash drawer */
         $printer->cut();
@@ -796,23 +796,23 @@ class chargeController extends Controller
         echo json_encode($xml['Body']['EnviarResponse']['EnviarResult']);
     }
     public function fe_send(
-            $number = '00000002',
-            $date = '2024-03-11 21:49:56',
-            $client_type = '02',
-            $client_taxpayer = '1',
-            $client_ruc = '0000-0000',
-            $client_dv = '00',
-            $client_name = 'Contado',
-            $client_direction = 'Penonome',
-            $client_telephone = '65070175',
-            $client_email = 'jadecoffeshop@gmail.com',
+            $number,
+            $date,
+            $client_type,
+            $client_taxpayer,
+            $client_ruc,
+            $client_dv,
+            $client_name,
+            $client_direction,
+            $client_telephone,
+            $client_email,
             $raw_item,
-            $net_total = 0.00,
-            $total_tax = 0.00,
-            $total_discount = 0.00,
-            $total_charge = 0.00,
+            $net_total,
+            $total_tax,
+            $total_discount,
+            $total_charge,
             $raw_payment,
-            $change = 0.00,
+            $change,
 
             $client_country = 'Panama'
         ) 
