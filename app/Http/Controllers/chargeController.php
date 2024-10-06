@@ -820,9 +820,13 @@ class chargeController extends Controller
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
-        $location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
+        // $location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
+        $location = 'https://emision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc';
         $t_company = $rs_option['FE_USER'];
         $t_pass = $rs_option['FE_PASSWORD'];
+        // $t_company = 'zblvgogrmgjv_tfhka';
+        // $t_pass = 'n*M,EcB2O_gg';
+
 
         $item_xml = '';
         $item_counter = 0;
