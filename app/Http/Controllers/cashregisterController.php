@@ -263,7 +263,7 @@ class cashregisterController extends Controller
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
         
-        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
         
         /* Start the printer */
@@ -364,7 +364,7 @@ class cashregisterController extends Controller
         $cashregisterController = new cashregisterController;
 		$rs_cashregister = $cashregisterController->getit($cashregister_id);
 
-        $connector = new NetworkPrintConnector("192.168.3.5", 9100);
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
         
         /* Start the printer */

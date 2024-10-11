@@ -203,6 +203,8 @@ class chargeController extends Controller
             $charge_data['payment'],
             $charge_data['charge']['tx_charge_change']
         );
+//                                                                        return response()->json(['status' => 'failed', 'message' => $response]);
+
         $xml = simplexml_load_string(str_replace(["s:", "a:", "i:"], "", $response));
         $xml = json_decode(json_encode($xml), true);
         $responseFE = $xml['Body']['EnviarResponse']['EnviarResult'];
@@ -215,11 +217,10 @@ class chargeController extends Controller
             $birthday_congrats = 0;
         }
 
-        //$this->print_charge($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point']);
         if ($responseFE['resultado'] === 'error') {
             return response()->json(['status' => 'failed', 'message' => $responseFE['mensaje']]);
-        }else{
-            $this->print_fe($charge_data['charge']['tx_charge_number'],$charge_data['charge']['created_at'],$charge_data['charge']['tx_client_name'],$charge_data['charge']['tx_client_cif'].' DV'.$charge_data['charge']['tx_client_dv'],$charge_data['article'],$charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'],$charge_data['charge']['tx_charge_discount'],$charge_data['charge']['tx_charge_tax'],$charge_data['charge']['tx_charge_total'],$charge_data['payment'],$charge_data['charge']['tx_charge_change'],$charge_data['charge']['user_name'],$birthday_congrats,$charge_data['charge']['tx_charge_tip'],$charge_data['charge']['tx_client_point'],$responseFE);
+        } else {
+            $this->print_fe($charge_data['charge']['tx_charge_number'], $charge_data['charge']['created_at'], $charge_data['charge']['tx_client_name'], $charge_data['charge']['tx_client_cif'] . ' DV' . $charge_data['charge']['tx_client_dv'], $charge_data['article'], $charge_data['charge']['tx_charge_nontaxable'] + $charge_data['charge']['tx_charge_taxable'], $charge_data['charge']['tx_charge_discount'], $charge_data['charge']['tx_charge_tax'], $charge_data['charge']['tx_charge_total'], $charge_data['payment'], $charge_data['charge']['tx_charge_change'], $charge_data['charge']['user_name'], $birthday_congrats, $charge_data['charge']['tx_charge_tip'], $charge_data['charge']['tx_client_point'], $responseFE);
         }
 
         return response()->json(['status' => 'success', 'message' => 'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
@@ -228,6 +229,103 @@ class chargeController extends Controller
     {
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
+
+        // ############ COMANDA  ############
+
+        // Start the printer
+
+        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
+
+        // PRINT TOP DATE
+        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
+        $printer -> text(date('d-m-Y')."\n");
+
+        //  Print top logo
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> bitImage($logo);
+
+        // Name of shop
+        $optionController = new optionController;
+        $rs_option = $optionController->getOption();
+
+        $printer -> text($rs_option['SOCIETY']."\n");
+        $printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
+        $printer -> text($rs_option['DIRECCION']."\n");
+        $printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
+        $printer -> feed();
+
+        // Title of receipt 
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        $printer -> setEmphasis(true);
+        $printer -> text("Facturación #".$number."\n");
+        $printer -> setEmphasis(false);
+
+        // Client Info 
+        $printer -> selectPrintMode();
+        $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
+        $printer -> text("Cliente: ".$client_name."\n");
+        $printer -> text("RUC: ".$client_ruc."\n");
+
+        $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer -> text("COMANDA\n");
+        $printer -> selectPrintMode();
+        $printer -> setJustification(Printer::JUSTIFY_LEFT);
+
+        $printer -> feed(2);
+
+        //  Items
+        $printer -> text("Articulos de la Comanda.\n");
+
+        $content_observation = '';
+        $last_observation = '';
+        $command_id = 0 ;
+        // foreach ($raw_item as $item) {
+        foreach ($raw_item as $key => $item) {
+            if ($item['tx_commanddata_status'] === 1) {  
+
+                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']);
+                $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+                $printer -> setEmphasis(true);
+                $printer -> text(" (".$item['tx_presentation_value'].")\n");
+                $printer -> setEmphasis(false);
+                $printer -> selectPrintMode();
+
+                $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+                $printer -> setEmphasis(true);
+                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+                $printer -> setEmphasis(false);
+                $printer -> selectPrintMode();
+
+                $raw_recipe = json_decode($item['tx_commanddata_recipe'], true);
+                foreach ($raw_recipe as $ingredient) {
+                    foreach ($ingredient as $k => $formule) {
+                        $splited_formule = explode(",", $formule);
+                        if ($splited_formule[4] === 'show') {
+                            $ing = explode(")", $k, 2);
+                            $printer->text('   -' . $ing[1] . "\n");
+                        }
+                    }
+                }
+
+                if (!empty($raw_item[$key + 1])) {
+                    if ($raw_item[$key + 1]['ai_command_id'] != $item['ai_command_id']) {
+                        $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
+                    }
+                } else {
+                    $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
+                }
+            }
+        }
+
+        // Cut the receipt
+        $printer -> cut();
+
+        // ############ RECIBO  ############
+
+
+
+
 
         /* Start the printer */
         $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
@@ -261,9 +359,9 @@ class chargeController extends Controller
 
         /* Client Info */
         $printer->selectPrintMode();
-        $printer->text("Fecha: ". date('d-m-Y h:i:s', strtotime($date)) . "\n");
-        $printer->text("N. Doc: ". $number);
-        $printer->text("Cajera: " . $user_name . "\n");
+        $printer->text("Fecha: " . date('d-m-Y h:i:s', strtotime($date)) . "\n");
+        $printer->text("N. Doc: " . $number);
+        $printer->text(" Cajera: " . $user_name . "\n");
         $printer->text("Razon Social: " . $client_name . "\n");
         $printer->text("RUC: " . $client_ruc . "\n");
         $printer->feed(2);
@@ -279,29 +377,29 @@ class chargeController extends Controller
         foreach ($raw_item as $key => $item) {
             if ($item['tx_commanddata_status'] === 1) {
                 $printer->text($item['tx_article_code'] . " - " . $item['tx_commanddata_description'] . " (" . $item['tx_presentation_value'] . ")\n");
-                $printer->text($item['tx_commanddata_quantity'] . " x " . number_format($item['tx_commanddata_price'],2) . "\n");
+                $printer->text($item['tx_commanddata_quantity'] . " x " . number_format($item['tx_commanddata_price'], 2) . "\n");
                 if ($item['tx_commanddata_discountrate'] != 0.00) {
-                    $printer->text("Ahorro ".number_format(($item['tx_commanddata_discountrate']*($item['tx_commanddata_quantity'] * $item['tx_commanddata_price']))/100,2) . "\n");
+                    $printer->text("Ahorro " . number_format(($item['tx_commanddata_discountrate'] * ($item['tx_commanddata_quantity'] * $item['tx_commanddata_price'])) / 100, 2) . "\n");
                 }
 
-                $raw_recipe = json_decode($item['tx_commanddata_recipe'], true);
-                foreach ($raw_recipe as $ingredient) {
-                    foreach ($ingredient as $k => $formule) {
-                        $splited_formule = explode(",", $formule);
-                        if ($splited_formule[4] === 'show') {
-                            $ing = explode(")", $k, 2);
-                            $printer->text('   -' . $ing[1] . "\n");
-                        }
-                    }
-                }
+                // $raw_recipe = json_decode($item['tx_commanddata_recipe'], true);
+                // foreach ($raw_recipe as $ingredient) {
+                //     foreach ($ingredient as $k => $formule) {
+                //         $splited_formule = explode(",", $formule);
+                //         if ($splited_formule[4] === 'show') {
+                //             $ing = explode(")", $k, 2);
+                //             $printer->text('   -' . $ing[1] . "\n");
+                //         }
+                //     }
+                // }
 
-                if (!empty($raw_item[$key + 1])) {
-                    if ($raw_item[$key + 1]['ai_command_id'] != $item['ai_command_id']) {
-                        $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
-                    }
-                } else {
-                    $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
-                }
+                // if (!empty($raw_item[$key + 1])) {
+                //     if ($raw_item[$key + 1]['ai_command_id'] != $item['ai_command_id']) {
+                //         $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
+                //     }
+                // } else {
+                //     $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
+                // }
             }
         }
 
@@ -352,7 +450,7 @@ class chargeController extends Controller
         $printer->setEmphasis(true);
         $printer->text("Autorizado. \n");
         $printer->setEmphasis(false);
-        $printer->text($response['cufe']." \n");
+        $printer->text($response['cufe'] . " \n");
         $printer->feed(1);
         $printer->setEmphasis(true);
         $printer->text("Fecha Recepción DGI. \n");
@@ -727,100 +825,14 @@ class chargeController extends Controller
         $printer->cut();
         $printer->close();
     }
-    public function test_fe()
-    {
-        $charge_data = $this->showIt('171021202977');
+    public function fe_send($number,$date,$client_type,$client_taxpayer,$client_ruc,$client_dv,$client_name,$client_direction,$client_telephone,$client_email,
+        $raw_item,$net_total,$total_tax,$total_discount,$total_charge,$raw_payment,$change,$client_country = 'Panama') {
 
-        // echo $charge_data['charge']['tx_charge_number']."<br/>".
-        //     $charge_data['charge']['created_at'] . "<br/>" .
-        //     $charge_data['charge']['tx_client_type'] . "<br/>" .
-        //     $charge_data['charge']['tx_client_taxpayer'] . "<br/>" .
-        //     $charge_data['charge']['tx_client_cif'] . "<br/>" .
-        //     $charge_data['charge']['tx_client_dv'] . "<br/>" .
-        //     $charge_data['charge']['tx_client_name'] . "<br/>" .
-        //     $charge_data['charge']['tx_client_direction'] . "<br/>" .
-        //     $charge_data['charge']['tx_client_telephone'] . "<br/>" .
-        //     // $charge_data['charge']['tx_client_email'],
-        //     'jorgesaldar@gmail.com' . "<br/>" .
-        //     // $charge_data['article'] . "<br/>" .
-        //     $charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'] . "<br/>" .
-        //     $charge_data['charge']['tx_charge_tax'] . "<br/>" .
-        //     $charge_data['charge']['tx_charge_discount'] . "<br/>" .
-        //     $charge_data['charge']['tx_charge_total'] . "<br/>" .
-        //     // $charge_data['payment'] . "<br/>" .
-        //     $charge_data['charge']['tx_charge_change'];
-
-        //  return false;
-        
-        $response = $this->fe_send(
-            $charge_data['charge']['tx_charge_number'],
-            $charge_data['charge']['created_at'],
-            $charge_data['charge']['tx_client_type'],
-            $charge_data['charge']['tx_client_taxpayer'],
-            $charge_data['charge']['tx_client_cif'],
-            $charge_data['charge']['tx_client_dv'],
-            $charge_data['charge']['tx_client_name'],
-            $charge_data['charge']['tx_client_direction'],
-            $charge_data['charge']['tx_client_telephone'],
-            $charge_data['charge']['tx_client_email'],
-            $charge_data['article'],
-            $charge_data['charge']['tx_charge_nontaxable'] + $charge_data['charge']['tx_charge_taxable'],
-            $charge_data['charge']['tx_charge_tax'],
-            $charge_data['charge']['tx_charge_discount'],
-            $charge_data['charge']['tx_charge_total'],
-            $charge_data['payment'],
-            $charge_data['charge']['tx_charge_change']
-        );
-        /*
-            $note = <<<XML
-                <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-                    <s:Body>
-                        <EnviarResponse xmlns="http://tempuri.org/">
-                            <EnviarResult xmlns:a="http://schemas.datacontract.org/2004/07/Services.Response" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
-                                <a:codigo>102</a:codigo>
-                                <a:resultado>error</a:resultado>
-                                <a:mensaje>El documento está duplicado</a:mensaje>
-                                <a:cufe>FE0120000155732387-2-2023-1400002024052400000000015050128219609273</a:cufe>
-                                <a:qr>https://dgi-fep-test.mef.gob.pa:40001/Consultas/FacturasPorQR?chFE=FE0120000155732387-2-2023-1400002024052400000000015050128219609273&amp;iAmb=2&amp;digestValue=Xy75MvDAeVW3fdJKaPx0r1SNUyG/6x2AO6R4h6JVM6o=&amp;jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjaEZFIjoiRkUwMTIwMDAwMTU1NzMyMzg3LTItMjAyMy0xNDAwMDAyMDI0MDUyNDAwMDAwMDAwMDE1MDUwMTI4MjE5NjA5MjczIiwiaUFtYiI6IjIiLCJkaWdlc3RWYWx1ZSI6Ilh5NzVNdkRBZVZXM2ZkSkthUHgwcjFTTlV5Ry82eDJBTzZSNGg2SlZNNm89In0._P9mydQU7VXBCIbrfcByjgIl2e9Z8yuY1pBnmN0Kaek</a:qr>
-                                <a:fechaRecepcionDGI>2024-05-24T22:27:28</a:fechaRecepcionDGI>
-                                <a:nroProtocoloAutorizacion>0000155596713-2-201520240000000000505883</a:nroProtocoloAutorizacion>
-                                <a:fechaLimite nil="true"/>
-                            </EnviarResult>
-                        </EnviarResponse>
-                    </s:Body>
-                </s:Envelope>
-                XML;
-        */
-        $xml = simplexml_load_string(str_replace(["s:","a:","i:"],"",$response));
-        $xml = json_decode(json_encode($xml),true);
-        echo json_encode($xml['Body']['EnviarResponse']['EnviarResult']);
-    }
-    public function fe_send(
-            $number,
-            $date,
-            $client_type,
-            $client_taxpayer,
-            $client_ruc,
-            $client_dv,
-            $client_name,
-            $client_direction,
-            $client_telephone,
-            $client_email,
-            $raw_item,
-            $net_total,
-            $total_tax,
-            $total_discount,
-            $total_charge,
-            $raw_payment,
-            $change,
-
-            $client_country = 'Panama'
-        ) 
-    {
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
-        $location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
+        //$location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
+        $location = 'https://emision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc';
         $t_company = $rs_option['FE_USER'];
         $t_pass = $rs_option['FE_PASSWORD'];
 
@@ -832,7 +844,7 @@ class chargeController extends Controller
                 $ttl_discount = round($ttl_discount, 3);
                 $ttl_discount = round($ttl_discount, 2);
 
-                $ttl_tax = ($item['tx_commanddata_taxrate'] * $item['tx_commanddata_price']) / 100;
+                $ttl_tax = ($item['tx_commanddata_taxrate'] * ($item['tx_commanddata_price']-$ttl_discount)) / 100;
                 $ttl_tax *= $item['tx_commanddata_quantity'];
                 $ttl_tax = round($ttl_tax, 3);
                 $ttl_tax = round($ttl_tax, 2);
@@ -926,133 +938,7 @@ class chargeController extends Controller
             ";
             $payment_total += $payment["tx_payment_amount"];
         }
-        /*
-            $request = "
-                <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tem=\"http://tempuri.org/\" xmlns:ser=\"http://schemas.datacontract.org/2004/07/Services.ObjComprobante.v1_0\">
-                    <soapenv:Header/>
-                    <soapenv:Body>
-                        <tem:Enviar>
-                            <tem:tokenEmpresa>" . $t_company . "</tem:tokenEmpresa>
-                            <tem:tokenPassword>" . $t_pass . "</tem:tokenPassword>
-                            <tem:documento>
-                                <ser:codigoSucursalEmisor>0000</ser:codigoSucursalEmisor>
-                                <ser:tipoSucursal>1</ser:tipoSucursal>
-                                <ser:datosTransaccion>
-                                    <ser:tipoEmision>01</ser:tipoEmision>
-                                    <ser:tipoDocumento>01</ser:tipoDocumento>
-                                    <ser:numeroDocumentoFiscal>001</ser:numeroDocumentoFiscal>
-                                    <ser:puntoFacturacionFiscal>505</ser:puntoFacturacionFiscal>
-                                    <ser:fechaEmision>2024-05-24T21:49:27-05:00</ser:fechaEmision>
-                                    <ser:fechaSalida>2024-05-24T21:49:27-05:00</ser:fechaSalida>
-                                    <ser:naturalezaOperacion>01</ser:naturalezaOperacion>
-                                    <ser:tipoOperacion>1</ser:tipoOperacion>
-                                    <ser:destinoOperacion>1</ser:destinoOperacion>
-                                    <ser:formatoCAFE>2</ser:formatoCAFE>
-                                    <ser:entregaCAFE>2</ser:entregaCAFE>
-                                    <ser:envioContenedor>1</ser:envioContenedor>
-                                    <ser:procesoGeneracion>1</ser:procesoGeneracion>
-                                    <ser:tipoVenta>1</ser:tipoVenta>
-                                    <ser:cliente>
-                                        <ser:tipoClienteFE>02</ser:tipoClienteFE>
-                                        <ser:tipoContribuyente>1</ser:tipoContribuyente>
-                                        <ser:numeroRUC>00000000</ser:numeroRUC>
-                                        <ser:digitoVerificadorRUC>00</ser:digitoVerificadorRUC>
-                                        <ser:razonSocial>Contado</ser:razonSocial>
-                                        <ser:direccion>Penonome</ser:direccion>
-                                        <ser:codigoUbicacion>2-6-1</ser:codigoUbicacion>
-                                        <ser:provincia>Cocle</ser:provincia>
-                                        <ser:distrito>Cocle</ser:distrito>
-                                        <ser:corregimiento>Cocle Cabecera</ser:corregimiento>
-                                        <ser:tipoIdentificacion></ser:tipoIdentificacion>
-                                        <ser:nroIdentificacionExtranjero></ser:nroIdentificacionExtranjero>
-                                        <ser:paisExtranjero></ser:paisExtranjero>
-                                        <ser:telefono1>6507-0175</ser:telefono1>
-                                        <ser:telefono2></ser:telefono2>
-                                        <ser:telefono3></ser:telefono3>
-                                        <ser:correoElectronico1>jorgesaldar@gmail.com</ser:correoElectronico1>
-                                        <ser:correoElectronico2></ser:correoElectronico2>
-                                        <ser:correoElectronico3></ser:correoElectronico3>
-                                        <ser:pais>PA</ser:pais>
-                                        <ser:paisOtro></ser:paisOtro>
-                                    </ser:cliente>
-                                </ser:datosTransaccion>
-    
-                                <ser:listaItems>
-                                    <!--Zero or more repetitions:-->
-                                    <ser:item>
-                                        <ser:descripcion>Soda</ser:descripcion>
-                                        <ser:codigo>C0001</ser:codigo>
-                                        <ser:unidadMedida>m</ser:unidadMedida>
-                                        <ser:cantidad>1.00</ser:cantidad>
-                                        <ser:fechaFabricacion>2024-05-24</ser:fechaFabricacion>
-                                        <ser:fechaCaducidad>2024-05-24</ser:fechaCaducidad>
-                                        <ser:codigoCPBSAbrev></ser:codigoCPBSAbrev>
-                                        <ser:codigoCPBS></ser:codigoCPBS>
-                                        <ser:unidadMedidaCPBS></ser:unidadMedidaCPBS>
-                                        <ser:infoItem>Lata de Soda</ser:infoItem>
-                                        <ser:precioUnitario>1.00</ser:precioUnitario>
-                                        <ser:precioUnitarioDescuento>0.00</ser:precioUnitarioDescuento>
-                                        <ser:precioItem>1.00</ser:precioItem>
-                                        <ser:valorTotal>1.00</ser:valorTotal>
-                                        <ser:tasaITBMS>00</ser:tasaITBMS>
-                                        <ser:valorITBMS>0.00</ser:valorITBMS>
-                                        <ser:tasaISC></ser:tasaISC>
-                                        <ser:valorISC></ser:valorISC>
-                                        <ser:listaItemOTI>
-                                            <ser:oti>
-                                                <ser:tasaOTI>01</ser:tasaOTI>
-                                                <ser:valorTasa>0.00</ser:valorTasa>
-                                            </ser:oti>
-                                        </ser:listaItemOTI>
-                                    </ser:item>
-
-                                </ser:listaItems>
-                                <ser:totalesSubTotales>
-                                    <ser:totalPrecioNeto>1.00</ser:totalPrecioNeto>
-                                    <ser:totalITBMS>0.00</ser:totalITBMS>
-                                    <ser:totalISC></ser:totalISC>
-                                    <ser:totalMontoGravado>0.00</ser:totalMontoGravado>
-                                    <ser:totalDescuento>0.00</ser:totalDescuento>
-                                    <ser:totalAcarreoCobrado>0.00</ser:totalAcarreoCobrado>
-                                    <ser:valorSeguroCobrado>0.00</ser:valorSeguroCobrado>
-                                    <ser:totalFactura>1.00</ser:totalFactura>
-
-
-
-                                    <ser:totalValorRecibido>5.00</ser:totalValorRecibido>
-                                    <ser:vuelto>4.00</ser:vuelto>
-                                    <ser:tiempoPago>1</ser:tiempoPago>
-                                    <ser:nroItems>1</ser:nroItems>
-                                    <ser:totalTodosItems>1.00</ser:totalTodosItems>
-                                    <ser:listaFormaPago>
-                                        <ser:formaPago>
-                                            <ser:formaPagoFact>02</ser:formaPagoFact>
-                                            <ser:descFormaPago></ser:descFormaPago>
-                                            <ser:valorCuotaPagada>5.00</ser:valorCuotaPagada>
-                                        </ser:formaPago>
-                                    </ser:listaFormaPago>
-                                    <ser:listaTotalOTI>
-                                        <ser:totalOti>
-                                            <ser:codigoTotalOTI>01</ser:codigoTotalOTI>
-                                            <ser:valorTotalOTI>0.00</ser:valorTotalOTI>
-                                        </ser:totalOti>
-                                    </ser:listaTotalOTI>
-                                </ser:totalesSubTotales>
-                                <ser:usoPosterior>
-                                    <ser:cufe></ser:cufe>
-                                </ser:usoPosterior>
-                            </tem:documento>
-                        </tem:Enviar>
-                    </soapenv:Body>
-                </soapenv:Envelope>
-            ";
-        */
-
-        /*
-                                            <ser:tipoIdentificacion>" .             ($client_type === '04') ? '01' : '' . "</ser:tipoIdentificacion>
-                                    <ser:nroIdentificacionExtranjero>" .    ($client_type === '04') ? $client_ruc : '' . "</ser:nroIdentificacionExtranjero>
-                                    <ser:paisExtranjero>" .                 ($client_type === '04') ? $client_country : '' . "</ser:paisExtranjero>
-        */
+        $listaDescBonificacion = '';
 
         $request = "
             <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tem=\"http://tempuri.org/\" xmlns:ser=\"http://schemas.datacontract.org/2004/07/Services.ObjComprobante.v1_0\">
@@ -1113,15 +999,16 @@ class chargeController extends Controller
                                 <ser:totalITBMS>" . number_format($total_tax, 2) . "</ser:totalITBMS>
                                 <ser:totalISC></ser:totalISC>
                                 <ser:totalMontoGravado>" . number_format($total_tax, 2) . "</ser:totalMontoGravado>
-                                <ser:totalDescuento>" . number_format($total_discount, 2) . "</ser:totalDescuento>
+                                <ser:totalDescuento>" . number_format(0, 2) . "</ser:totalDescuento>
                                 <ser:totalAcarreoCobrado>0.00</ser:totalAcarreoCobrado>
                                 <ser:valorSeguroCobrado>0.00</ser:valorSeguroCobrado>
                                 <ser:totalFactura>" . number_format($total_charge, 2) . "</ser:totalFactura>
                                 <ser:totalValorRecibido>" . number_format($payment_total, 2) . "</ser:totalValorRecibido>
                                 <ser:vuelto>" . number_format($change, 2) . "</ser:vuelto>
                                 <ser:tiempoPago>1</ser:tiempoPago>
-                                <ser:nroItems>1</ser:nroItems>
+                                <ser:nroItems>". $item_counter ."</ser:nroItems>
                                 <ser:totalTodosItems>" . number_format($net_total + $total_tax, 2) . "</ser:totalTodosItems>
+                                ".$listaDescBonificacion."
                                 <ser:listaFormaPago>
                                     " . $payment_xml . "
                                 </ser:listaFormaPago>
@@ -1140,7 +1027,7 @@ class chargeController extends Controller
                 </soapenv:Body>
             </soapenv:Envelope>
         ";
-
+//        return $request;
 
 
         $action = "Enviar";
@@ -1457,7 +1344,6 @@ class chargeController extends Controller
 
         /* Start the printer */
         $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
-        // $printer = new Printer($connector);
 
         // PRINT TOP DATE
         $printer->setJustification(Printer::JUSTIFY_RIGHT);
@@ -1468,10 +1354,6 @@ class chargeController extends Controller
         $printer->bitImage($logo);
 
         /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
@@ -1487,14 +1369,10 @@ class chargeController extends Controller
         /* Title of receipt */
         $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
         $printer->setEmphasis(true);
-        // $printer -> text("RECIBO DE FACTURACIÓN #".$number."\n");
         $printer->setEmphasis(false);
 
         /* Client Info */
         $printer->selectPrintMode();
-        // $printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
-        // $printer -> text("Cliente: ".$client_name."\n");
-        // $printer -> text("RUC: ".$client_ruc."\n");
         $printer->feed(2);
 
         /* Items */
@@ -1505,30 +1383,15 @@ class chargeController extends Controller
         $printer->setJustification(Printer::JUSTIFY_LEFT);
         $printer->text("Articulos Relacionados.\n");
 
-        // foreach ($raw_item as $item) {
-        //     if ($item['tx_commanddata_status'] === 1) {
-        //         $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']."\n");
-        //         $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
-        //     }
-        // }
         $printer->feed(2);
         $printer->setJustification(Printer::JUSTIFY_RIGHT);
         $printer->setEmphasis(true);
-        // $printer -> text("Subtotal. B/ ".number_format($subtotal,2)."\n");
         $printer->setEmphasis(false);
 
         /* Tax and total */
-        // $printer -> text("Descuento. B/ ".number_format($discount,2)."\n");
-        // $printer -> text("ITBMS. B/ ".number_format($tax,2)."\n");
-        // $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        // $printer -> text("TOTAL. B/ ".number_format($total,2)."\n");
         $printer->selectPrintMode();
         $printer->feed(1);
         $printer->text("Pagos Relacionados.\n");
-        // foreach ($raw_payment as $payment) {
-        //     $printer -> text($payment['tx_paymentmethod_value'].": ".number_format($payment['tx_payment_amount'],2)."\n");
-        // }
-        // $printer -> text("Cambio: ".number_format($change,2)."\n");
 
         /* Footer */
         $printer->feed(2);
@@ -1546,6 +1409,75 @@ class chargeController extends Controller
 
         $printer->close();
 
+    }
+
+    public function test_fe()
+    {
+        $charge_data = $this->showIt('171021202977');
+
+        // echo $charge_data['charge']['tx_charge_number']."<br/>".
+        //     $charge_data['charge']['created_at'] . "<br/>" .
+        //     $charge_data['charge']['tx_client_type'] . "<br/>" .
+        //     $charge_data['charge']['tx_client_taxpayer'] . "<br/>" .
+        //     $charge_data['charge']['tx_client_cif'] . "<br/>" .
+        //     $charge_data['charge']['tx_client_dv'] . "<br/>" .
+        //     $charge_data['charge']['tx_client_name'] . "<br/>" .
+        //     $charge_data['charge']['tx_client_direction'] . "<br/>" .
+        //     $charge_data['charge']['tx_client_telephone'] . "<br/>" .
+        //     // $charge_data['charge']['tx_client_email'],
+        //     'jorgesaldar@gmail.com' . "<br/>" .
+        //     // $charge_data['article'] . "<br/>" .
+        //     $charge_data['charge']['tx_charge_nontaxable']+$charge_data['charge']['tx_charge_taxable'] . "<br/>" .
+        //     $charge_data['charge']['tx_charge_tax'] . "<br/>" .
+        //     $charge_data['charge']['tx_charge_discount'] . "<br/>" .
+        //     $charge_data['charge']['tx_charge_total'] . "<br/>" .
+        //     // $charge_data['payment'] . "<br/>" .
+        //     $charge_data['charge']['tx_charge_change'];
+
+        //  return false;
+
+        $response = $this->fe_send(
+            $charge_data['charge']['tx_charge_number'],
+            $charge_data['charge']['created_at'],
+            $charge_data['charge']['tx_client_type'],
+            $charge_data['charge']['tx_client_taxpayer'],
+            $charge_data['charge']['tx_client_cif'],
+            $charge_data['charge']['tx_client_dv'],
+            $charge_data['charge']['tx_client_name'],
+            $charge_data['charge']['tx_client_direction'],
+            $charge_data['charge']['tx_client_telephone'],
+            $charge_data['charge']['tx_client_email'],
+            $charge_data['article'],
+            $charge_data['charge']['tx_charge_nontaxable'] + $charge_data['charge']['tx_charge_taxable'],
+            $charge_data['charge']['tx_charge_tax'],
+            $charge_data['charge']['tx_charge_discount'],
+            $charge_data['charge']['tx_charge_total'],
+            $charge_data['payment'],
+            $charge_data['charge']['tx_charge_change']
+        );
+        /*
+            $note = <<<XML
+                <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+                    <s:Body>
+                        <EnviarResponse xmlns="http://tempuri.org/">
+                            <EnviarResult xmlns:a="http://schemas.datacontract.org/2004/07/Services.Response" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+                                <a:codigo>102</a:codigo>
+                                <a:resultado>error</a:resultado>
+                                <a:mensaje>El documento está duplicado</a:mensaje>
+                                <a:cufe>FE0120000155732387-2-2023-1400002024052400000000015050128219609273</a:cufe>
+                                <a:qr>https://dgi-fep-test.mef.gob.pa:40001/Consultas/FacturasPorQR?chFE=FE0120000155732387-2-2023-1400002024052400000000015050128219609273&amp;iAmb=2&amp;digestValue=Xy75MvDAeVW3fdJKaPx0r1SNUyG/6x2AO6R4h6JVM6o=&amp;jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjaEZFIjoiRkUwMTIwMDAwMTU1NzMyMzg3LTItMjAyMy0xNDAwMDAyMDI0MDUyNDAwMDAwMDAwMDE1MDUwMTI4MjE5NjA5MjczIiwiaUFtYiI6IjIiLCJkaWdlc3RWYWx1ZSI6Ilh5NzVNdkRBZVZXM2ZkSkthUHgwcjFTTlV5Ry82eDJBTzZSNGg2SlZNNm89In0._P9mydQU7VXBCIbrfcByjgIl2e9Z8yuY1pBnmN0Kaek</a:qr>
+                                <a:fechaRecepcionDGI>2024-05-24T22:27:28</a:fechaRecepcionDGI>
+                                <a:nroProtocoloAutorizacion>0000155596713-2-201520240000000000505883</a:nroProtocoloAutorizacion>
+                                <a:fechaLimite nil="true"/>
+                            </EnviarResult>
+                        </EnviarResponse>
+                    </s:Body>
+                </s:Envelope>
+                XML;
+        */
+        $xml = simplexml_load_string(str_replace(["s:", "a:", "i:"], "", $response));
+        $xml = json_decode(json_encode($xml), true);
+        echo json_encode($xml['Body']['EnviarResponse']['EnviarResult']);
     }
 
     public function checklogin_reprint(Request $request)
