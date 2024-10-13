@@ -713,6 +713,12 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       cls_charge.index();
+
+              var btn = document.getElementById('btn_feleft');
+        if (btn) {
+          btn.click();
+        }
+
       setInterval(() => {
         var btn = document.getElementById('btn_reloadrequest');
         if (btn) {
@@ -721,7 +727,7 @@
         var btn = document.getElementById('btn_filterClosedRequest');
         if (btn) {
           btn.click();
-        }
+        }        
       }, 60000);
       cls_charge.api_login();
 		});

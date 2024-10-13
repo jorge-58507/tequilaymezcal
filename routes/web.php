@@ -27,7 +27,6 @@ Route::get('/report', function () {
     return view('report.index');
 })->middleware('auth');
 
-Route::get('test', 'chargeController@test_fe');
 
 Route::get('configuration', 'configurationController@index')->middleware('auth');
 Route::get('product/{param}/count', 'productController@show_quantity')->middleware('auth');
@@ -54,11 +53,9 @@ Route::get('warehouse/{param_a}/product', 'warehouseController@get_product')->mi
 Route::get('productwarehouse/{param_a}', 'productwarehouseController@show')->middleware('auth');
 Route::get('productwarehouse/{param_a}/count', 'productwarehouseController@show_quantity')->middleware('auth');
 Route::get('client/{param_a}/purchase', 'clientController@show_purchaselist')->middleware('auth');
-// Route::get('acregister/{param}/show', 'acregisterController@show_register')->middleware('auth');
+Route::get('feleft', 'chargeController@fe_left');
 
 Route::post('product/{slug}/measure', 'measureproductController@save')->middleware('auth');
-//Route::post('article/product', 'measureproductController@save')->middleware('auth');
-//Route::post('product/{param}/count', 'productController@update_quantity')->middleware('auth');
 Route::post('creditnote/{param}/nullify', 'creditnoteController@nullify')->middleware('auth');
 Route::post('depletion/{param}/article', 'depletionController@depletionByArticle')->middleware('auth');
 Route::post('/table_upd/', 'tableController@renovate')->middleware('auth');
@@ -106,7 +103,6 @@ Route::put('productwarehouse/{param}', 'productwarehouseController@update')->mid
 
 
 
-// Route::resource('article/presentation', 'articlepresentationController')->middleware('auth');
 Route::resource('ubication', 'ubicationController')->middleware('auth');
 Route::resource('table',   'tableController')->middleware('auth');
 Route::resource('product', 'productController')->middleware('auth');

@@ -1030,8 +1030,6 @@ class chargeController extends Controller
                 </soapenv:Body>
             </soapenv:Envelope>
         ";
-//        return $request;
-
 
         $action = "Enviar";
         $header = [
@@ -1052,6 +1050,60 @@ class chargeController extends Controller
         $response = curl_exec($ch);
         $err_status = curl_errno($ch);
         return $response;
+    }
+
+    public function fe_left()
+    {
+        $location = 'https://emision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc';
+        $t_company = 'zblvgogrmgjv_tfhka';
+        $t_pass = 'n*M,EcB2O_gg';
+
+        $request = "
+            <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tem=\"http://tempuri.org/\">
+                <soapenv:Header/>
+                <soapenv:Body>
+                    <tem:FoliosRestantes>
+                        <!--Optional:-->
+                        <tem:tokenEmpresa>zblvgogrmgjv_tfhka</tem:tokenEmpresa>
+                        <!--Optional:-->
+                        <tem:tokenPassword>n*M,EcB2O_gg</tem:tokenPassword>
+                    </tem:FoliosRestantes>
+                </soapenv:Body>
+            </soapenv:Envelope>
+        ";
+        //        return $request;
+
+
+        $action = "FoliosRestantes";
+        $header = [
+            'Method: POST',
+            'Connection: Keep-Alive',
+            'User-Agent: PHP-SOAP-CURL',
+            'Content-Type: text/xml;charset=UTF-8',
+            'SOAPAction: "http://tempuri.org/IService/FoliosRestantes"'
+        ];
+
+        $ch = curl_init($location);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+        $response = curl_exec($ch);
+        $err_status = curl_errno($ch);
+
+        $xml = simplexml_load_string(str_replace(["s:", "a:", "i:"], "", $response));
+        $xml = json_decode(json_encode($xml), true);
+        $responseFE = json_encode($xml['Body']['FoliosRestantesResponse']['FoliosRestantesResult']);
+        return response()->json(['status' => 'success', 'data' => $responseFE]);
+
+        if ($responseFE['resultado'] === 'error') {
+            return response()->json(['status' => 'failed', 'message' => $responseFE['mensaje']]);
+        } else {
+            return response()->json(['status' => 'success', 'data' => $responseFE]);
+        }
+
     }
 
     /**

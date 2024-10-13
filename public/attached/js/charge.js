@@ -554,7 +554,6 @@ class class_request{
         var btn_next = `<div class="col-6 pt-4"><button id="btn_nextstatus" type="button" class="btn btn-info btn-lg" onclick="cls_request.request_next(this,'${request_info.tx_request_slug}')">Cerrar Pedido</button></div>`;
       break;
     }
-    // var btn_next = (request_info.tx_request_status === 2 || request_info.tx_request_status === 3) ? `<div class="col-6 pt-4"><button type="button" class="btn btn-info btn-lg" onclick="cls_request.request_next('${request_info.tx_request_slug}')">Siguiente</button></div>` : '';
     var content = `
           <div class="col-sm-12" style="height: 25vh;">
             <div class="row">
@@ -609,43 +608,9 @@ class class_request{
                     </div>
                   </div>
                 </div>
-
-
-
-
               </div>
             </div>
           </div>
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     `;
 
     var footer = `
@@ -778,7 +743,7 @@ class class_charge{
                     </button>
                   </div>
                 </div>
-                <div class="col-md-12 col-lg-6 pt-3">
+                <div class="col-md-8 col-lg-3 pt-3">
                   <div class="input-group mb-3">
                     <label class="input-group-text" for="closedrequestLimit">Mostrar</label>
                     <select id="closedrequestLimit" class="form-select">
@@ -786,6 +751,18 @@ class class_charge{
                       <option value="50">50</option>
                       <option value="100">100</option>
                     </select>
+                  </div>
+                </div>
+                <div class="col-md-4 col-lg-3 pt-3">
+                  <div class="input-group mb-3">
+                    <label class="input-group-text text-bg-info" for="folioLeft">F. Restante</label>
+                    <input type="text" id="folioLeft"  class="form-control" readonly value="">
+                    <button class="btn btn-outline-secondary" type="button" id="btn_feleft" onclick="cls_charge.get_feleft()">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                      </svg>
+                    </button>
+
                   </div>
                 </div>
                 <div id='container_closedrequest' class="col-md-12">
@@ -1441,7 +1418,22 @@ class class_charge{
     cls_payment.giftcard = [];
     cls_payment.render();
   }
+  get_feleft(){
+    var url = '/feleft/';
+    var method = 'GET';
+    var body = '';
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        var obj_data = JSON.parse(obj.data)
+        console.log(obj_data)
+        document.getElementById('folioLeft').value = obj_data.foliosDisponibleCiclo + '/' + obj_data.foliosTotalesCiclo;
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
 
+  }
 
   async api_login(){
     var url = cls_charge.api_url + 'APIlogin';
