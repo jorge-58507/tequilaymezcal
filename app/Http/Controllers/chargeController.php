@@ -831,7 +831,7 @@ class chargeController extends Controller
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
-        // $location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
+        //$location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
         $location = 'https://emision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc';
         $t_company = $rs_option['FE_USER'];
         $t_pass = $rs_option['FE_PASSWORD'];
@@ -881,7 +881,7 @@ class chargeController extends Controller
                         <ser:unidadMedidaCPBS></ser:unidadMedidaCPBS>
                         <ser:infoItem>" . $item['tx_commanddata_description'] . "</ser:infoItem>
                         <ser:precioUnitario>" . number_format($item['tx_commanddata_price'], 2) . "</ser:precioUnitario>
-                        <ser:precioUnitarioDescuento>" . number_format($ttl_discount * $item['tx_commanddata_quantity'], 2) . "</ser:precioUnitarioDescuento>
+                        <ser:precioUnitarioDescuento>" . number_format($ttl_discount, 2) . "</ser:precioUnitarioDescuento>
                         <ser:precioItem>" . number_format($price_item, 2) . "</ser:precioItem>
                         <ser:valorTotal>" . number_format($price_item + $ttl_tax, 2) . "</ser:valorTotal>
                         <ser:tasaITBMS>" . $tax_rate_code . "</ser:tasaITBMS>
@@ -1030,7 +1030,7 @@ class chargeController extends Controller
                 </soapenv:Body>
             </soapenv:Envelope>
         ";
-
+//return $request;
         $action = "Enviar";
         $header = [
             'Method: POST',
