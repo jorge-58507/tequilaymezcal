@@ -95,6 +95,19 @@ class clientController extends Controller
             return response()->json(['status'=>'failed','message'=>'No existe.']);
         }
     }
+    public function show_client($id)
+    {
+        $qry = tm_client::where('ai_client_id', $id);
+        if ($qry->count() > 0) {
+            $rs = $qry->first();
+            $giftcardController = new giftcardController;
+            $rs_giftcard = $giftcardController->get_all_by_client($rs['ai_client_id']);
+
+            return ['status' => 'success', 'message' => '', 'data' => ['client' => $rs, 'giftcard' => $rs_giftcard]];
+        } else {
+            return ['status' => 'failed', 'message' => 'No existe.'];
+        }
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -198,4 +211,78 @@ class clientController extends Controller
 
         return response()->json(['status'=>'success','message'=>'','data'=>['purchaselist'=>$rs_request]]);
     }
+
+    public function fe_checkruc($client_id=2)
+    {
+        $rs_client = tm_client::where('ai_client_id', $client_id)->first();
+
+        if ($rs_client['tx_client_type'] === '02') {
+            return ['status' => 'success','resultado' => 'success', 'mensaje' => 'Cliente no es Contribuyente'];
+        }else{
+            $optionController = new optionController;
+            $rs_option = $optionController->getOption();
+
+            
+            $location = 'https://emision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc';
+            // $t_company = $rs_option['FE_USER'].'aa';
+            // $t_pass = $rs_option['FE_PASSWORD'];
+            $t_company = 'zblvgogrmgjv_tfhka';
+            $t_pass = 'n*M,EcB2O_gg';
+
+
+            $request = "
+                <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tem=\"http://tempuri.org/\" xmlns:ser=\"http://schemas.datacontract.org/2004/07/Services.ApiRest\">
+                <soapenv:Header/>
+                <soapenv:Body>
+                    <tem:ConsultarRucDV>
+                        <!--Optional:-->
+                        <tem:consultarRucDVRequest>
+                            <!--Optional:-->
+                            <ser:tokenEmpresa>" . $t_company . "</ser:tokenEmpresa>
+                            <!--Optional:-->
+                            <ser:tokenPassword>" . $t_pass . "</ser:tokenPassword>
+                            <!--Optional:-->
+                            <ser:tipoRuc>" . $rs_client['tx_client_taxpayer'] . "</ser:tipoRuc>
+                            <!--Optional:-->
+                            <ser:ruc>" . $rs_client['tx_client_cif'] . "</ser:ruc>
+                        </tem:consultarRucDVRequest>
+                    </tem:ConsultarRucDV>
+                </soapenv:Body>
+                </soapenv:Envelope>
+            ";
+
+
+            $action = "ConsultarRucDV";
+            $header = [
+                'Method: POST',
+                'Connection: Keep-Alive',
+                'User-Agent: PHP-SOAP-CURL',
+                'Content-Type: text/xml;charset=UTF-8',
+                'SOAPAction: "http://tempuri.org/IService/ConsultarRucDV"'
+            ];
+
+            $ch = curl_init($location);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+            curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+            $response = curl_exec($ch);
+            $err_status = curl_errno($ch);
+
+            $xml = simplexml_load_string(str_replace(["s:", "a:", "i:"], "", $response));
+            $xml = json_decode(json_encode($xml), true);
+            $responseFE = $xml['Body']['ConsultarRucDVResponse']['ConsultarRucDVResult'];
+         
+            return $responseFE;
+         
+            // if ($responseFE['resultado'] === 'error') {
+            //     return response()->json(['status' => 'failed', 'message' => $responseFE['mensaje']]);
+            // } else {
+            //     return response()->json(['status' => 'success', 'data' => $responseFE]);
+            // }
+        }
+    }
+
 }

@@ -125,7 +125,8 @@ class creditnoteController extends Controller
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
-        $location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
+        // $location = 'https://demoemision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc?wsdl';
+        $location = 'https://emision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc';
         $t_company = $rs_option['FE_USER'];
         $t_pass = $rs_option['FE_PASSWORD'];
 
@@ -437,6 +438,7 @@ class creditnoteController extends Controller
         }
         $qry_charge->update(['tx_charge_status'=>2]);
 
+        $this->fe_creditnote('Anulacion',$rs_charge['tx_charge_number']);
         // ANSWER
         $rs_creditnote = tm_creditnote::where('creditnote_ai_charge_id',$rs_charge['ai_charge_id'])->get();
         return response()->json(['status'=>'success','message'=>'Nota de Cr&eacute;dito procesada.','data'=>['creditnote'=>$rs_creditnote]]);

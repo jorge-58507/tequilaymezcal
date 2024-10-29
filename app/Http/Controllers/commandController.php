@@ -163,7 +163,20 @@ class commandController extends Controller
     {
         $rs_request = tm_request::where('tx_request_slug',$request_slug)->first();
         $rs_command = $this->getByRequest($rs_request['ai_request_id']);
-        return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command, 'request_info'=>$rs_request]]);
+
+        $clientController = new clientController;
+        $ans_checkruc = $clientController->fe_checkruc($rs_request['request_ai_client_id']);
+
+        $client_info = $clientController->show_client($rs_request['request_ai_client_id']);
+        if (!preg_match("/^\d{3,4}-\d{4}$/", $client_info['data']['client']['tx_client_telephone'])) {
+            return response()->json(['status' => 'failed', 'message' => 'Verifique el cliente: Formato del Teléfono']);
+        }
+
+        if ($ans_checkruc['resultado'] === 'error') {
+            return response()->json(['status' => 'failed', 'message' => 'Verifique el cliente: '.$ans_checkruc['mensaje']]);
+        }else{
+            return response()->json(['status'=>'success','message'=>'','data'=>['command_procesed'=>$rs_command, 'request_info'=>$rs_request]]);
+        }
     }
     public function discount(Request $request, $request_slug){
         $user = $request->user();

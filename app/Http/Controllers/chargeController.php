@@ -1054,7 +1054,13 @@ class chargeController extends Controller
 
     public function fe_left()
     {
+        $optionController = new optionController;
+        $rs_option = $optionController->getOption();
+
+        
         $location = 'https://emision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc';
+        // $t_company = $rs_option['FE_USER'];
+        // $t_pass = $rs_option['FE_PASSWORD'];
         $t_company = 'zblvgogrmgjv_tfhka';
         $t_pass = 'n*M,EcB2O_gg';
 
@@ -1064,9 +1070,9 @@ class chargeController extends Controller
                 <soapenv:Body>
                     <tem:FoliosRestantes>
                         <!--Optional:-->
-                        <tem:tokenEmpresa>zblvgogrmgjv_tfhka</tem:tokenEmpresa>
+                        <tem:tokenEmpresa>".$t_company."</tem:tokenEmpresa>
                         <!--Optional:-->
-                        <tem:tokenPassword>n*M,EcB2O_gg</tem:tokenPassword>
+                        <tem:tokenPassword>".$t_pass."</tem:tokenPassword>
                     </tem:FoliosRestantes>
                 </soapenv:Body>
             </soapenv:Envelope>
@@ -1095,8 +1101,8 @@ class chargeController extends Controller
 
         $xml = simplexml_load_string(str_replace(["s:", "a:", "i:"], "", $response));
         $xml = json_decode(json_encode($xml), true);
-        $responseFE = json_encode($xml['Body']['FoliosRestantesResponse']['FoliosRestantesResult']);
-        return response()->json(['status' => 'success', 'data' => $responseFE]);
+        $responseFE = $xml['Body']['FoliosRestantesResponse']['FoliosRestantesResult'];
+        // return response()->json(['status' => 'success', 'data' => $responseFE]);
 
         if ($responseFE['resultado'] === 'error') {
             return response()->json(['status' => 'failed', 'message' => $responseFE['mensaje']]);

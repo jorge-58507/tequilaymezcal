@@ -1238,9 +1238,6 @@ class class_command{
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ '+cls_general.val_price(total_sale.total,2,1,1);
 
-        // const Modal = bootstrap.Modal.getInstance('#commandModal');
-        // Modal.hide();
-
         if (obj.data.cashier === 1) {
           swal({
             title: "¿Desea cobrar este pedido?",
@@ -2107,6 +2104,11 @@ class class_client{
     var taxpayer = document.getElementById('clientTaxpayer').value;
     var status = (document.getElementById('clientStatus').checked) ? 1 : 0;
 
+    let pat = /^\d{3,4}-\d{4}$/gm;
+    if (!pat.test(telephone)) {
+      cls_general.shot_toast_bs('Verifique el formato del telefono.', { bg: 'text-bg-warning' });
+      return false;
+    }
     if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(cif) === 0) {
       cls_general.shot_toast_bs('El campo nombre y C&eacute;dula no pueden estar vac&iacute;os',{bg: 'text-bg-warning'});
       return false;

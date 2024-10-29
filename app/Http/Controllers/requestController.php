@@ -173,6 +173,12 @@ class requestController extends Controller
         if ($qry_client->count() < 1) {
             return response()->json(['status'=>'failed','message'=>'Cliente no existe.']);
         }
+        $client_info = $qry_client->first();
+        if (!preg_match("/^\d{3,4}-\d{4}$/", $client_info['tx_client_telephone'])) {
+            return response()->json(['status' => 'failed', 'message' => 'Verifique el cliente: Formato del Teléfono']);
+        }
+
+
         $rs_table = tm_table::where('ai_table_id',$request->input('b'))->first();
         if ($rs_table['tx_table_type'] === 2) {
             $check_occupied = tm_request::where('request_ai_table_id',$request->input('b'))->where('tx_request_slug','!=',$slug)->where('tx_request_status',0)->count();
@@ -281,10 +287,6 @@ class requestController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 

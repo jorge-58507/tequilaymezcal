@@ -1424,8 +1424,7 @@ class class_charge{
     var body = '';
     var funcion = function (obj) {
       if (obj.status === 'success') {
-        var obj_data = JSON.parse(obj.data)
-        console.log(obj_data)
+        var obj_data = obj.data
         document.getElementById('folioLeft').value = obj_data.foliosDisponibleCiclo + '/' + obj_data.foliosTotalesCiclo;
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
@@ -3083,7 +3082,7 @@ class class_payment{
     cls_payment.render();
   }
   process(btn,request_slug){
-    cls_general.disable_submit(btn)
+    cls_general.disable_submit(btn,0)
     var raw_payment = cls_payment.payment;
     let received = 0
     raw_payment.map((payment) => { received += payment.amount; });
@@ -3536,31 +3535,31 @@ class class_creditnote{
       },
       dangerMode: true,
     })
-      .then((ans) => {
-        switch (ans) {
-          case 'si':
-            var url = '/creditnote/' + charge_slug + '/nullify';
-            var method = 'POST';
-            var body = JSON.stringify({ a: charge_slug, c: 'ANULADA' });
-            var funcion = function (obj) {
-              if (obj.status === 'success') {
-                cls_creditnote.selected = [];
-                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-                cls_charge.index();
-                cls_request.render('open', cls_request.open_request);
-                cls_request.render('closed', cls_request.closed_request);
-                cls_request.render('canceled', cls_charge.charge_list);
-              } else {
-                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-              }
+    .then((ans) => {
+      switch (ans) {
+        case 'si':
+          var url = '/creditnote/' + charge_slug + '/nullify';
+          var method = 'POST';
+          var body = JSON.stringify({ a: charge_slug, c: 'ANULADA' });
+          var funcion = function (obj) {
+            if (obj.status === 'success') {
+              cls_creditnote.selected = [];
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+              cls_charge.index();
+              cls_request.render('open', cls_request.open_request);
+              cls_request.render('closed', cls_request.closed_request);
+              cls_request.render('canceled', cls_charge.charge_list);
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
             }
-            cls_general.async_laravel_request(url, method, funcion, body);
-          break;
-          case 'no':
+          }
+          cls_general.async_laravel_request(url, method, funcion, body);
+        break;
+        case 'no':
 
-            break;
-        }
-      });
+          break;
+      }
+    });
   }
 }
 class class_cashoutput{
