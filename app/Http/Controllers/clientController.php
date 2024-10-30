@@ -224,7 +224,7 @@ class clientController extends Controller
 
             
             $location = 'https://emision.thefactoryhka.com.pa/ws/obj/v1.0/Service.svc';
-            $t_company = $rs_option['FE_USER'].'aa';
+            $t_company = $rs_option['FE_USER'];
             $t_pass = $rs_option['FE_PASSWORD'];
             // $t_company = 'zblvgogrmgjv_tfhka';
             // $t_pass = 'n*M,EcB2O_gg';
