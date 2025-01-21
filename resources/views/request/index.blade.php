@@ -160,6 +160,21 @@
       </div>
     </div>
   </div>
+  <!-- Modal splitRequest-->
+  <div class="modal fade" id="splitrequestModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="splitRequest_title">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="splitRequest_content" class="modal-body">
+        </div>
+        <div id="splitRequest_footer" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
 
 	<div id="container_request" class="row"></div>
 
@@ -171,7 +186,6 @@
 	
 	<script type="text/javascript">
 		var low_inventory = '<?php echo $data['low_inventory'] ?>';
-    console.log(low_inventory);
 		if (low_inventory > 0) {
 		  swal ( "Atención" ,  "Existen artículos con baja existencia. Diríjase al Menu Compras." ,  "error" );      
 		}

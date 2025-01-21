@@ -80,6 +80,7 @@ Route::post('/commanddatalastrequest/', 'commanddataController@add_tolastrequest
 Route::post('/acregister/filter', 'acregisterController@filter');
 Route::post('/productwarehouse/add_product', 'productwarehouseController@add_product');
 Route::post('productwarehouse/{param}/count', 'productwarehouseController@update_quantity')->middleware('auth');
+Route::post('/request/split', 'requestController@save_split');
 
 Route::delete('product/{param}/measure', 'measureproductController@delete')->middleware('auth');
 Route::delete('purchase/{param}/return', 'productinputController@return')->middleware('auth');

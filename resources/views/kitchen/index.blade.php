@@ -89,7 +89,6 @@
 
     const cls_command = new class_command;
 		document.addEventListener('DOMContentLoaded', function() {
-      // cls_kitchen.index();
       cls_kitchen.render_notready();
       cls_kitchen.render_ready();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\tm_commanddata;
 use Illuminate\Http\Request;
 use App\tm_ubication;
 use App\tm_table;
@@ -84,13 +85,13 @@ class requestController extends Controller
     }
     public function save($table_id, $client_id, $code, $title){
         $rs_table = tm_table::where('ai_table_id',$table_id)->first();
-        if ($rs_table['tx_table_type'] === 2) {
-            $check_table = tm_request::where('tx_request_status',0)->where('request_ai_table_id',$table_id);
-            if ($check_table->count() > 0) {
-                $rs_request = $check_table->first();
-                return ['status'=>'failed','message'=>'La mesa esta ocupada.', 'data' => $rs_request];
-            }
-        }
+        // if ($rs_table['tx_table_type'] === 2) {
+            // $check_table = tm_request::where('tx_request_status',0)->where('request_ai_table_id',$table_id);
+            // if ($check_table->count() > 0) {
+            //     $rs_request = $check_table->first();
+            //     return ['status'=>'failed','message'=>'La mesa esta ocupada.', 'data' => $rs_request];
+            // }
+        // }
         if ($rs_table['tx_table_type'] > 2) {
             return ['status'=>'failed','message'=>'No es una mesa.'];
         }
@@ -125,15 +126,28 @@ class requestController extends Controller
             $rs_command = [];
             $rs_table = 'vacio';
         }
+        if (count($rs_command) === 0) { //Si no tiene comandas desactivar el pedido
+            $qry_request->update(['tx_request_status' => 3]);
+        }
         return response()->json(['status'=>'success','message'=>'','data'=>['request'=>$rs_request, 'command_procesed'=>$rs_command, 'table'=>$rs_table]]);
     }
     public function showByTable($table_slug){
         $qry_request = tm_request::join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tm_tables.tx_table_slug',$table_slug)->where('tx_request_status',0);
-        $rs_request = $qry_request->first();
-        $commandController = new commandController;
-        $rs_command = ($qry_request->count() > 0) ? $commandController->getByRequest($rs_request['ai_request_id']) : [];
-        
-        return response()->json(['status'=>'success','message'=>'','data'=>['request'=>$rs_request,'command_procesed'=>$rs_command]]);
+        if ($qry_request->count() > 1) {
+            $rs_request = $qry_request->get();
+            foreach ($rs_request as $key => $request) {
+                $commandController = new commandController;
+                $rs_command = $commandController->getByRequest($request['ai_request_id']);
+                $rs_request[$key]['command_procesed'] = $rs_command;
+            }
+            return response()->json(['status' => 'success', 'message' => '', 'data' => ['request' => $rs_request]]);
+        }else{
+            $rs_request = $qry_request->first();
+            $commandController = new commandController;
+            $rs_command = ($qry_request->count() > 0) ? $commandController->getByRequest($rs_request['ai_request_id']) : [];
+            
+            return response()->json(['status'=>'success','message'=>'','data'=>['request'=>$rs_request,'command_procesed'=>$rs_command]]);
+        }
     }
     public function showByBar($table_slug){
         $qry_request = tm_request::join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tm_tables.tx_table_slug',$table_slug)->where('tx_request_status',0);
@@ -142,28 +156,6 @@ class requestController extends Controller
         return response()->json(['status'=>'success','message'=>'','data'=>['request'=>$rs_request]]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
     public function update_rel(Request $request, $slug){
         $qry = tm_request::where('tx_request_slug',$slug);
         if ($qry->count() < 1) {
@@ -249,6 +241,35 @@ class requestController extends Controller
         $raw_request = $this->getAll();
         return response()->json(['status'=>'success','message'=>'','data'=>['open_request'=>$raw_request['open_request'], 'closed_request'=>$raw_request['closed_request'], 'canceled_request'=>$raw_request['canceled_request']]]);
     }
+
+    public function save_split(Request $request){
+
+        $request_split = $request->input('a');
+        foreach ($request_split as $key => $req) {
+            if (!empty($req['id'])) {
+                $table_id = $req['table_id'];
+                $rs_command = tm_command::where('command_ai_request_id',$req['id'])->first();
+                foreach ($req['commanddata'] as $x => $commanddata) {
+                    tm_commanddata::where('ai_commanddata_id', $commanddata['ai_commanddata_id'])->update(['commanddata_ai_command_id' => $rs_command['ai_command_id']]);
+                }
+            }else{
+                $count = tm_request::count();
+                $code = substr('000000000000' . $count, -10);
+
+                $ans_request = $this->save($table_id, 1, $code, $req['title']);
+
+                $user = $request->user();
+                $command_controller = new commandController;
+                $command_id = $command_controller->save($user['id'], $ans_request['data']['id'], '', 'Local', '');
+
+                foreach ($req['commanddata'] as $x => $commanddata) {
+                    tm_commanddata::where('ai_commanddata_id', $commanddata['ai_commanddata_id'])->update(['commanddata_ai_command_id' => $command_id]);
+                }
+            }
+        }
+        return response()->json(['status' => 'success', 'message' => 'Pedido dividido correctamente.']);
+    }
+    
     public function print(Request $request, $request_slug){
         $qry = tm_request::join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_slug',$request_slug);
         if ($qry->count() === 0) {

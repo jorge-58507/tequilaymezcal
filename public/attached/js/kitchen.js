@@ -24,6 +24,7 @@ class class_kitchen
     document.getElementById('container_notready_bar').innerHTML = content_bar;
   }
   render_ready() {
+    console.log(cls_kitchen.ready)
     var content = cls_command.generate_ready_list(cls_kitchen.ready);
     document.getElementById('container_ready').innerHTML = content;
   }

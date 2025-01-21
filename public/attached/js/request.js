@@ -103,6 +103,8 @@ class class_request {
     this.api_url = api_url;
     this.api_token = '';
     this.online_pendant = [];
+    this.request_split = [];
+    this.request_opened = [];
   }
   index(){
     var content = `
@@ -204,8 +206,34 @@ class class_request {
       var url = '/request/' + table_slug + '/table'; var method = 'GET';
       var body = "";
       var funcion = function (obj) {
-        cls_command.command_procesed = obj.data.command_procesed;
-        cls_request.render_request(obj.data.request,table_slug);
+        if (cls_general.is_empty_var(obj.data.request) === 1 && obj.data.request.length > 1 ) {
+          var content_request = cls_request.generate_openrequest(obj.data.request);
+          var content = `
+            <div class="row">
+              <div class="col-sm-12 text-center py-2">
+              </div>
+              <div class="col-sm-12">
+                ${content_request}
+              </div>
+            </div>
+          `;
+          var footer = `
+            <div class="row">
+              <div class="col-sm-12">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              </div>
+            </div>
+          `;
+          document.getElementById('requestModal_title').innerHTML = '<h5>Pedidos de la mesa </h5 > ';
+          document.getElementById('requestModal_content').innerHTML = content;
+          document.getElementById('requestModal_footer').innerHTML = footer;
+
+          const modal = new bootstrap.Modal('#requestModal', {})
+          modal.show();
+        }else{
+          cls_command.command_procesed = obj.data.command_procesed;
+          cls_request.render_request(obj.data.request,table_slug);
+        }
       }
       cls_general.async_laravel_request(url, method, funcion, body);
     }
@@ -248,6 +276,7 @@ class class_request {
       if (obj.data.command_procesed.length === 0) {
         cls_general.shot_toast_bs('El pedido ya fue cerrado.', { bg: 'text-bg-warning' }); return false;
       }
+      cls_request.request_split = [];
       var table_slug = obj.data.table.tx_table_slug;
       cls_command.command_procesed = obj.data.command_procesed;
       cls_request.render_request(obj.data.request, table_slug);
@@ -420,6 +449,233 @@ class class_request {
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
+  getByTable(table_slug){
+    var url = '/request/' + table_slug + '/table'; var method = 'GET';
+    var body = "";
+    var funcion = function (obj) {
+      if (cls_general.is_empty_var(obj.data.command_procesed) === 1) {
+        if (obj.data.command_procesed.length === 0) {
+          cls_general.shot_toast_bs('El pedido ya fue cerrado.', { bg: 'text-bg-warning' }); return false;
+        }
+        var raw_split = { commanddata: [] };
+        raw_split = { title: obj.data.request.tx_request_title, number: obj.data.request.tx_request_code, id: obj.data.request.ai_request_id, table_id: obj.data.request.request_ai_table_id, commanddata: [] }
+        obj.data.command_procesed.forEach(element => {
+          raw_split.commanddata.push(element);
+        });
+        cls_request.request_split.push(raw_split);
+      }else{
+        obj.data.request.map((req) => {
+          var raw_split = { commanddata: [] };
+          raw_split = { title: req.tx_request_title, number: req.tx_request_code, id: req.ai_request_id, table_id: req.request_ai_table_id, commanddata: [] }
+          req.command_procesed.forEach(element => {
+            raw_split.commanddata.push(element);
+          });
+          cls_request.request_split.push(raw_split);
+        })
+      }
+
+      var content_commandList = cls_request.generate_articleSplited(cls_request.request_split);
+      document.getElementById('commandList').innerHTML = content_commandList.content;
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
+  split(table_slug,request_slug){
+    var content = `
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h4 class="badge rounded-pill text-bg-primary fs-5">Dividir Pedido</h4>
+          <br/>
+          <button type="button" class="btn btn-success btn-lg" onclick="event.preventDefault(); cls_request.save_split()">Guardar</button>
+          &nbsp;
+          <button type="button" class="btn btn-secondary btn-sm" onclick="event.preventDefault(); cls_request.showByRequest('${request_slug}')">Salir</button>
+        </div>
+        <div class="col-md-12">
+          <div id="commandList" class="row"></div>
+        </div>
+      </div>
+    `;
+    document.getElementById('container_request').innerHTML = content;
+    cls_request.getByTable(table_slug);
+  }
+  // generate_articleprocesed(command_procesed, request) {
+  //   var raw_price = [];
+  //   var content_command_procesed = `<div class="list-group">   <li class="list-group-item list-group-item-primary text-center fw-bold">${request.tx_request_title} (${request.tx_request_code})</li>`;
+  //   command_procesed.map((command, index) => {
+  //     if (command.tx_commanddata_status === 0) {
+  //       var bg_status = 'text-bg-warning text-body-tertiary';
+  //       var btn = ``;
+  //     } else {
+  //       // [{ PRICE, discount, tax, quantity }]
+  //       raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
+  //       var bg_status = '';
+  //       var btn = `<button type="button" class="btn btn-secondary btn-sm" onclick="event.preventDefault(); cls_commanddata.changeRequest(${command.ai_commanddata_id})">Cambiar</button>`;
+  //     }
+  //     var recipe = JSON.parse(command.tx_commanddata_recipe);
+  //     var content_recipe = '<ul>';
+  //     recipe.map((ingredient) => {
+  //       for (const index in ingredient) {
+  //         content_recipe += `<li><small>${index}</small></li>`;
+  //       }
+  //     })
+  //     content_recipe += `</ul>`;
+
+  //     if (recipe.length > 0) {
+  //       content_recipe = `
+  //         <span class="d-inline-flex gap-1">
+  //           <button class="btn btn-link text-decoration-none btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRecipe${index}" aria-expanded="false" aria-controls="collapseExample">
+  //             Ver Receta
+  //           </button>
+  //         </span>
+  //         <div class="collapse" id="collapseRecipe${index}">
+  //           <div class="card card-body text-truncate">
+  //             ${content_recipe}
+  //           </div>
+  //         </div>
+  //       `;
+  //     } else {
+  //       content_recipe = '';
+  //     }
+  //     content_command_procesed += `
+  //       <a href="#" class="list-group-item list-group-item-action ${bg_status}" aria-current="true" onclick="event.preventDefault();">
+  //         <div class="d-flex w-100 justify-content-between">
+  //           <span class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description} (${command.tx_presentation_value})</span>
+  //           ${btn}
+  //         </div>
+  //         ${content_recipe}
+  //       </a>
+  //     `;
+  //   })
+  //   content_command_procesed += `</div>`;
+  //   return { 'content': content_command_procesed, 'price': raw_price };
+  // }
+  generate_articleSplited(request_split) {
+    console.log(request_split)
+    var content_command_procesed = ``;
+    var raw_price = [];
+    request_split.map((request, request_index) => {
+      content_command_procesed += `<div class="list-group col-lg-6 mt-3">`;   
+      if (cls_general.is_empty_var(request.number) === 1) {
+        content_command_procesed += `<li class="list-group-item list-group-item-primary text-center fw-bold">${request.title} (${request.number})</li>`;
+      }else{
+        content_command_procesed += `<li class="list-group-item list-group-item-warning text-center fw-bold">${request.title}</li>`;
+      }
+
+      request.commanddata.map((command, commanddata_index) => {
+        if (command.tx_commanddata_status === 0) {
+          var bg_status = 'text-bg-warning text-body-tertiary';
+          var btn = ``;
+        } else {
+          // [{ PRICE, discount, tax, quantity }]
+          raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
+          var bg_status = '';
+          var btn = `<button type="button" class="btn btn-secondary btn-sm" onclick="event.preventDefault(); cls_commanddata.changeRequest(${request_index}, ${commanddata_index}, ${command.ai_commanddata_id})">Cambiar</button>`;
+        }
+        var recipe = JSON.parse(command.tx_commanddata_recipe);
+        var content_recipe = '<ul>';
+        recipe.map((ingredient) => {
+          for (const index in ingredient) {
+            content_recipe += `<li><small>${index}</small></li>`;
+          }
+        })
+        content_recipe += `</ul>`;
+  
+        if (recipe.length > 0) {
+          content_recipe = `
+            <span class="d-inline-flex gap-1">
+              <button class="btn btn-link text-decoration-none btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRecipe${request_index}" aria-expanded="false" aria-controls="collapseExample">
+                Ver Receta
+              </button>
+            </span>
+            <div class="collapse" id="collapseRecipe${request_index}">
+              <div class="card card-body text-truncate">
+                ${content_recipe}
+              </div>
+            </div>
+          `;
+        } else {
+          content_recipe = '';
+        }
+        content_command_procesed += `
+          <a href="#" class="list-group-item list-group-item-action ${bg_status}" aria-current="true" onclick="event.preventDefault();">
+            <div class="d-flex w-100 justify-content-between">
+              <span class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description} (${command.tx_presentation_value})</span>
+              ${btn}
+            </div>
+            ${content_recipe}
+          </a>
+        `;
+      })
+
+
+      content_command_procesed += `</div>`;
+    })
+    return { 'content': content_command_procesed, 'price': raw_price };
+  }
+  newrequest(request_index, commanddata_index, commanddata_id){
+    const Modal = bootstrap.Modal.getInstance('#splitrequestModal');
+    if (Modal) {
+      Modal.hide();
+    }
+    swal({
+      title: 'Título',
+      text: "Ingrese un título para el pedido.",
+
+      content: {
+        element: "input",
+        attributes: {
+          placeholder: "Título",
+          type: "text",
+        },
+      },
+    })
+    .then((request_title) => {
+      if (cls_general.is_empty_var(request_title) === 0) {
+        return swal("Debe ingresar un título.");
+      }
+
+      if (request_index === 0 && cls_request.request_split[request_index].commanddata.length === 1){ cls_general.shot_toast_bs("No puede vaciar el pedido principal."); return false; };
+      cls_request.request_split.push({ title: request_title, commanddata: [] })
+      cls_request.add_commanddata(request_index, commanddata_index, cls_request.request_split.length - 1)
+      cls_request.remove_commanddata(request_index,commanddata_index);
+
+      var content_commandList = cls_request.generate_articleSplited(cls_request.request_split);
+      document.getElementById('commandList').innerHTML = content_commandList.content;
+    });
+  }
+  moveRequest(request_index, commanddata_index, goal_index){
+    const Modal = bootstrap.Modal.getInstance('#splitrequestModal');
+    if (Modal) {
+      Modal.hide();
+    }
+    if (request_index === 0 && cls_request.request_split[request_index].commanddata.length === 1) { cls_general.shot_toast_bs("No puede vaciar el pedido principal.", { bg: 'text-bg-warning' }); return false; };
+    cls_request.add_commanddata(request_index, commanddata_index, goal_index)
+    cls_request.remove_commanddata(request_index, commanddata_index);
+
+    var content_commandList = cls_request.generate_articleSplited(cls_request.request_split);
+    document.getElementById('commandList').innerHTML = content_commandList.content;
+
+  }
+  add_commanddata(request_index, commanddata_index, goal){
+    var move_commanddata = cls_request.request_split[request_index].commanddata[commanddata_index]
+    cls_request.request_split[goal].commanddata.push(move_commanddata);
+  }
+  remove_commanddata(request_index,commanddata_index){
+    cls_request.request_split[request_index].commanddata.splice(commanddata_index,1);
+  }
+  save_split(){
+    var url = '/request/split/';
+    var method = 'POST';
+    var body = JSON.stringify({ a: cls_request.request_split });
+    var funcion = function (obj) {
+      if (obj.status === 'success') {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+        window.location.href = '/request';
+      } else {
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+      }
+    }
+    cls_general.async_laravel_request(url, method, funcion, body);
+  }
 
   // API METHODS
   async api_login() {
@@ -491,7 +747,6 @@ class class_request {
     content += '</ul>';
     return { content: content, counter: counter };
   }
-
 }
 class class_article {
   constructor(article_list){
@@ -540,6 +795,8 @@ class class_command{
     this.command_procesed = [];
   }
   index(request_info, table_slug){
+    cls_request.request_opened = request_info;
+
     var request_slug = '';
     if (request_info != null) {
       var key = Object.keys(request_info);
@@ -651,9 +908,6 @@ class class_command{
           </div>
         </div>
 
-
-
-
         <div class="col-md-12 text-center d-md-block d-lg-none">
           <div class="row">
             <div class="col-md-4 text-center">
@@ -684,20 +938,21 @@ class class_command{
           </div>
         </div>
 
-
-
-
         <div class="col-md-12 col-lg-6">
           <div class="row">
             <div class="col-12 col-lg-8">
               <span>Listado de Comandas</span>
             </div>
             <div class="col-12 col-lg-4">
-              <button class="badge btn btn-info" onclick="cls_request.print('${request_slug}')">
+              <button class="badge btn btn-info" onclick="cls_request.print('${request_slug}')" title="Imprimir">
                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
                   <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
                   <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
                 </svg>
+              </button>
+              &nbsp;
+              <button class="badge btn btn-success" onclick="cls_request.split('${table_slug}','${request_slug}')" title="Dividir Pedido">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M246.6 150.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l96-96c12.5-12.5 32.8-12.5 45.3 0l96 96c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L352 109.3 352 384c0 35.3 28.7 64 64 64l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-70.7 0-128-57.3-128-128c0-35.3-28.7-64-64-64l-114.7 0 41.4 41.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0l-96-96c-12.5-12.5-12.5-32.8 0-45.3l96-96c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3L109.3 256 224 256c23.3 0 45.2 6.2 64 17.1l0-163.9-41.4 41.4z"/></svg>
               </button>
             </div>
             <div id="commandList" class="col-sm-12 v_scrollable" style="height: 70vh">
@@ -1126,7 +1381,6 @@ class class_command{
       }else{
         content_recipe = '';
       }
-
       content_command_procesed += `
         <a href="#" class="list-group-item list-group-item-action ${bg_status}" aria-current="true" onclick="event.preventDefault();">
           <div class="d-flex w-100 justify-content-between">
@@ -2204,5 +2458,37 @@ class class_commanddata{
         }
         cls_general.async_laravel_request(url, method, funcion, body);
       });
+  }
+  changeRequest(request_index, commanddata_index, commanddata_id){
+    console.log(cls_request.request_split)
+    var content = `
+      <div class="list-group">
+        <a href="#" class="list-group-item list-group-item-action text-center" onclick="cls_request.newrequest(${request_index},${commanddata_index}, ${commanddata_id})" > Nuevo Pedido </a >
+    `;
+    cls_request.request_split.map((req,goal_index) =>  {
+      if (cls_general.is_empty_var(req.number) === 1) {
+        content += `
+          <a href="#" class="list-group-item list-group-item-action active" aria-current="true" onclick="cls_request.moveRequest(${request_index},${commanddata_index},${goal_index})">
+            ${req.title} (${req.number})
+          </a>
+        `;
+      }else{
+        content += `<a href="#" class="list-group-item list-group-item-action" onclick="cls_request.moveRequest(${request_index},${commanddata_index},${goal_index})">${req.title}</a>`;
+      }
+    })
+    content += `</div>`;
+
+    var footer = `
+      <div class="row">
+        <div class="col-sm-12">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('splitRequest_title').innerHTML = 'Seleccionar Pedido';
+    document.getElementById('splitRequest_content').innerHTML = content;
+    document.getElementById('splitRequest_footer').innerHTML = footer;
+    const modal = new bootstrap.Modal('#splitrequestModal', {})
+    modal.show();
   }
 }
