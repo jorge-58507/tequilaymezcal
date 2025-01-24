@@ -1896,8 +1896,8 @@ class class_price{
     if (cls_general.is_empty_var(presentation_id) === 0) {
       cls_general.shot_toast_bs('Debe seleccionar la presentaci&oacute;n.', { bg: 'text-bg-warning' }); return false;
     }
-    if (cls_general.is_empty_var(pOne) === 0) {
-      cls_general.shot_toast_bs('Debe ingresar el primer precio.', { bg: 'text-bg-warning' }); return false;
+    if (cls_general.is_empty_var(pThree) === 0) {
+      cls_general.shot_toast_bs('Debe ingresar el precio standard.', { bg: 'text-bg-warning' }); return false;
     }
     var url = '/price/'; 
     var method = 'POST';

@@ -54,9 +54,9 @@ class priceController extends Controller
      */
     public function store(Request $request)
     {
-        $pOne = $request->input('a');
-        $pTwo = $request->input('b');
-        $pThree = $request->input('c');
+        $pOne   = (empty($request->input('a'))) ? 0.00 : $request->input('a');
+        $pTwo   = (empty($request->input('b'))) ? 0.00 : $request->input('b');
+        $pThree = (empty($request->input('c'))) ? 0.00 : $request->input('c');
         $article_slug = $request->input('e');
         $presentation_id = $request->input('f');
         // $raw_recipe = $request->input('g');
