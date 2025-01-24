@@ -78,6 +78,9 @@ class productController extends Controller
         $tm_product->tx_product_slug = time().str_replace(' ','', $request->input('d'));
         $tm_product->save();
 
+        $productwarehouseController = new productwarehouseController;
+        $productwarehouseController->save($tm_product->ai_product_id, 1, $request->input('b'), 0, $request->input('f'), $request->input('g'));
+
         // GUARDAR MEDIDA
         $measureproductController = new measureproductController;
         $measureproductController->add($tm_product->ai_product_id,$request->input('l'),1);

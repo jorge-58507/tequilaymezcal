@@ -3482,7 +3482,6 @@ class class_creditnote{
     var i = '';
     cls_creditnote.selected.find((commanddata, index) => { if (commanddata.commanddata_id === commanddata_id) { i = index; } })
     
-    // var selected = cls_creditnote.selected.find((commanddata, index) => { if (commanddata_id == commanddata.commanddata_id) { return index } });
     if (cls_general.is_empty_var(i) === 1) {
       cls_creditnote.selected.splice(i,1);
     }
@@ -3718,8 +3717,6 @@ class class_cashregister{
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-
-    // cls_general.print_html('/print_cashregister/'+cashregister_id);
   }
 
   create(){
@@ -4175,7 +4172,7 @@ class class_client{
         var needles = str.split(' ');
         var raw_filtered = [];
         for (var i in haystack) {
-          if (i == limit) { break; }
+          if (raw_filtered.length === parseInt(limit)) { break; }
           var ocurrencys = 0;
           for (const a in needles) {
             if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }

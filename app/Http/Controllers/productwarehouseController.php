@@ -15,14 +15,14 @@ class productwarehouseController extends Controller
         $user = $request->user();
         $qry_product = tm_product::where('ai_product_id', $request->input('c'));
         if ($qry_product->count() === 0) {
-            return response()->json(['status'=>'failed','message'=>'Producto no existe.'],400);
+            return response()->json(['status' => 'failed', 'message' => 'Producto no existe.'], 400);
         }
         $rs_product = $qry_product->first();
 
-        $qry = tm_productwarehouse::where('productwarehouse_ai_product_id',$request->input('c'))->where('productwarehouse_ai_warehouse_id',$request->input('b'));
+        $qry = tm_productwarehouse::where('productwarehouse_ai_product_id', $request->input('c'))->where('productwarehouse_ai_warehouse_id', $request->input('b'));
         if ($qry->count() === 0) {
-            
-            $qry_fromwarehouse = tm_productwarehouse::where('productwarehouse_ai_warehouse_id',$request->input('f'))->where('productwarehouse_ai_product_id',$request->input('c'));
+
+            $qry_fromwarehouse = tm_productwarehouse::where('productwarehouse_ai_warehouse_id', $request->input('f'))->where('productwarehouse_ai_product_id', $request->input('c'));
             $rs_fromwarehouse = $qry_fromwarehouse->first();
             $quantity_from = $rs_fromwarehouse['tx_productwarehouse_quantity'] - $request->input('a');
             $qry_fromwarehouse->update(['tx_productwarehouse_quantity' => $quantity_from]);
@@ -30,34 +30,26 @@ class productwarehouseController extends Controller
             $minimun = (!empty($request->input('d'))) ? $request->input('d') : 0;
             $maximun = (!empty($request->input('e'))) ? $request->input('e') : 10000;
 
-            $tm_productwarehouse = new tm_productwarehouse;
-            $tm_productwarehouse->productwarehouse_ai_user_id       = $user->id;
-            $tm_productwarehouse->productwarehouse_ai_product_id    = $request->input('c');
-            $tm_productwarehouse->productwarehouse_ai_warehouse_id  = $request->input('b');
-            $tm_productwarehouse->tx_productwarehouse_description   = $rs_product['tx_product_value'];
-            $tm_productwarehouse->tx_productwarehouse_quantity      = $request->input('a');
-            $tm_productwarehouse->tx_productwarehouse_minimun       = $minimun;
-            $tm_productwarehouse->tx_productwarehouse_maximun       = $maximun;
-            $tm_productwarehouse->save();
+            $productwarehouse_id = $this->save($request->input('c'), $request->input('b'), $rs_product['tx_product_value'], $request->input('a'), $minimun, $maximun);
 
             // GUARDAR WAREHOUSETRANSFER
             $tm_warehousetransfer = new tm_warehousetransfer;
-            $tm_warehousetransfer-> warehousetransfer_ai_user_id                = $user->id;
-            $tm_warehousetransfer-> warehousetransfer_ai_product_id             = $request->input('c');
-            $tm_warehousetransfer-> warehousetransfer_ai_productwarehouse_id    = $tm_productwarehouse->ai_productwarehouse_id;
-            $tm_warehousetransfer-> tx_warehousetransfer_quantity               = $request->input('a');
-            $tm_warehousetransfer-> tx_warehousetransfer_origin                 = $request->input('f');
-            $tm_warehousetransfer-> tx_warehousetransfer_originquantity         = $rs_fromwarehouse['tx_productwarehouse_quantity'];
-            $tm_warehousetransfer-> tx_warehousetransfer_destination            = $request->input('b');
-            $tm_warehousetransfer-> tx_warehousetransfer_destinationquantity    = 0;
+            $tm_warehousetransfer->warehousetransfer_ai_user_id = $user->id;
+            $tm_warehousetransfer->warehousetransfer_ai_product_id = $request->input('c');
+            $tm_warehousetransfer->warehousetransfer_ai_productwarehouse_id = $productwarehouse_id;
+            $tm_warehousetransfer->tx_warehousetransfer_quantity = $request->input('a');
+            $tm_warehousetransfer->tx_warehousetransfer_origin = $request->input('f');
+            $tm_warehousetransfer->tx_warehousetransfer_originquantity = $rs_fromwarehouse['tx_productwarehouse_quantity'];
+            $tm_warehousetransfer->tx_warehousetransfer_destination = $request->input('b');
+            $tm_warehousetransfer->tx_warehousetransfer_destinationquantity = 0;
             $tm_warehousetransfer->save();
 
             //ANSWER
-            $rs_productwarehouse = tm_productwarehouse::select('tm_productwarehouses.ai_productwarehouse_id','tm_productwarehouses.tx_productwarehouse_description','tm_productwarehouses.tx_productwarehouse_quantity','tm_productwarehouses.tx_productwarehouse_minimun','tm_productwarehouses.tx_productwarehouse_maximun','tm_products.tx_product_code','tm_warehouses.tx_warehouse_value')->join('tm_warehouses','tm_warehouses.ai_warehouse_id','tm_productwarehouses.productwarehouse_ai_warehouse_id')->join('tm_products','tm_products.ai_product_id', 'tm_productwarehouses.productwarehouse_ai_product_id')->orderby('productwarehouse_ai_warehouse_id')->orderby('tx_productwarehouse_description')->get();
-            return response()->json(['status'=>'success','message'=>'Agregado correctamente.', 'data' => ['all' => $rs_productwarehouse]]);
-        }else{
+            $rs_productwarehouse = tm_productwarehouse::select('tm_productwarehouses.ai_productwarehouse_id', 'tm_productwarehouses.tx_productwarehouse_description', 'tm_productwarehouses.tx_productwarehouse_quantity', 'tm_productwarehouses.tx_productwarehouse_minimun', 'tm_productwarehouses.tx_productwarehouse_maximun', 'tm_products.tx_product_code', 'tm_warehouses.tx_warehouse_value')->join('tm_warehouses', 'tm_warehouses.ai_warehouse_id', 'tm_productwarehouses.productwarehouse_ai_warehouse_id')->join('tm_products', 'tm_products.ai_product_id', 'tm_productwarehouses.productwarehouse_ai_product_id')->orderby('productwarehouse_ai_warehouse_id')->orderby('tx_productwarehouse_description')->get();
+            return response()->json(['status' => 'success', 'message' => 'Agregado correctamente.', 'data' => ['all' => $rs_productwarehouse]]);
+        } else {
 
-            $qry_fromwarehouse = tm_productwarehouse::where('productwarehouse_ai_warehouse_id',$request->input('f'))->where('productwarehouse_ai_product_id',$request->input('c'));
+            $qry_fromwarehouse = tm_productwarehouse::where('productwarehouse_ai_warehouse_id', $request->input('f'))->where('productwarehouse_ai_product_id', $request->input('c'));
             $rs_fromwarehouse = $qry_fromwarehouse->first();
             $quantity_from = $rs_fromwarehouse['tx_productwarehouse_quantity'] - $request->input('a');
             $qry_fromwarehouse->update(['tx_productwarehouse_quantity' => $quantity_from]);
@@ -68,22 +60,41 @@ class productwarehouseController extends Controller
 
             // GUARDAR WAREHOUSETRANSFER
             $tm_warehousetransfer = new tm_warehousetransfer;
-            $tm_warehousetransfer-> warehousetransfer_ai_user_id                = $user->id;
-            $tm_warehousetransfer-> warehousetransfer_ai_product_id             = $request->input('c');
-            $tm_warehousetransfer-> warehousetransfer_ai_productwarehouse_id    = $rs['ai_productwarehouse_id'];
-            $tm_warehousetransfer-> tx_warehousetransfer_quantity               = $request->input('a');
-            $tm_warehousetransfer-> tx_warehousetransfer_origin                 = $request->input('f');
-            $tm_warehousetransfer-> tx_warehousetransfer_originquantity         = $rs_fromwarehouse['tx_productwarehouse_quantity'];
-            $tm_warehousetransfer-> tx_warehousetransfer_destination            = $request->input('b');
-            $tm_warehousetransfer-> tx_warehousetransfer_destinationquantity    = $rs['tx_productwarehouse_quantity'];
+            $tm_warehousetransfer->warehousetransfer_ai_user_id = $user->id;
+            $tm_warehousetransfer->warehousetransfer_ai_product_id = $request->input('c');
+            $tm_warehousetransfer->warehousetransfer_ai_productwarehouse_id = $rs['ai_productwarehouse_id'];
+            $tm_warehousetransfer->tx_warehousetransfer_quantity = $request->input('a');
+            $tm_warehousetransfer->tx_warehousetransfer_origin = $request->input('f');
+            $tm_warehousetransfer->tx_warehousetransfer_originquantity = $rs_fromwarehouse['tx_productwarehouse_quantity'];
+            $tm_warehousetransfer->tx_warehousetransfer_destination = $request->input('b');
+            $tm_warehousetransfer->tx_warehousetransfer_destinationquantity = $rs['tx_productwarehouse_quantity'];
             $tm_warehousetransfer->save();
 
             //ANSWER
-            $rs_productwarehouse = tm_productwarehouse::select('tm_productwarehouses.ai_productwarehouse_id','tm_productwarehouses.tx_productwarehouse_description','tm_productwarehouses.tx_productwarehouse_quantity','tm_productwarehouses.tx_productwarehouse_minimun','tm_productwarehouses.tx_productwarehouse_maximun','tm_products.tx_product_code','tm_warehouses.tx_warehouse_value')->join('tm_warehouses','tm_warehouses.ai_warehouse_id','tm_productwarehouses.productwarehouse_ai_warehouse_id')->join('tm_products','tm_products.ai_product_id', 'tm_productwarehouses.productwarehouse_ai_product_id')->orderby('productwarehouse_ai_warehouse_id')->orderby('tx_productwarehouse_description')->get();
-            return response()->json(['status'=>'success','message'=>'El producto ya existe, se actualizó la cantidad.', 'data' => ['all' => $rs_productwarehouse]]);
+            $rs_productwarehouse = tm_productwarehouse::select('tm_productwarehouses.ai_productwarehouse_id', 'tm_productwarehouses.tx_productwarehouse_description', 'tm_productwarehouses.tx_productwarehouse_quantity', 'tm_productwarehouses.tx_productwarehouse_minimun', 'tm_productwarehouses.tx_productwarehouse_maximun', 'tm_products.tx_product_code', 'tm_warehouses.tx_warehouse_value')->join('tm_warehouses', 'tm_warehouses.ai_warehouse_id', 'tm_productwarehouses.productwarehouse_ai_warehouse_id')->join('tm_products', 'tm_products.ai_product_id', 'tm_productwarehouses.productwarehouse_ai_product_id')->orderby('productwarehouse_ai_warehouse_id')->orderby('tx_productwarehouse_description')->get();
+            return response()->json(['status' => 'success', 'message' => 'El producto ya existe, se actualizó la cantidad.', 'data' => ['all' => $rs_productwarehouse]]);
         }
-        
 
+
+    }
+
+    public function save($product_id, $warehouse_id, $description, $quantity, $minimun, $maximun)
+    {
+
+        $user = Auth()->user();
+
+        $tm_productwarehouse = new tm_productwarehouse;
+        $tm_productwarehouse->productwarehouse_ai_user_id = $user->id;
+        $tm_productwarehouse->productwarehouse_ai_product_id = $product_id;
+        $tm_productwarehouse->productwarehouse_ai_warehouse_id = $warehouse_id;
+        $tm_productwarehouse->tx_productwarehouse_description = $description;
+        $tm_productwarehouse->tx_productwarehouse_quantity = $quantity;
+        $tm_productwarehouse->tx_productwarehouse_minimun = $minimun;
+        $tm_productwarehouse->tx_productwarehouse_maximun = $maximun;
+        $tm_productwarehouse->save();
+
+
+        return $tm_productwarehouse->ai_productwarehouse_id;
     }
 
     public function show($id){
