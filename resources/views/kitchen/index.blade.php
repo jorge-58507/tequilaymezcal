@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title','Cocina')
+@section('title', 'Cocina')
 @section('css')
   <link rel="stylesheet" href="{{ asset('attached/css/jquery-ui.css') }}">
 @endsection
@@ -28,6 +28,9 @@
     
 
     <div class="col-xs-12 v_scrollable bb_1 border_gray" style="height: 100vh;">
+      <audio id="notification_bell" controls style="display: none;">
+        <source type="audio/wav" src="{{ asset('attached/mp3/knife.mp3') }}">
+      </audio>
       <nav>
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
           <button class="nav-link active" id="btn_tab_ready" data-bs-toggle="tab" data-bs-target="#tab_ready" type="button" role="tab" aria-controls="nav-home" aria-selected="true" onclick="cls_kitchen.reload()">PENDIENTE</button>
@@ -95,6 +98,13 @@
       setInterval(() => {
         cls_kitchen.reload();
       }, 15000);
+
+      setInterval(() => {
+        if (cls_kitchen.notready.length > 0) {
+          var audio = document.getElementById("notification_bell");
+          audio.play();
+        }
+      }, 60000);
 
 		});
 
