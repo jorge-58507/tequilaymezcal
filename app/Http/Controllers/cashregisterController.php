@@ -279,11 +279,6 @@ class cashregisterController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
-
         $printer -> text($rs_option['SOCIETY']."\n");
         $printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
         $printer -> text($rs_option['DIRECCION']."\n");
@@ -310,6 +305,7 @@ class cashregisterController extends Controller
         $printer -> text("T. Credito: B/".number_format($incomeCredit - $returnCredit, 2)."\n");
         $printer -> text("Yappy: B/".number_format($incomeYappi - $returnYappi, 2)."\n");
         $printer -> text("Nequi: B/".number_format($incomeNequi - $returnNequi, 2)."\n");
+        $printer -> text("Otros: B/".number_format($incomeAnother - $returnAnother, 2)."\n");
         $printer -> text("Cupón: B/".number_format($incomeGiftcard - $returnGiftcard, 2)."\n");
         
         $printer -> feed(1);
@@ -369,7 +365,6 @@ class cashregisterController extends Controller
         
         /* Start the printer */
         $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
-        // $printer = new Printer($connector);
         
         // PRINT TOP DATE
         $printer -> setJustification(Printer::JUSTIFY_RIGHT);
