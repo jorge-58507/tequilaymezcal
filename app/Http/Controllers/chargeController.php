@@ -73,6 +73,16 @@ class chargeController extends Controller
         //
     }
 
+    public function checkInternet() {
+        $connected = @fsockopen("www.google.com", 80); 
+        if ($connected) {
+            fclose($connected);
+            return true; 
+        }
+        return false;
+    }
+
+
     /**
      * Store a newly created resource in storage.
      *
@@ -180,6 +190,10 @@ class chargeController extends Controller
             $tm_point->tx_point_quantity = $point_quantity;
             $tm_point->tx_point_quantityafter = $point_after;
             $tm_point->save();
+        }
+
+        if (!$this->checkInternet()) {
+            return response()->json(['status' => 'failed', 'message' => 'No hay conexion a internet.']);
         }
 
         $charge_data = $this->showIt($charge_slug);
