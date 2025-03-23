@@ -141,7 +141,7 @@ class clientController extends Controller
         }
         $check_cif = tm_client::where('tx_client_cif',$request->input('b'))->where('tx_client_slug','!=',$slug)->count();
         if ($check_cif > 0) {
-            return response()->json(['status'=>'failed','message'=>'La C&eacute;dula/Pasaporte ya existe.']);
+            return response()->json(['status'=>'failed','message'=>'La C&eacute;dula/Pasaporte ya existe. CIF:'.$check_cif]);
         }
         $taxpayer = substr($request->input('h'),0,1);
         $type = substr($request->input('h'),1,2);

@@ -198,6 +198,33 @@ class chargeController extends Controller
 
         $charge_data = $this->showIt($charge_slug);
 
+        if ($charge_data['charge']['tx_client_birthday'] != '1970-01-01') {
+            $birthday_congrats = (date('d-m', strtotime($charge_data['charge']['tx_client_birthday'])) == date('d-m')) ? 1 : 0;
+        } else {
+            $birthday_congrats = 0;
+        }
+
+        if ($point_price > 0) {
+            $this->print_charge(
+                $charge_data['charge']['tx_charge_number'],
+                $charge_data['charge']['created_at'],
+                $charge_data['charge']['tx_client_name'],
+                $charge_data['charge']['tx_client_cif'] . ' DV' . $charge_data['charge']['tx_client_dv'],
+                $charge_data['article'],
+                $charge_data['charge']['tx_charge_nontaxable'] + $charge_data['charge']['tx_charge_taxable'],
+                $charge_data['charge']['tx_charge_discount'],
+                $charge_data['charge']['tx_charge_tax'],
+                $charge_data['charge']['tx_charge_total'],
+                $charge_data['payment'],
+                $charge_data['charge']['tx_charge_change'],
+                $charge_data['charge']['user_name'],
+                $birthday_congrats,
+                $charge_data['charge']['tx_charge_tip'],
+                $charge_data['charge']['tx_client_point'],
+            );
+            // return response()->json(['status' => 'success', 'message' => 'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
+        }
+
         $response = $this->fe_send(
             $charge_data['charge']['tx_charge_number'],
             $charge_data['charge']['created_at'],
@@ -217,19 +244,11 @@ class chargeController extends Controller
             $charge_data['payment'],
             $charge_data['charge']['tx_charge_change']
         );
-//                                                                        return response()->json(['status' => 'failed', 'message' => $response]);
 
+        
         $xml = simplexml_load_string(str_replace(["s:", "a:", "i:"], "", $response));
         $xml = json_decode(json_encode($xml), true);
         $responseFE = $xml['Body']['EnviarResponse']['EnviarResult'];
-
-
-
-        if ($charge_data['charge']['tx_client_birthday'] != '1970-01-01') {
-            $birthday_congrats = (date('d-m', strtotime($charge_data['charge']['tx_client_birthday'])) == date('d-m')) ? 1 : 0;
-        } else {
-            $birthday_congrats = 0;
-        }
 
         if ($responseFE['resultado'] === 'error') {
             return response()->json(['status' => 'failed', 'message' => $responseFE['mensaje']]);
@@ -816,8 +835,6 @@ class chargeController extends Controller
             $printer->text("FELICIDADES\n");
             $printer->text("EN TU CUMPLEAÑOS" . "\n");
             $printer->selectPrintMode();
-            // $printer -> text("De parte de Jade Café"."\n");
-            // $printer -> text("le obsequiamos un Café."."\n");
         }
 
         /* Footer */
