@@ -1438,7 +1438,6 @@ class class_charge{
     var url = cls_charge.api_url + 'APIlogin';
     var method = 'POST';
     var body = JSON.stringify({ email: 'apirequest@mail.com', password: 'requestable7812' });
-    // var body = JSON.stringify({ email: 'requestapi@mail.com', password: 'requestable7812' });
     var funcion = function (obj) {
       if (obj.data.status === 'success') {
         cls_charge.api_token = obj.data.token;
@@ -1903,7 +1902,8 @@ class class_command{
         <select class="form-select" id="articlePrice">`;
         raw.map((price) => {
           var p = parseFloat(price);
-          if (price > 0.1) {
+          if (!isNaN(p)) {
+          // if (price > 0.1) {
             content += `<option value="${p}">${p.toFixed(2)}</option>`;
           }
         })
@@ -2002,8 +2002,6 @@ class class_command{
     document.getElementById('article_selected').innerHTML = content.content;
     document.getElementById('span_commandTotal').innerHTML = '<h5>Total: B/ ' + content.price_sale.total + '</h5>';
   }
-
-
   generate_articleselected(command_list) {
     var content = '<div class="accordion" id="">';
     var raw_price = [];
@@ -2274,11 +2272,30 @@ class class_command{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  set_client(slug, name, exent) {
+  // set_client(slug, name, exent) {
+  //   document.getElementById('requestClient').setAttribute('alt', exent);
+  //   document.getElementById('requestClient').setAttribute('name', slug);
+  //   document.getElementById('requestClient').value = name;
+
+  //   const Modal = bootstrap.Modal.getInstance('#clientModal');
+  //   if (Modal != null) {
+  //     Modal.hide();
+  //   }
+
+  // }
+  set_client(slug, name, exent, birthday = '') {
+    console.log("llamando")
     document.getElementById('requestClient').setAttribute('alt', exent);
     document.getElementById('requestClient').setAttribute('name', slug);
     document.getElementById('requestClient').value = name;
-
+    var today = cls_general.getDate();
+    var raw_birthday = birthday.split("-");
+    var split_birthday = raw_birthday[2] + '/' + raw_birthday[1];
+    var raw_today = today[0].split("-");
+    var split_today = raw_today[2] + '/' + raw_today[1]
+    if (birthday != '1970-01-01' && split_birthday === split_today) {
+      swal("El cliente seleccionado cumpleaños hoy.");
+    }
     const Modal = bootstrap.Modal.getInstance('#clientModal');
     if (Modal != null) {
       Modal.hide();
@@ -4374,75 +4391,81 @@ class class_client{
       cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
       return false;
     }
-
-    var method = 'POST';
-    var url = '/client/';
-    var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
-    var funcion = function (obj) {
-      if (obj.status === 'success') {
-        cls_client.client_list = obj.data.client_list;
-        cls_client.index()
-      } else {
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-      }
-    }
-    cls_general.async_laravel_request(url, method, funcion, body);
-  }
-  update(client_slug) {
-    var name = cls_general.set_name(document.getElementById('clientName').value);
-    var cif = document.getElementById('clientCIF').value;
-    var dv = document.getElementById('clientDV').value;
-    var telephone = document.getElementById('clientTelephone').value;
-    var email = document.getElementById('clientEmail').value;
-    var direction = document.getElementById('clientDirection').value;
-    var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
-    var taxpayer = document.getElementById('clientTaxpayer').value;
-    var status = (document.getElementById('clientStatus').checked) ? 1 : 0;
-
-    if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(cif) === 0) {
-      cls_general.shot_toast_bs('El campo nombre y C&eacute;dula no pueden estar vac&iacute;os', { bg: 'text-bg-warning' });
-      return false;
-    }
-    if (isNaN(dv)) {
-      cls_general.shot_toast_bs('D&iacute;gito verificador deben ser numeros', { bg: 'text-bg-warning' });
-      return false;
-    }
-    if (cls_general.is_empty_var(email) === 1 && cls_general.isEmail(email) != true) {
-      cls_general.shot_toast_bs('Verifique el Email', { bg: 'text-bg-warning' });
-      return false;
-    }
-    if (taxpayer != "102") {
-      var pattern = /\d/
-      if (cls_general.is_empty_var(dv) === 0) {
-        cls_general.shot_toast_bs('Falta ingresar el DV.', { bg: 'text-bg-warning' });
-        return false;
-      }
-      if (cls_general.is_empty_var(email) === 0) {
-        cls_general.shot_toast_bs('Debe ingresar el Email', { bg: 'text-bg-warning' });
-        return false;
-      }
+    var request_client = document.getElementById('requestClient').name;
+    if (cls_general.is_empty_var(request_client) === 0 || request_client == "001") {
+      var method = 'POST';
+      var url = '/client/';
     } else {
-      var pattern = /^[1-9]-?\d{2,}-?\d{2,}$/
+      var method = 'PUT';
+      var url = '/client/' + request_client;
     }
-    if (pattern.test(cif) != true) {
-      cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
-      return false;
-    }
-
-    var method = 'PUT';
-    var url = '/client/' + client_slug;
     var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
     var funcion = function (obj) {
       if (obj.status === 'success') {
         cls_client.client_list = obj.data.client_list;
-        cls_client.index()
+        cls_command.set_client(obj.data.client.tx_client_slug, obj.data.client.tx_client_name, obj.data.client.tx_client_exempt, `'${obj.data.client.tx_client_birthday}'`).
+        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
       } else {
         cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
       }
     }
     cls_general.async_laravel_request(url, method, funcion, body);
-
   }
+  // update(client_slug) {
+  //   var name = cls_general.set_name(document.getElementById('clientName').value);
+  //   var cif = document.getElementById('clientCIF').value;
+  //   var dv = document.getElementById('clientDV').value;
+  //   var telephone = document.getElementById('clientTelephone').value;
+  //   var email = document.getElementById('clientEmail').value;
+  //   var direction = document.getElementById('clientDirection').value;
+  //   var exempt = (document.getElementById('clientExempt').checked) ? 1 : 0;
+  //   var taxpayer = document.getElementById('clientTaxpayer').value;
+  //   var status = (document.getElementById('clientStatus').checked) ? 1 : 0;
+
+  //   if (cls_general.is_empty_var(name) === 0 || cls_general.is_empty_var(cif) === 0) {
+  //     cls_general.shot_toast_bs('El campo nombre y C&eacute;dula no pueden estar vac&iacute;os', { bg: 'text-bg-warning' });
+  //     return false;
+  //   }
+  //   if (isNaN(dv)) {
+  //     cls_general.shot_toast_bs('D&iacute;gito verificador deben ser numeros', { bg: 'text-bg-warning' });
+  //     return false;
+  //   }
+  //   if (cls_general.is_empty_var(email) === 1 && cls_general.isEmail(email) != true) {
+  //     cls_general.shot_toast_bs('Verifique el Email', { bg: 'text-bg-warning' });
+  //     return false;
+  //   }
+  //   if (taxpayer != "102") {
+  //     var pattern = /\d/
+  //     if (cls_general.is_empty_var(dv) === 0) {
+  //       cls_general.shot_toast_bs('Falta ingresar el DV.', { bg: 'text-bg-warning' });
+  //       return false;
+  //     }
+  //     if (cls_general.is_empty_var(email) === 0) {
+  //       cls_general.shot_toast_bs('Debe ingresar el Email', { bg: 'text-bg-warning' });
+  //       return false;
+  //     }
+  //   } else {
+  //     var pattern = /^[1-9]-?\d{2,}-?\d{2,}$/
+  //   }
+  //   if (pattern.test(cif) != true) {
+  //     cls_general.shot_toast_bs('Verifique la C&eacute;dula/RUC', { bg: 'text-bg-warning' });
+  //     return false;
+  //   }
+
+  //   var method = 'PUT';
+  //   var url = '/client/' + client_slug;
+  //   var body = JSON.stringify({ a: name, b: cif, c: dv, d: telephone, e: email, f: direction, g: exempt, h: taxpayer, i: status });
+  //   var funcion = function (obj) {
+  //     if (obj.status === 'success') {
+  //       cls_client.client_list = obj.data.client_list;
+  //       cls_client.index()
+  //     } else {
+  //       cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+  //     }
+  //   }
+  //   cls_general.async_laravel_request(url, method, funcion, body);
+
+  // }
   delete(client_slug) {
     var url = '/client/' + client_slug; var method = 'DELETE';
     var body = "";

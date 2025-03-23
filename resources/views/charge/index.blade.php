@@ -685,7 +685,8 @@
 		var api_url = <?php echo json_encode($data['api_url']); ?>;
     const cls_charge = new class_charge(canceled_request,api_url);
 
-    const cls_command = new class_command;
+    // const cls_command = new class_command;
+		var cls_command = new class_command;
 
 		var paymentmethod = JSON.parse('<?php echo json_encode($data['paymentmethod']) ?>');
 		const cls_paymentmethod = new class_paymentmethod(paymentmethod);
