@@ -1407,6 +1407,10 @@ class class_command{
     cls_command.render_articleselected();
   }
   save(request_slug, table_slug){ //ESTA FUNCION SOLO ABRE EL MODAL
+    var btn_commandprocess = document.getElementById('btn_commandprocess');
+    if (btn_commandprocess) {
+      cls_general.disable_submit(btn_commandprocess,1);
+    }
     var command_list = cls_command.command_list;
     if (command_list < 1) {
       cls_general.shot_toast_bs('Seleccione los art&iacute;culos.',{bg: 'text-bg-warning'});

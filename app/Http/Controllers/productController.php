@@ -220,8 +220,7 @@ class productController extends Controller
                     ->join('tm_products','tm_products.ai_product_id','rel_measure_products.measure_product_ai_product_id')
                     ->where('measure_product_ai_measure_id',$raw_explode[1])->where('measure_product_ai_product_id',$raw_explode[2])->first();
 
-                    // $warehouse_id = (!empty($raw_explode[3])) ? $raw_explode[3] : 2;
-                    $warehouse_id = (!empty($raw_explode[3]) && gettype($raw_explode[3]) === 'integer') ? $raw_explode[3] : 2;
+                    $warehouse_id = (!empty($raw_explode[3]) && ctype_digit($raw_explode[3])) ? (int)$raw_explode[3] : 2;
                     $qry_productwarehouse = tm_productwarehouse::select('tm_productwarehouses.tx_productwarehouse_quantity')->where('productwarehouse_ai_product_id',$raw_explode[2])->where('productwarehouse_ai_warehouse_id',$warehouse_id);
                     if ($consumption === 'Local') {
                         if (!empty($raw_explode[5])) {
@@ -235,7 +234,10 @@ class productController extends Controller
                         }else{
                             if ($rs_measureproduct['tx_product_discountable'] == 1) {
                                 $rs_productwarehouse = $qry_productwarehouse->first();
-                                $quantity = $rs_productwarehouse['tx_productwarehouse_quantity']-(($raw_explode[0]*$article['quantity'])*$rs_measureproduct['tx_measure_product_relation']);
+                                $quantity = $rs_productwarehouse['tx_productwarehouse_quantity']-
+                                (($raw_explode[0]*
+                                $article['quantity'])*
+                                $rs_measureproduct['tx_measure_product_relation']);
                                 $qry_productwarehouse->update(['tx_productwarehouse_quantity' => $quantity]);
                             }
                         }
