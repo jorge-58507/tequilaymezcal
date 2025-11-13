@@ -396,7 +396,7 @@ class printController extends Controller
 								<td>'.number_format($returnYappi, 2).'</td>
 							</tr>
 							<tr>
-								<th>Nequi</th>
+								<th>PedidosYa</th>
 								<td>'.number_format($incomeNequi - $returnNequi, 2).'</td>
 								<td>'.number_format($incomeNequi, 2).'</td>
 								<td>'.number_format($returnNequi, 2).'</td>
@@ -1450,7 +1450,7 @@ class printController extends Controller
 											B/ '.number_format($raw_paymenttotal[5],2).'
 										</td>
 										<td>
-											<strong>Nequi</strong><br>
+											<strong>PedidosYa</strong><br>
 											B/ '.number_format($raw_paymenttotal[6],2).'
 										</td>
 										<td>

@@ -24,6 +24,9 @@ Route::get('/request', function () {
     return view('request.index');
 })->name('request')->middleware('auth');
 Route::get('/report', function () {
+    if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
+        return redirect() -> route('request.index');
+    }
     return view('report.index');
 })->middleware('auth');
 

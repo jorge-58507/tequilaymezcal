@@ -304,7 +304,7 @@ class cashregisterController extends Controller
         $printer -> text("T. Clave: B/".number_format($incomeDebit - $returnDebit, 2)."\n");
         $printer -> text("T. Credito: B/".number_format($incomeCredit - $returnCredit, 2)."\n");
         $printer -> text("Yappy: B/".number_format($incomeYappi - $returnYappi, 2)."\n");
-        $printer -> text("Nequi: B/".number_format($incomeNequi - $returnNequi, 2)."\n");
+        $printer -> text("PedidosYa: B/".number_format($incomeNequi - $returnNequi, 2)."\n");
         $printer -> text("Otros: B/".number_format($incomeAnother - $returnAnother, 2)."\n");
         $printer -> text("Cupón: B/".number_format($incomeGiftcard - $returnGiftcard, 2)."\n");
         

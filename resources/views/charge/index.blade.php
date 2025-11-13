@@ -114,7 +114,6 @@
                         <th scope="col">Salida Anulada</th>
                       </tr>
                     </thead> 
-                    {{-- HACER ESTA TABLA DE LA CAJA MENUDA, UBICAR EL DIV PARA LA LISTA DE ARQUEOS HECHOS EN E DIA --}}
                     <tbody>
                       <tr>
                         <th><span id="span_totalCashout"></span></th>
@@ -167,7 +166,7 @@
                         <td><span id="span_returnYappi"></span></td>
                       </tr>
                       <tr>
-                        <th>Nequi</th>
+                        <th>PedidosYa</th>
                         <td class="table-secondary"><span id="span_totalNequi"></span></td>
                         <td><span id="span_incomeNequi"></span></td>
                         <td><span id="span_returnNequi"></span></td>
@@ -342,7 +341,7 @@
                           <td></td>
                         </tr>
                         <tr>
-                          <th>Nequi</th>
+                          <th>PedidosYa</th>
                           <td class="table-secondary"></td>
                           <td></td>
                           <td></td>
@@ -723,7 +722,7 @@
           btn.click();
         }
       }, 60000);
-      cls_charge.api_login();
+      //cls_charge.api_login();
 		});
     var fecha = cls_general.getDate()
     document.getElementById('cashoutputDatefilter').value = cls_general.date_converter('ymd','dmy', fecha[0]);

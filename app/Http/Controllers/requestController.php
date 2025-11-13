@@ -197,11 +197,23 @@ class requestController extends Controller
     }
 
     public function getOpenRequest(){
-        $rs_openrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at','users.name as user_name')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')->join('users','users.id','tm_commands.command_ai_user_id')->where('tx_request_status',0)->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at','DESC')->get();
+        $rs_openrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at','users.name as user_name')
+        ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
+        ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')
+        ->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')
+        ->join('users','users.id','tm_commands.command_ai_user_id')
+        ->where('tx_request_status',0)->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at','DESC')->get();
         return $rs_openrequest;
     }
     public function getClosedRequest(){
-        $rs_closedrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at','users.name as user_name')->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')->join('users','users.id','tm_commands.command_ai_user_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',1)->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at','DESC')->get();
+        $rs_closedrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at','users.name as user_name')
+        ->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')
+        ->join('users','users.id','tm_commands.command_ai_user_id')
+        ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
+        ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')
+        ->where('tx_request_status',1)
+        ->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at','DESC')->get();
+        
         $commandController = new commandController; //CALCULAR EL TOTAL
         foreach ($rs_closedrequest as $a => $request) {
             $raw_command = $commandController->getByRequest($request['ai_request_id']);

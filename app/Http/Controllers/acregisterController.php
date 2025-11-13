@@ -41,7 +41,7 @@ class acregisterController extends Controller
         $type = $request->input('a');
         $code = $request->input('b');
 
-        $qry_logincode = tm_logincode::where('tx_logincode_value', $code);
+        $qry_logincode = tm_logincode::where('tx_logincode_value', $code)->where('tx_logincode_status',1); //VERIFICAR QUE EL LOGINCODE ESTE ACTIVO
         if ($qry_logincode->count() === 0) {
             return response()->json(['status' => 'failed', 'message' => 'Tarjeta no registrada.']);
         }
@@ -78,7 +78,7 @@ class acregisterController extends Controller
      */
     public function show($code)
     {
-        $qry_logincode = tm_logincode::join('users','users.email','tm_logincodes.tx_logincode_user')->where('tx_logincode_value', $code);
+        $qry_logincode = tm_logincode::join('users','users.email','tm_logincodes.tx_logincode_user')->where('tx_logincode_value', $code)->where('tx_logincode_status',1);
         if ($qry_logincode->count() === 0) {
             return response()->json(['status' => 'failed', 'message' => 'Tarjeta no registrada.']);
         }
@@ -204,15 +204,44 @@ class acregisterController extends Controller
                 $raw_date['totaltime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
 
                 //Tiempo extra
-                if ($interval_totaltime->h > 9) {
-                    $interval_totaltime->h -= 9;
-                    $raw_date['extratime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
-                }else{
-                    if ($interval_totaltime->h === 9 && $interval_totaltime->i > 0) {
-                        $interval_totaltime->h -= 9;
+                // if ($interval_totaltime->h > 8) {
+                //     $interval_totaltime->h -= 8;
+                //     $raw_date['extratime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
+                // }else{
+                //     if ($interval_totaltime->h === 8 && $interval_totaltime->i > 0) {
+                //         $interval_totaltime->h -= 8;
+                //         $raw_date['extratime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
+                //     }
+                // }
+
+                if (date('H', strtotime($raw_date['out'])) > 21) {
+                    if ($interval_totaltime->h > 7 && $interval_totaltime->i > 30) {
+                        $interval_totaltime->h -= 7;
+                        $interval_totaltime->i -= 30;
                         $raw_date['extratime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
+                    }else{
+                        if ($interval_totaltime->h === 7 && $interval_totaltime->i > 30) {
+                            $interval_totaltime->h -= 7;
+                            $interval_totaltime->i -= 30;
+                            $raw_date['extratime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
+                        }
+                    }
+                }else{
+                    if ($interval_totaltime->h > 8) {
+                        $interval_totaltime->h -= 8;
+                        $raw_date['extratime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
+                    }else{
+                        if ($interval_totaltime->h === 8 && $interval_totaltime->i > 0) {
+                            $interval_totaltime->h -= 8;
+                            $raw_date['extratime'] = date('H:i:s', strtotime($interval_totaltime->format('%H:%i')));
+                        }
                     }
                 }
+                
+
+
+
+
             }else{
                 $raw_date['asistance'] = 'No';
                 $raw_date['counter'] = $asistance;

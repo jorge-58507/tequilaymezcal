@@ -241,7 +241,7 @@ class class_report
           B/ ${cls_general.val_price(raw_paymenttotal[5], 2, 1, 1) }
         </div>
         <div class="col-sm-3">
-          <strong>Nequi</strong><br>
+          <strong>PedidosYa</strong><br>
           B/ ${cls_general.val_price(raw_paymenttotal[6], 2, 1, 1) }
         </div>
         <div class="col-sm-3">

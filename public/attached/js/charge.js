@@ -960,7 +960,7 @@ class class_charge{
       }
     });
     setInterval(() => {
-      cls_request.get_onlinependant()
+      //cls_request.get_onlinependant()
     }, 30000);
   }
   show(request_slug){
@@ -4018,7 +4018,7 @@ class class_cashregister{
               <td>${cls_general.val_price(outcome_yappi, 2, 1, 1) }</td>
             </tr>
             <tr>
-              <th>Nequi</th>
+              <th>PedidosYa</th>
               <td class="table-secondary">${cls_general.val_price(income_nequi - outcome_nequi, 2, 1, 1) }</td>
               <td>${cls_general.val_price(income_nequi, 2, 1, 1) }</td>
               <td>${cls_general.val_price(outcome_nequi, 2, 1, 1) }</td>

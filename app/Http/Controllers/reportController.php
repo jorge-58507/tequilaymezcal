@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers; 
 
 use Illuminate\Http\Request;
 
 class reportController extends Controller
 {
     public function show(Request $request){
-        
+        // if ( auth()->user()->hasAnyRole(['admin','super','cashier']) != true){ 
+        //     return redirect() -> route('request.index');
+        // }
+
         $from = $request->input('a');
         $to = $request->input('b');
         $type = $request->input('c');
