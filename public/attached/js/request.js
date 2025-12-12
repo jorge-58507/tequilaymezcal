@@ -968,6 +968,8 @@ class class_command{
       if (obj.status === 'success') {
 
         var raw = str.split(',');
+        console.log(raw);
+        
         var content = `<label for="articlePrice">Precio</label>
         <select class="form-select" id="articlePrice">`;
         raw.map((price) => {
