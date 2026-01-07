@@ -3,6 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Factory;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\View;
+
 use App\tm_charge;
 use App\tm_request;
 use App\tm_paymentmethod;
@@ -30,7 +35,7 @@ class chargeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(): Factory|RedirectResponse|View
     {
         if (auth()->user()->hasAnyRole(['admin', 'super', 'cashier']) != true) {
             return redirect()->route('request.index');
@@ -63,16 +68,6 @@ class chargeController extends Controller
         return view('charge.index', compact('data'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
     public function checkInternet() {
         $connected = @fsockopen("www.google.com", 80); 
         if ($connected) {
@@ -89,7 +84,7 @@ class chargeController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         if (auth()->user()->hasAnyRole(['admin', 'super', 'cashier']) != true) {
             return response()->json(['status' => 'failed', 'message' => 'Usuario no autorizado.']);
@@ -192,16 +187,17 @@ class chargeController extends Controller
             $tm_point->save();
         }
 
-        if (!$this->checkInternet()) {
-            return response()->json(['status' => 'failed', 'message' => 'No hay conexion a internet.']);
-        }
-
         $charge_data = $this->showIt($charge_slug);
-
         if ($charge_data['charge']['tx_client_birthday'] != '1970-01-01') {
             $birthday_congrats = (date('d-m', strtotime($charge_data['charge']['tx_client_birthday'])) == date('d-m')) ? 1 : 0;
         } else {
             $birthday_congrats = 0;
+        }
+
+        if (!$this->checkInternet()) {
+            $this->print_command($charge_data['charge']['tx_charge_number'], $charge_data['charge']['created_at'], $charge_data['charge']['tx_client_name'], $charge_data['charge']['tx_client_cif'] . ' DV' . $charge_data['charge']['tx_client_dv'], $charge_data['article']);
+            $this->print_receipt($charge_data['charge']['tx_charge_number'], $charge_data['charge']['created_at'], $charge_data['charge']['tx_client_name'], $charge_data['charge']['tx_client_cif'] . ' DV' . $charge_data['charge']['tx_client_dv'], $charge_data['article'], $charge_data['charge']['tx_charge_nontaxable'] + $charge_data['charge']['tx_charge_taxable'], $charge_data['charge']['tx_charge_discount'], $charge_data['charge']['tx_charge_tax'], $charge_data['charge']['tx_charge_total'], $charge_data['payment'], $charge_data['charge']['tx_charge_change'], $charge_data['charge']['user_name'], $birthday_congrats, $charge_data['charge']['tx_charge_tip'], $charge_data['charge']['tx_client_point']);
+            return response()->json(['status' => 'failed', 'message' => 'No hay conexion a internet.']);
         }
 
         if ($point_price > 0) {
@@ -222,7 +218,6 @@ class chargeController extends Controller
                 $charge_data['charge']['tx_charge_tip'],
                 $charge_data['charge']['tx_client_point'],
             );
-            // return response()->json(['status' => 'success', 'message' => 'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
         }
 
         $response = $this->fe_send(
@@ -258,7 +253,7 @@ class chargeController extends Controller
 
         return response()->json(['status' => 'success', 'message' => 'Pedido cobrado satisfactoriamente.', 'data' => ['slug' => $charge_slug]]);
     }
-    public function print_fe($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point, $response)
+    public function print_fe        ($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point, $response)
     {
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
@@ -354,10 +349,7 @@ class chargeController extends Controller
         // Cut the receipt
         $printer -> cut();
 
-        // ############ RECIBO  ############
-
-
-
+        // ############ RECIBO FACTURA ELECTRONICA ############
 
 
         /* Start the printer */
@@ -414,25 +406,6 @@ class chargeController extends Controller
                 if ($item['tx_commanddata_discountrate'] != 0.00) {
                     $printer->text("Ahorro " . number_format(($item['tx_commanddata_discountrate'] * ($item['tx_commanddata_quantity'] * $item['tx_commanddata_price'])) / 100, 2) . "\n");
                 }
-
-                // $raw_recipe = json_decode($item['tx_commanddata_recipe'], true);
-                // foreach ($raw_recipe as $ingredient) {
-                //     foreach ($ingredient as $k => $formule) {
-                //         $splited_formule = explode(",", $formule);
-                //         if ($splited_formule[4] === 'show') {
-                //             $ing = explode(")", $k, 2);
-                //             $printer->text('   -' . $ing[1] . "\n");
-                //         }
-                //     }
-                // }
-
-                // if (!empty($raw_item[$key + 1])) {
-                //     if ($raw_item[$key + 1]['ai_command_id'] != $item['ai_command_id']) {
-                //         $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
-                //     }
-                // } else {
-                //     $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
-                // }
             }
         }
 
@@ -470,7 +443,7 @@ class chargeController extends Controller
         if ($point > 0) {
             $printer->setEmphasis(true);
             $printer->text("Ud. lleva acumulados " . $point . " puntos\n");
-            $printer->text("con 24 podrá canjearlos por productos seleccionados.\n");
+            $printer->text("con 12 podrá canjearlos por productos seleccionados.\n");
             $printer->setEmphasis(false);
         }
         $printer->text("Gracias por su compra en Jade Café\n");
@@ -498,7 +471,7 @@ class chargeController extends Controller
         $printer->close();
     }
 
-    public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point = 0)
+    public function print_charge    ($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point = 0)
     {
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
@@ -729,7 +702,7 @@ class chargeController extends Controller
         $printer->close();
     }
 
-    public function print_receipt($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point = 0)
+    public function print_receipt   ($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats, $tip, $point = 0)
     {
         $connector = new NetworkPrintConnector("192.168.1.113", 9100);
         $printer = new Printer($connector);
@@ -855,6 +828,99 @@ class chargeController extends Controller
         /* Cut the receipt and open the cash drawer */
         $printer->cut();
         $printer->close();
+    }
+    public function print_command ($number, $date, $client_name, $client_ruc, $raw_item){
+        $connector = new NetworkPrintConnector("192.168.1.113", 9100);
+        $printer = new Printer($connector);
+
+        // ############ COMANDA  ############
+
+        // Start the printer
+
+        $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
+
+        // PRINT TOP DATE
+        $printer->setJustification(Printer::JUSTIFY_RIGHT);
+        $printer->text(date('d-m-Y') . "\n");
+
+        //  Print top logo
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->bitImage($logo);
+
+        // Name of shop
+        $optionController = new optionController;
+        $rs_option = $optionController->getOption();
+
+        $printer->text($rs_option['SOCIETY'] . "\n");
+        $printer->text($rs_option['RUC'] . " DV " . $rs_option['DV'] . "\n");
+        $printer->text($rs_option['DIRECCION'] . "\n");
+        $printer->text("Whatsapp: " . $rs_option['CEL'] . " Tel. " . $rs_option['TELEFONO'] . "\n");
+        $printer->feed();
+
+        // Title of receipt 
+        $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        $printer->setEmphasis(true);
+        $printer->text("Facturación #" . $number . "\n");
+        $printer->setEmphasis(false);
+
+        // Client Info 
+        $printer->selectPrintMode();
+        $printer->text(date('d-m-Y h:i:s', strtotime($date)) . "\n");
+        $printer->text("Cliente: " . $client_name . "\n");
+        $printer->text("RUC: " . $client_ruc . "\n");
+
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer->text("COMANDA\n");
+        $printer->selectPrintMode();
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+
+        $printer->feed(2);
+
+        //  Items
+        $printer->text("Articulos de la Comanda.\n");
+
+        // foreach ($raw_item as $item) {
+        foreach ($raw_item as $key => $item) {
+            if ($item['tx_commanddata_status'] === 1) {
+
+                $printer->text($item['tx_article_code'] . " - " . $item['tx_commanddata_description']);
+                $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+                $printer->setEmphasis(true);
+                $printer->text(" (" . $item['tx_presentation_value'] . ")\n");
+                $printer->setEmphasis(false);
+                $printer->selectPrintMode();
+
+                $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+                $printer->setEmphasis(true);
+                $printer->text($item['tx_commanddata_quantity'] . " x " . $item['tx_commanddata_price'] . "\n");
+                $printer->setEmphasis(false);
+                $printer->selectPrintMode();
+
+                $raw_recipe = json_decode($item['tx_commanddata_recipe'], true);
+                foreach ($raw_recipe as $ingredient) {
+                    foreach ($ingredient as $k => $formule) {
+                        $splited_formule = explode(",", $formule);
+                        if ($splited_formule[4] === 'show') {
+                            $ing = explode(")", $k, 2);
+                            $printer->text('   -' . $ing[1] . "\n");
+                        }
+                    }
+                }
+
+                if (!empty($raw_item[$key + 1])) {
+                    if ($raw_item[$key + 1]['ai_command_id'] != $item['ai_command_id']) {
+                        $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
+                    }
+                } else {
+                    $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
+                }
+            }
+        }
+
+        // Cut the receipt
+        $printer->cut();
+
     }
     public function fe_send($number,$date,$client_type,$client_taxpayer,$client_ruc,$client_dv,$client_name,$client_direction,$client_telephone,$client_email,
         $raw_item,$net_total,$total_tax,$total_discount,$total_charge,$raw_payment,$change,$client_country = 'Panama') {
@@ -1083,7 +1149,7 @@ class chargeController extends Controller
         return $response;
     }
 
-    public function fe_left()
+    public function fe_left(): JsonResponse //FOLIOS RESTANTES
     {
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
@@ -1149,7 +1215,7 @@ class chargeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($slug)
+    public function show($slug): JsonResponse|RedirectResponse
     {
         if (auth()->user()->hasAnyRole(['admin', 'super', 'cashier']) != true) {
             return redirect()->route('request.index');
@@ -1161,7 +1227,7 @@ class chargeController extends Controller
         $rs = $this->showIt($slug);
         return response()->json(['status' => 'success', 'message' => '', 'data' => ['charge' => $rs['charge'], 'payment' => $rs['payment'], 'article' => $rs['article']]]);
     }
-    public function filter(Request $request, $from, $to, $limit)
+    public function filter(Request $request, $from, $to, $limit): JsonResponse
     {
         $rs_canceledrequest = tm_request::select('users.name as user_name', 'tm_clients.tx_client_name', 'tm_charges.tx_charge_number', 'tm_charges.updated_at', 'tm_charges.tx_charge_total', 'tm_charges.tx_charge_slug', 'tm_requests.tx_request_title', 'tm_requests.tx_request_code', 'tm_tables.tx_table_value', 'tm_charges.created_at')
             ->join('tm_charges', 'tm_charges.ai_charge_id', 'tm_requests.request_ai_charge_id')
@@ -1343,39 +1409,6 @@ class chargeController extends Controller
             'cashregister_list' => $rs_cashregister,
             'giftcard' => $rs_giftcard
         ];
-    }
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
     public function calculate_sale($raw_price)
     { //[{price,discount,tax, quantity}]
