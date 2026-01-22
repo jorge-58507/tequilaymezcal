@@ -18,7 +18,7 @@ class clientSeeder extends Seeder
         $tm_client->tx_client_cif = '0-000-000';
         $tm_client->tx_client_dv = '';
         $tm_client->tx_client_direction = 'NO INDICA';
-        $tm_client->tx_client_telephone = '';
+        $tm_client->tx_client_telephone = '0000-0000';
         $tm_client->tx_client_exempt = 0;
         $tm_client->tx_client_taxpayer = 1;
         $tm_client->tx_client_type = '02';

@@ -423,6 +423,9 @@ class class_request {
 
   // API METHODS
   async api_login() {
+    if (cls_request.api_url == null) {
+      return false;
+    }
     var url = cls_request.api_url + 'APIlogin';
     var method = 'POST';
     var body = JSON.stringify({ email: 'apirequest@mail.com', password: 'requestable7812' });
@@ -437,6 +440,9 @@ class class_request {
   }
 
   async get_onlinependant() {
+    if (cls_request.api_url == null) {
+      return false;
+    }
     var url = cls_request.api_url + 'APIrequest/pendant';
     var method = 'GET';
     var body = '';
@@ -1457,6 +1463,9 @@ class class_command{
   }
   // API
   async create_request(request_slug) {
+    if (cls_request.api_url == null) {
+      return false;
+    }
     var url = cls_request.api_url + 'APIrequest/show/' + request_slug;
     var method = 'GET';
     var body = '';

@@ -49,7 +49,8 @@ class requestController extends Controller
             'article_list' => $rs_article,
             'client_list' => $rs_client,
             'low_inventory' => $chk_low_inventory,
-            'api_url' => $url['tx_option_value']
+            'api_url' => (empty($url['tx_option_value'])) ? null : $url['tx_option_value']
+
         ];
         return view('request.index', compact('data'));
     }

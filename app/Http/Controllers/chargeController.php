@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Factory;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\View;
+use Illuminate\View\View;
 
 use App\tm_charge;
 use App\tm_request;
@@ -63,7 +63,7 @@ class chargeController extends Controller
             'article_list' => $rs_article,
             'creditnote_list' => $rs_creditnote,
             'table_list' => $rs_table['list'],
-            'api_url' => $url['tx_option_value']
+            'api_url' => (empty($url['tx_option_value'])) ? null : $url['tx_option_value']
         ];
         return view('charge.index', compact('data'));
     }
@@ -195,8 +195,8 @@ class chargeController extends Controller
         }
 
         if (!$this->checkInternet()) {
-            $this->print_command($charge_data['charge']['tx_charge_number'], $charge_data['charge']['created_at'], $charge_data['charge']['tx_client_name'], $charge_data['charge']['tx_client_cif'] . ' DV' . $charge_data['charge']['tx_client_dv'], $charge_data['article']);
             $this->print_receipt($charge_data['charge']['tx_charge_number'], $charge_data['charge']['created_at'], $charge_data['charge']['tx_client_name'], $charge_data['charge']['tx_client_cif'] . ' DV' . $charge_data['charge']['tx_client_dv'], $charge_data['article'], $charge_data['charge']['tx_charge_nontaxable'] + $charge_data['charge']['tx_charge_taxable'], $charge_data['charge']['tx_charge_discount'], $charge_data['charge']['tx_charge_tax'], $charge_data['charge']['tx_charge_total'], $charge_data['payment'], $charge_data['charge']['tx_charge_change'], $charge_data['charge']['user_name'], $birthday_congrats, $charge_data['charge']['tx_charge_tip'], $charge_data['charge']['tx_client_point']);
+            $this->print_command($charge_data['charge']['tx_charge_number'], $charge_data['charge']['created_at'], $charge_data['charge']['tx_client_name'], $charge_data['charge']['tx_client_cif'] . ' DV' . $charge_data['charge']['tx_client_dv'], $charge_data['article']);
             return response()->json(['status' => 'failed', 'message' => 'No hay conexion a internet.']);
         }
 
@@ -1127,7 +1127,7 @@ class chargeController extends Controller
                 </soapenv:Body>
             </soapenv:Envelope>
         ";
-//return $request;
+        //return $request;
         $action = "Enviar";
         $header = [
             'Method: POST',

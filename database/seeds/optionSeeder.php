@@ -19,6 +19,11 @@ class optionSeeder extends Seeder
         $tm->save();
 
         $tm = new tm_option;
+        $tm->tx_option_title = 'API_URL';
+        $tm->tx_option_value = '';
+        $tm->save();
+
+        $tm = new tm_option;
         $tm->tx_option_title = 'TITULO';
         $tm->tx_option_value = 'Jade Café';
         $tm->save();

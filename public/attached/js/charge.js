@@ -355,6 +355,9 @@ class class_request{
 
   // API METHODS
   async get_onlinependant(){
+    if (cls_charge.api_url == null) {
+      return false;
+    }
     var url = cls_charge.api_url + 'APIrequest/pendant';
     var method = 'GET';
     var body = '';
@@ -376,6 +379,9 @@ class class_request{
     await cls_general.async_api_request(url, method, funcion, body, api_token);
   }
   async get_onlinerequest(){
+    if (cls_charge.api_url == null) {
+      return false;
+    }
     var status = document.getElementById('onlinerequestStatus').value;
     var limit = document.getElementById('onlinerequestLimit').value;
     switch (status) {
@@ -1435,6 +1441,10 @@ class class_charge{
   }
 
   async api_login(){
+    if (cls_charge.api_url == null) {
+      return false;
+    }
+
     var url = cls_charge.api_url + 'APIlogin';
     var method = 'POST';
     var body = JSON.stringify({ email: 'apirequest@mail.com', password: 'requestable7812' });
