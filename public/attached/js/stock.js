@@ -1462,7 +1462,7 @@ class class_productoutput{
     content += '</ul>';
     return content;
   }
-  product_total() {
+  async product_total() {
     var select_measure = document.getElementById("productMeasure");
     var rel_measure = select_measure.options[select_measure.selectedIndex].getAttribute('alt');
     var product_quantity = document.getElementById('productQuantity').value;
@@ -1472,12 +1472,12 @@ class class_productoutput{
     if (cls_general.is_empty_var(product_quantity) === 0 || cls_general.is_empty_var(product_price) === 0 || cls_general.is_empty_var(product_discountrate) === 0 || cls_general.is_empty_var(product_taxrate) === 0) {
       var total = { total: 0.00 };
     } else {
-      var total = cls_general.calculate_sale([{ price: product_price*rel_measure, discount: product_discountrate, tax: product_taxrate, quantity: product_quantity }]);
+      var total = await cls_general.calculate_sale([{ price: product_price*rel_measure, discount: product_discountrate, tax: product_taxrate, quantity: product_quantity }]);
     }
     //[{PRICE,discount,tax, quantity}]
     document.getElementById('productTotal').innerHTML = cls_general.val_price(total.total, 2, 1, 1);
   }
-  addproduct() {
+  async addproduct() {
     var product_id = document.getElementById('productId').value;
     var product_description = document.getElementById('productDescription').value;
     var select_measure = document.getElementById('productMeasure');
@@ -1492,19 +1492,19 @@ class class_productoutput{
       cls_general.shot_toast_bs('Debe llenar todos los campos', { bg: 'text-bg-warning' });
       return false;
     }
-    var added_total = cls_general.calculate_sale([{ price: product_price*rel_measure, discount: product_discountrate, tax: product_taxrate, quantity: product_quantity }]);
+    var added_total = await cls_general.calculate_sale([{ price: product_price*rel_measure, discount: product_discountrate, tax: product_taxrate, quantity: product_quantity }]);
     cls_productoutput.productoutput_selected.push({ id: product_id, description: product_description, measure_id: product_measureId, measure_description: product_measureDescription, quantity: product_quantity, price: product_price * rel_measure, discountrate: product_discountrate, taxrate: product_taxrate, total: added_total.total });
     var raw_total = [];
     cls_productoutput.productoutput_selected.map((product) => {
       raw_total.push({ price: product.price, discount: product.discountrate, tax: product.taxrate, quantity: product.quantity })
     })
-    var total = cls_general.calculate_sale(raw_total);
+    var total = await cls_general.calculate_sale(raw_total);
     document.getElementById('span_productoutputTotal').innerHTML = '<h5>Total: B / ' + cls_general.val_price(total.total, 2, 1, 1) + '</h5>';
     const Modal = bootstrap.Modal.getInstance('#productoutputModal');
     Modal.hide();
     document.getElementById('productoutput_selected').innerHTML = cls_productoutput.generate_productselected(cls_productoutput.productoutput_selected);
   }
-  deleteproduct(index) {
+  async deleteproduct(index) {
     var product_added = cls_productoutput.productoutput_selected;
     product_added.splice(index, 1);
     cls_productoutput.productoutput_selected = product_added;
@@ -1513,7 +1513,7 @@ class class_productoutput{
     cls_productoutput.productoutput_selected.map((product) => {
       raw_total.push({ price: product.price, discount: product.discountrate, tax: product.taxrate, quantity: product.quantity })
     })
-    var total = cls_general.calculate_sale(raw_total);
+    var total = await cls_general.calculate_sale(raw_total);
     document.getElementById('span_productoutputTotal').innerHTML = '<h5>Total: B / ' + cls_general.val_price(total.total, 2, 1, 1) + '</h5>';
   }
   generate_productselected(raw_productselected) {
@@ -1555,7 +1555,7 @@ class class_productoutput{
         },
       },
     })
-    .then((reason) => {
+    .then( async (reason) => {
       if (cls_general.is_empty_var(reason) === 0) {
         return swal("Debe ingresar el motivo.");
       }
@@ -1563,7 +1563,7 @@ class class_productoutput{
       cls_productoutput.productoutput_selected.map((product) => {
         raw_product.push({ price: product.price, discount: product.discountrate, tax: product.taxrate, quantity: product.quantity })
       });
-      var raw_total = cls_general.calculate_sale(raw_product);
+      var raw_total = await cls_general.calculate_sale(raw_product);
       cls_general.disable_submit(document.getElementById('btn_productoutputprocess'));
 
       var url = '/productoutput/';
@@ -2122,17 +2122,23 @@ class class_productwarehouse{
   }
   render_modal(productwarehouse){
     var transfer_list = ``;
-    productwarehouse.transfer_list.map((line) => {
-      transfer_list += `
-        <li class="list-group-item d-flex justify-content-between align-items-start">
-          <div class="ms-2 me-auto">
-            <div class="fw-bold fs_12">${cls_general.datetime_converter(line.created_at)}</div>
-            <small>${line.tx_warehouse_value}</small>
-          </div>
-          <span class="badge bg-primary rounded-pill">${line.tx_warehousetransfer_quantity}</span>
-        </li>
-      `;
-    })
+    if (productwarehouse.transfer_list) {
+      productwarehouse.transfer_list.map((line) => {
+        transfer_list += `
+          <li class="list-group-item d-flex justify-content-between align-items-start">
+            <div class="ms-2 me-auto">
+              <div class="fw-bold fs_12">${cls_general.datetime_converter(
+                line.created_at
+              )}</div>
+              <small>${line.tx_warehouse_value}</small>
+            </div>
+            <span class="badge bg-primary rounded-pill">${
+              line.tx_warehousetransfer_quantity
+            }</span>
+          </li>
+        `;
+      });
+    }
     var info = productwarehouse.info;
     var content = `
       <form id="form_edit_productwarehouse" onsubmit="event.preventDefault(); cls_productwarehouse.update(${info.ai_productwarehouse_id})" autocomplete="off">
@@ -2434,7 +2440,6 @@ class class_inventorycohort
           document.getElementById('filter_product').addEventListener('keyup', () => {
             cls_productcode.filter_productlist(document.getElementById('filter_product').value);
           });
-
         }else{
           cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
         }
@@ -2444,6 +2449,7 @@ class class_inventorycohort
   }
   generate_inventorycohort_list(raw_product) {
     var content = '';
+    console.log(raw_product)
     raw_product.map((product, index) => {
       content += `
         <tr class="text-center">

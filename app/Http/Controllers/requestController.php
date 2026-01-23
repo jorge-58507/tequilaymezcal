@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\JsonResponse;
+
 use App\tm_commanddata;
 use Illuminate\Http\Request;
 use App\tm_ubication;
@@ -25,22 +30,22 @@ class requestController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(): Factory|RedirectResponse|View
     {
-        $rs_ubication =       tm_ubication::join('tm_tables','tm_tables.table_ai_ubication_id','tm_ubications.ai_ubication_id')->whereIn('tx_table_type',[1,2])->where('tx_table_active',1)->where('tx_ubication_status',1)->orderby('ai_ubication_id')->orderby('tx_table_type')->get();
-        $rs_article =           tm_article::select('tm_articles.ai_article_id','tm_articles.tx_article_thumbnail','tm_articles.tx_article_code', 'tm_articles.tx_article_value', 'tm_articles.tx_article_promotion','tm_articles.tx_article_slug','tm_categories.ai_category_id','tm_categories.tx_category_value')->join('tm_categories','tm_categories.ai_category_id','tm_articles.article_ai_category_id')->where('tx_article_status',1)->orderby('tx_article_promotion','DESC')->orderby('tx_article_value','ASC')->get();
-        $rs_client =            tm_client::where('tx_client_status',1)->get();
+        $rs_ubication = tm_ubication::join('tm_tables', 'tm_tables.table_ai_ubication_id', 'tm_ubications.ai_ubication_id')->whereIn('tx_table_type', [1, 2])->where('tx_table_active', 1)->where('tx_ubication_status', 1)->orderby('ai_ubication_id')->orderby('tx_table_type')->get();
+        $rs_article = tm_article::select('tm_articles.ai_article_id', 'tm_articles.tx_article_thumbnail', 'tm_articles.tx_article_code', 'tm_articles.tx_article_value', 'tm_articles.tx_article_promotion', 'tm_articles.tx_article_slug', 'tm_categories.ai_category_id', 'tm_categories.tx_category_value')->join('tm_categories', 'tm_categories.ai_category_id', 'tm_articles.article_ai_category_id')->where('tx_article_status', 1)->orderby('tx_article_promotion', 'DESC')->orderby('tx_article_value', 'ASC')->get();
+        $rs_client = tm_client::where('tx_client_status', 1)->get();
         $raw_request = $this->getAll();
 
-        if ( auth()->user()->hasAnyRole(['admin','super']) != true){ 
+        if (auth()->user()->hasAnyRole(['admin', 'super']) != true) {
             $chk_low_inventory = 0;
-        }else{
-            $chk_low_inventory = tm_product::where('tx_product_status',1)
-            ->join('tm_productwarehouses','tm_productwarehouses.productwarehouse_ai_product_id','tm_products.ai_product_id')
-            ->where('tx_productwarehouse_quantity','<','tx_productwarehouse_minimun')
-            ->where('tx_product_alarm',1)->count();
+        } else {
+            $chk_low_inventory = tm_product::where('tx_product_status', 1)
+                ->join('tm_productwarehouses', 'tm_productwarehouses.productwarehouse_ai_product_id', 'tm_products.ai_product_id')
+                ->where('tx_productwarehouse_quantity', '<', 'tx_productwarehouse_minimun')
+                ->where('tx_product_alarm', 1)->count();
         }
-        $url = tm_option::select('tx_option_value')->where('tx_option_title','API_URL')->first();
+        $url = tm_option::select('tx_option_value')->where('tx_option_title', 'API_URL')->first();
 
         $data = [
             'table_list' => $rs_ubication,
@@ -63,37 +68,11 @@ class requestController extends Controller
         ];
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function save($table_id, $client_id, $code, $title)
     {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-
-    }
-    public function save($table_id, $client_id, $code, $title){
-        $rs_table = tm_table::where('ai_table_id',$table_id)->first();
-        // if ($rs_table['tx_table_type'] === 2) {
-            // $check_table = tm_request::where('tx_request_status',0)->where('request_ai_table_id',$table_id);
-            // if ($check_table->count() > 0) {
-            //     $rs_request = $check_table->first();
-            //     return ['status'=>'failed','message'=>'La mesa esta ocupada.', 'data' => $rs_request];
-            // }
-        // }
+        $rs_table = tm_table::where('ai_table_id', $table_id)->first();
         if ($rs_table['tx_table_type'] > 2) {
-            return ['status'=>'failed','message'=>'No es una mesa.'];
+            return ['status' => 'failed', 'message' => 'No es una mesa.'];
         }
         $tm_request = new tm_request;
 
@@ -102,37 +81,32 @@ class requestController extends Controller
         $tm_request->tx_request_code = $code;
         $tm_request->tx_request_title = $title;
         $tm_request->tx_request_status = 0;
-        $tm_request->tx_request_slug = time().$title;
+        $tm_request->tx_request_slug = time() . $title;
         $tm_request->save();
 
-        return ['status'=>'success','message'=>'', 'data' => ['id' => $tm_request->ai_request_id]];
+        return ['status' => 'success', 'message' => '', 'data' => ['id' => $tm_request->ai_request_id]];
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($slug)
     {
-        $qry_request = tm_request::join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tx_request_slug',$slug)->where('tx_request_status',0);
+        $qry_request = tm_request::join('tm_clients', 'tm_clients.ai_client_id', 'tm_requests.request_ai_client_id')->where('tx_request_slug', $slug)->where('tx_request_status', 0);
         $rs_request = $qry_request->first();
         $commandController = new commandController;
         if ($qry_request->count() > 0) {
             $rs_command = $commandController->getByRequest($rs_request['ai_request_id']);
-            $rs_table = tm_table::where('ai_table_id',$rs_request['request_ai_table_id'])->first();
-        }else{
+            $rs_table = tm_table::where('ai_table_id', $rs_request['request_ai_table_id'])->first();
+        } else {
             $rs_command = [];
             $rs_table = 'vacio';
         }
         if (count($rs_command) === 0) { //Si no tiene comandas desactivar el pedido
             $qry_request->update(['tx_request_status' => 3]);
         }
-        return response()->json(['status'=>'success','message'=>'','data'=>['request'=>$rs_request, 'command_procesed'=>$rs_command, 'table'=>$rs_table]]);
+        return response()->json(['status' => 'success', 'message' => '', 'data' => ['request' => $rs_request, 'command_procesed' => $rs_command, 'table' => $rs_table]]);
     }
-    public function showByTable($table_slug){
-        $qry_request = tm_request::join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tm_tables.tx_table_slug',$table_slug)->where('tx_request_status',0);
+    public function showByTable($table_slug)
+    {
+        $qry_request = tm_request::join('tm_tables', 'tm_tables.ai_table_id', 'tm_requests.request_ai_table_id')->join('tm_clients', 'tm_clients.ai_client_id', 'tm_requests.request_ai_client_id')->where('tm_tables.tx_table_slug', $table_slug)->where('tx_request_status', 0);
         if ($qry_request->count() > 1) {
             $rs_request = $qry_request->get();
             foreach ($rs_request as $key => $request) {
@@ -141,35 +115,37 @@ class requestController extends Controller
                 $rs_request[$key]['command_procesed'] = $rs_command;
             }
             return response()->json(['status' => 'success', 'message' => '', 'data' => ['request' => $rs_request]]);
-        }else{
+        } else {
             $rs_request = $qry_request->first();
             $commandController = new commandController;
             $rs_command = ($qry_request->count() > 0) ? $commandController->getByRequest($rs_request['ai_request_id']) : [];
-            
-            return response()->json(['status'=>'success','message'=>'','data'=>['request'=>$rs_request,'command_procesed'=>$rs_command]]);
+
+            return response()->json(['status' => 'success', 'message' => '', 'data' => ['request' => $rs_request, 'command_procesed' => $rs_command]]);
         }
     }
-    public function showByBar($table_slug){
-        $qry_request = tm_request::join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->where('tm_tables.tx_table_slug',$table_slug)->where('tx_request_status',0);
+    public function showByBar($table_slug)
+    {
+        $qry_request = tm_request::join('tm_tables', 'tm_tables.ai_table_id', 'tm_requests.request_ai_table_id')->join('tm_clients', 'tm_clients.ai_client_id', 'tm_requests.request_ai_client_id')->where('tm_tables.tx_table_slug', $table_slug)->where('tx_request_status', 0);
         $rs_request = $qry_request->get();
-        
-        return response()->json(['status'=>'success','message'=>'','data'=>['request'=>$rs_request]]);
+
+        return response()->json(['status' => 'success', 'message' => '', 'data' => ['request' => $rs_request]]);
     }
 
-    public function update_rel(Request $request, $slug){
-        $qry = tm_request::where('tx_request_slug',$slug);
+    public function update_rel(Request $request, $slug)
+    {
+        $qry = tm_request::where('tx_request_slug', $slug);
         if ($qry->count() < 1) {
-            return response()->json(['status'=>'failed','message'=>'Pedido no existe.']);
+            return response()->json(['status' => 'failed', 'message' => 'Pedido no existe.']);
         }
-        $qry_client = tm_client::where('tx_client_slug',$request->input('a'));
+        $qry_client = tm_client::where('tx_client_slug', $request->input('a'));
         if ($qry_client->count() < 1) {
-            return response()->json(['status'=>'failed','message'=>'Cliente no existe.']);
+            return response()->json(['status' => 'failed', 'message' => 'Cliente no existe.']);
         }
-        $rs_table = tm_table::where('ai_table_id',$request->input('b'))->first();
+        $rs_table = tm_table::where('ai_table_id', $request->input('b'))->first();
         if ($rs_table['tx_table_type'] === 2) {
-            $check_occupied = tm_request::where('request_ai_table_id',$request->input('b'))->where('tx_request_slug','!=',$slug)->where('tx_request_status',0)->count();
+            $check_occupied = tm_request::where('request_ai_table_id', $request->input('b'))->where('tx_request_slug', '!=', $slug)->where('tx_request_status', 0)->count();
             if ($check_occupied > 0) {
-                return response()->json(['status'=>'failed','message'=>'La mesa est&aacute; ocupada.']);
+                return response()->json(['status' => 'failed', 'message' => 'La mesa est&aacute; ocupada.']);
             }
         }
 
@@ -179,48 +155,51 @@ class requestController extends Controller
             'request_ai_table_id' => $request->input('b')
         ]);
         // ANSWER
-        return response()->json(['status'=>'success','message'=>'Cliente y mesa actualizados.']);
+        return response()->json(['status' => 'success', 'message' => 'Cliente y mesa actualizados.']);
     }
-    public function close($request_slug){
-        $qry = tm_request::where('tx_request_slug',$request_slug)->where('tx_request_status',0);
+    public function close($request_slug)
+    {
+        $qry = tm_request::where('tx_request_slug', $request_slug)->where('tx_request_status', 0);
         if ($qry->count() === 0) {
-            return response()->json(['status'=>'failed','message'=>'Pedido erroneo']);
+            return response()->json(['status' => 'failed', 'message' => 'Pedido erroneo']);
         }
         $user = Auth()->user();
-        $qry->update(['tx_request_status'=>1, 'tx_request_closedby'=>$user['id']]);
+        $qry->update(['tx_request_status' => 1, 'tx_request_closedby' => $user['id']]);
 
         // ANSWER
-        $rs_openrequest =       $this->getOpenRequest();
-        $rs_closedrequest =     $this->getClosedRequest();
-        
-        return response()->json(['status'=>'success','message'=>'Pedido cerrado.','data'=>['open_request'=>$rs_openrequest, 'closed_request'=>$rs_closedrequest]]);
+        $rs_openrequest = $this->getOpenRequest();
+        $rs_closedrequest = $this->getClosedRequest();
+
+        return response()->json(['status' => 'success', 'message' => 'Pedido cerrado.', 'data' => ['open_request' => $rs_openrequest, 'closed_request' => $rs_closedrequest]]);
     }
 
-    public function getOpenRequest(){
-        $rs_openrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at','users.name as user_name')
-        ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
-        ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')
-        ->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')
-        ->join('users','users.id','tm_commands.command_ai_user_id')
-        ->where('tx_request_status',0)->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at','DESC')->get();
+    public function getOpenRequest()
+    {
+        $rs_openrequest = tm_request::select('tm_requests.ai_request_id', 'tm_requests.tx_request_slug', 'tm_requests.tx_request_code', 'tm_clients.tx_client_name', 'tm_requests.tx_request_title', 'tm_tables.tx_table_value', 'tm_requests.created_at', 'tm_requests.updated_at', 'users.name as user_name')
+            ->join('tm_clients', 'tm_clients.ai_client_id', 'tm_requests.request_ai_client_id')
+            ->join('tm_tables', 'tm_tables.ai_table_id', 'tm_requests.request_ai_table_id')
+            ->join('tm_commands', 'tm_commands.command_ai_request_id', 'tm_requests.ai_request_id')
+            ->join('users', 'users.id', 'tm_commands.command_ai_user_id')
+            ->where('tx_request_status', 0)->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at', 'DESC')->get();
         return $rs_openrequest;
     }
-    public function getClosedRequest(){
-        $rs_closedrequest = tm_request::select('tm_requests.ai_request_id','tm_requests.tx_request_slug','tm_requests.tx_request_code','tm_clients.tx_client_name','tm_requests.tx_request_title','tm_tables.tx_table_value','tm_requests.created_at','tm_requests.updated_at','users.name as user_name')
-        ->join('tm_commands','tm_commands.command_ai_request_id','tm_requests.ai_request_id')
-        ->join('users','users.id','tm_commands.command_ai_user_id')
-        ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
-        ->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')
-        ->where('tx_request_status',1)
-        ->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at','DESC')->get();
-        
+    public function getClosedRequest()
+    {
+        $rs_closedrequest = tm_request::select('tm_requests.ai_request_id', 'tm_requests.tx_request_slug', 'tm_requests.tx_request_code', 'tm_clients.tx_client_name', 'tm_requests.tx_request_title', 'tm_tables.tx_table_value', 'tm_requests.created_at', 'tm_requests.updated_at', 'users.name as user_name')
+            ->join('tm_commands', 'tm_commands.command_ai_request_id', 'tm_requests.ai_request_id')
+            ->join('users', 'users.id', 'tm_commands.command_ai_user_id')
+            ->join('tm_clients', 'tm_clients.ai_client_id', 'tm_requests.request_ai_client_id')
+            ->join('tm_tables', 'tm_tables.ai_table_id', 'tm_requests.request_ai_table_id')
+            ->where('tx_request_status', 1)
+            ->groupby('tm_requests.ai_request_id')->orderby('tm_requests.created_at', 'DESC')->get();
+
         $commandController = new commandController; //CALCULAR EL TOTAL
         foreach ($rs_closedrequest as $a => $request) {
             $raw_command = $commandController->getByRequest($request['ai_request_id']);
             $raw_price = [];
             foreach ($raw_command as $b => $command) {
                 if ($command['tx_commanddata_status'] === 1) {
-                    array_push($raw_price,['price'=>$command['tx_commanddata_price'],'discount'=>$command['tx_commanddata_discountrate'],'tax'=>$command['tx_commanddata_taxrate'], 'quantity'=>$command['tx_commanddata_quantity']]);
+                    array_push($raw_price, ['price' => $command['tx_commanddata_price'], 'discount' => $command['tx_commanddata_discountrate'], 'tax' => $command['tx_commanddata_taxrate'], 'quantity' => $command['tx_commanddata_quantity']]);
                 }
             }
             $chargeController = new chargeController;
@@ -229,8 +208,9 @@ class requestController extends Controller
         }
         return $rs_closedrequest;
     }
-    public function getCanceledRequest(){
-        $rs_canceledrequest =   tm_request::select('tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at','tm_charges.updated_at','users.name as user_name')->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')->join('users','users.id','tm_charges.charge_ai_user_id')->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')->join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_status',2)->orderby('tm_charges.created_at','DESC')->limit(200)->get();
+    public function getCanceledRequest()
+    {
+        $rs_canceledrequest = tm_request::select('tm_clients.tx_client_name', 'tm_charges.tx_charge_number', 'tm_charges.tx_charge_total', 'tm_charges.tx_charge_slug', 'tm_requests.tx_request_title', 'tm_requests.tx_request_code', 'tm_tables.tx_table_value', 'tm_charges.created_at', 'tm_charges.updated_at', 'users.name as user_name')->join('tm_charges', 'tm_charges.ai_charge_id', 'tm_requests.request_ai_charge_id')->join('users', 'users.id', 'tm_charges.charge_ai_user_id')->join('tm_clients', 'tm_clients.ai_client_id', 'tm_requests.request_ai_client_id')->join('tm_tables', 'tm_tables.ai_table_id', 'tm_requests.request_ai_table_id')->where('tx_request_status', 2)->orderby('tm_charges.created_at', 'DESC')->limit(200)->get();
         return $rs_canceledrequest;
     }
     /**
@@ -239,32 +219,31 @@ class requestController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function reload(): JsonResponse
     {
-        //
-    }
-    public function reload(){
         $raw_request = $this->getAll();
-        return response()->json(['status'=>'success','message'=>'','data'=>['open_request'=>$raw_request['open_request'], 'closed_request'=>$raw_request['closed_request'], 'canceled_request'=>$raw_request['canceled_request']]]);
+        return response()->json(['status' => 'success', 'message' => '', 'data' => ['open_request' => $raw_request['open_request'], 'closed_request' => $raw_request['closed_request'], 'canceled_request' => $raw_request['canceled_request']]]);
     }
-    public function reopen($request_slug){
-        tm_request::where('tx_request_slug',$request_slug)->update(['tx_request_status'=>0]);
-        
+    public function reopen($request_slug)
+    {
+        tm_request::where('tx_request_slug', $request_slug)->update(['tx_request_status' => 0]);
+
         $raw_request = $this->getAll();
-        return response()->json(['status'=>'success','message'=>'','data'=>['open_request'=>$raw_request['open_request'], 'closed_request'=>$raw_request['closed_request'], 'canceled_request'=>$raw_request['canceled_request']]]);
+        return response()->json(['status' => 'success', 'message' => '', 'data' => ['open_request' => $raw_request['open_request'], 'closed_request' => $raw_request['closed_request'], 'canceled_request' => $raw_request['canceled_request']]]);
     }
 
-    public function save_split(Request $request){
+    public function save_split(Request $request)
+    {
 
         $request_split = $request->input('a');
         foreach ($request_split as $key => $req) {
             if (!empty($req['id'])) {
                 $table_id = $req['table_id'];
-                $rs_command = tm_command::where('command_ai_request_id',$req['id'])->first();
+                $rs_command = tm_command::where('command_ai_request_id', $req['id'])->first();
                 foreach ($req['commanddata'] as $x => $commanddata) {
                     tm_commanddata::where('ai_commanddata_id', $commanddata['ai_commanddata_id'])->update(['commanddata_ai_command_id' => $rs_command['ai_command_id']]);
                 }
-            }else{
+            } else {
                 $count = tm_request::count();
                 $code = substr('000000000000' . $count, -10);
 
@@ -281,11 +260,12 @@ class requestController extends Controller
         }
         return response()->json(['status' => 'success', 'message' => 'Pedido dividido correctamente.']);
     }
-    
-    public function print(Request $request, $request_slug){
-        $qry = tm_request::join('tm_tables','tm_tables.ai_table_id','tm_requests.request_ai_table_id')->where('tx_request_slug',$request_slug);
+
+    public function print(Request $request, $request_slug)
+    {
+        $qry = tm_request::join('tm_tables', 'tm_tables.ai_table_id', 'tm_requests.request_ai_table_id')->where('tx_request_slug', $request_slug);
         if ($qry->count() === 0) {
-            return response()->json(['status'=>'failed','message'=>'No existe.']);
+            return response()->json(['status' => 'failed', 'message' => 'No existe.']);
         }
         $rs_request = $qry->first();
 
@@ -300,66 +280,66 @@ class requestController extends Controller
         $printer = new Printer($connector);
 
         /* Information for the receipt */
-        
+
         /* Start the printer */
         $logo = EscposImage::load("./attached/image/logo_print2.png", 30);
         // $printer = new Printer($connector);
-        
+
         // PRINT TOP DATE
-        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        $printer -> text(date('d-m-Y h:i:s')."\n");
+        $printer->setJustification(Printer::JUSTIFY_RIGHT);
+        $printer->text(date('d-m-Y h:i:s') . "\n");
 
         /* Print top logo */
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
-        $printer -> bitImage($logo);
-        
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->bitImage($logo);
+
         /* Name of shop */
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
-        $printer -> text($rs_option['SOCIETY']."\n");
-        $printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
-        $printer -> text($rs_option['DIRECCION']."\n");
-        $printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer -> text("PRECUENTA\n");
-        $printer -> text("DOCUMENTO NO FISCAL\n");
-        $printer -> selectPrintMode();
-        $printer -> feed();
-        
+        $printer->text($rs_option['SOCIETY'] . "\n");
+        $printer->text($rs_option['RUC'] . " DV " . $rs_option['DV'] . "\n");
+        $printer->text($rs_option['DIRECCION'] . "\n");
+        $printer->text("Whatsapp: " . $rs_option['CEL'] . " Tel. " . $rs_option['TELEFONO'] . "\n");
+        $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer->text("PRECUENTA\n");
+        $printer->text("DOCUMENTO NO FISCAL\n");
+        $printer->selectPrintMode();
+        $printer->feed();
+
         /* Title of receipt */
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-        $printer -> setEmphasis(true);
-        $printer -> text("PRECUENTA PEDIDO #".$rs_request['tx_table_value']."\n");
-        $printer -> setEmphasis(false);
-        $printer -> feed(2);
-        
+        $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+        $printer->setEmphasis(true);
+        $printer->text("PRECUENTA PEDIDO #" . $rs_request['tx_table_value'] . "\n");
+        $printer->setEmphasis(false);
+        $printer->feed(2);
+
         /* Items */
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer -> text("PRECUENTA\n");
-        $printer -> text("DOCUMENTO NO FISCAL\n");
-        $printer -> selectPrintMode();
-        $printer -> setJustification(Printer::JUSTIFY_LEFT);
-        $printer -> text("Articulos Relacionados.\n");
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer->text("PRECUENTA\n");
+        $printer->text("DOCUMENTO NO FISCAL\n");
+        $printer->selectPrintMode();
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("Articulos Relacionados.\n");
 
         $raw_price = [];
         foreach ($raw_item as $key => $item) {
-            if ($item['tx_commanddata_status'] === 1) {  
-                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']." (".$item['tx_presentation_value'].")\n");
-                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
+            if ($item['tx_commanddata_status'] === 1) {
+                $printer->text($item['tx_article_code'] . " - " . $item['tx_commanddata_description'] . " (" . $item['tx_presentation_value'] . ")\n");
+                $printer->text($item['tx_commanddata_quantity'] . " x " . $item['tx_commanddata_price'] . "\n");
                 if ($item['tx_commanddata_discountrate'] != 0.00) {
                     $printer->text("Descuento -" . number_format(($item['tx_commanddata_discountrate'] * ($item['tx_commanddata_quantity'] * $item['tx_commanddata_price'])) / 100, 2) . "\n");
                 }
 
-                if (!empty($raw_item[$key+1])) {
-                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
-                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-                        $printer -> feed(1);
+                if (!empty($raw_item[$key + 1])) {
+                    if ($raw_item[$key + 1]['ai_command_id'] != $item['ai_command_id']) {
+                        $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
+                        $printer->feed(1);
                     }
-                }else{
-                    $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-                    $printer -> feed(1);
+                } else {
+                    $printer->text("OBS. " . $item['tx_command_observation'] . "\n" . "Consumo: " . $item['tx_command_consumption'] . "\n");
+                    $printer->feed(1);
                 }
 
                 $raw_price[] = [
@@ -374,44 +354,44 @@ class requestController extends Controller
         $chargeController = new chargeController;
         $raw_total = $chargeController->calculate_sale($raw_price);
 
-        $tip = ($raw_total['gross_total'] * $suggested_tip)/100;
+        $tip = ($raw_total['gross_total'] * $suggested_tip) / 100;
 
 
-        $printer -> feed(2);
-        $printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        $printer -> setEmphasis(true);
-        $printer -> text("Subtotal. B/ ".number_format($raw_total['subtotal'] + $raw_total['st_notaxable'],2)."\n");
-        $printer -> setEmphasis(false);
-        
+        $printer->feed(2);
+        $printer->setJustification(Printer::JUSTIFY_RIGHT);
+        $printer->setEmphasis(true);
+        $printer->text("Subtotal. B/ " . number_format($raw_total['subtotal'] + $raw_total['st_notaxable'], 2) . "\n");
+        $printer->setEmphasis(false);
+
         /* Tax and total */
-        $printer -> text("Descuento. B/ ".number_format($raw_total['discount'],2)."\n");
-        $printer -> text("ITBMS. B/ ".number_format($raw_total['tax'],2)."\n");
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer -> text("TOTAL. B/ ".number_format($raw_total['total']+$tip,2)."\n");
-        $printer -> selectPrintMode();
-        $printer -> feed(1);
-        $printer -> text("Elaborador(a): ".$user['name']."\n");
-        $printer -> feed(1);
+        $printer->text("Descuento. B/ " . number_format($raw_total['discount'], 2) . "\n");
+        $printer->text("ITBMS. B/ " . number_format($raw_total['tax'], 2) . "\n");
+        $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer->text("TOTAL. B/ " . number_format($raw_total['total'] + $tip, 2) . "\n");
+        $printer->selectPrintMode();
+        $printer->feed(1);
+        $printer->text("Elaborador(a): " . $user['name'] . "\n");
+        $printer->feed(1);
 
-        $printer -> setJustification(Printer::JUSTIFY_CENTER);
-        $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        $printer -> text("PROPINA SUGERIDA. \n");
-        $printer -> text("10% -> B/ ".number_format((10*$raw_total['gross_total'])/100,2)."\n");
-        $printer -> text("15% -> B/ ".number_format((15*$raw_total['gross_total'])/100,2)."\n");
-        $printer -> text("20% -> B/ ".number_format((20*$raw_total['gross_total'])/100,2)."\n");
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+        $printer->text("PROPINA SUGERIDA. \n");
+        $printer->text("10% -> B/ " . number_format((10 * $raw_total['gross_total']) / 100, 2) . "\n");
+        $printer->text("15% -> B/ " . number_format((15 * $raw_total['gross_total']) / 100, 2) . "\n");
+        $printer->text("20% -> B/ " . number_format((20 * $raw_total['gross_total']) / 100, 2) . "\n");
 
         /* Footer */
-        $printer -> feed(2);
-        $printer -> text("PRECUENTA\n");
-        $printer -> text("DOCUMENTO NO FISCAL\n");
-        $printer -> selectPrintMode();
-        $printer -> feed(2);
-        
-        /* Cut the receipt and open the cash drawer */
-        $printer -> cut();
-        $printer -> close();
+        $printer->feed(2);
+        $printer->text("PRECUENTA\n");
+        $printer->text("DOCUMENTO NO FISCAL\n");
+        $printer->selectPrintMode();
+        $printer->feed(2);
 
-        return response()->json(['status'=>'success','message'=>'Impreso satisfactoriamente.']);
+        /* Cut the receipt and open the cash drawer */
+        $printer->cut();
+        $printer->close();
+
+        return response()->json(['status' => 'success', 'message' => 'Impreso satisfactoriamente.']);
 
     }
 }

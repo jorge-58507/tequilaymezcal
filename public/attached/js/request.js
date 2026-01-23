@@ -497,57 +497,6 @@ class class_request {
     document.getElementById('container_request').innerHTML = content;
     cls_request.getByTable(table_slug);
   }
-  // generate_articleprocesed(command_procesed, request) {
-  //   var raw_price = [];
-  //   var content_command_procesed = `<div class="list-group">   <li class="list-group-item list-group-item-primary text-center fw-bold">${request.tx_request_title} (${request.tx_request_code})</li>`;
-  //   command_procesed.map((command, index) => {
-  //     if (command.tx_commanddata_status === 0) {
-  //       var bg_status = 'text-bg-warning text-body-tertiary';
-  //       var btn = ``;
-  //     } else {
-  //       // [{ PRICE, discount, tax, quantity }]
-  //       raw_price.push({ price: command.tx_commanddata_price, discount: command.tx_commanddata_discountrate, tax: command.tx_commanddata_taxrate, quantity: command.tx_commanddata_quantity });
-  //       var bg_status = '';
-  //       var btn = `<button type="button" class="btn btn-secondary btn-sm" onclick="event.preventDefault(); cls_commanddata.changeRequest(${command.ai_commanddata_id})">Cambiar</button>`;
-  //     }
-  //     var recipe = JSON.parse(command.tx_commanddata_recipe);
-  //     var content_recipe = '<ul>';
-  //     recipe.map((ingredient) => {
-  //       for (const index in ingredient) {
-  //         content_recipe += `<li><small>${index}</small></li>`;
-  //       }
-  //     })
-  //     content_recipe += `</ul>`;
-
-  //     if (recipe.length > 0) {
-  //       content_recipe = `
-  //         <span class="d-inline-flex gap-1">
-  //           <button class="btn btn-link text-decoration-none btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRecipe${index}" aria-expanded="false" aria-controls="collapseExample">
-  //             Ver Receta
-  //           </button>
-  //         </span>
-  //         <div class="collapse" id="collapseRecipe${index}">
-  //           <div class="card card-body text-truncate">
-  //             ${content_recipe}
-  //           </div>
-  //         </div>
-  //       `;
-  //     } else {
-  //       content_recipe = '';
-  //     }
-  //     content_command_procesed += `
-  //       <a href="#" class="list-group-item list-group-item-action ${bg_status}" aria-current="true" onclick="event.preventDefault();">
-  //         <div class="d-flex w-100 justify-content-between">
-  //           <span class="mb-1">${command.tx_commanddata_quantity} - ${command.tx_commanddata_description} (${command.tx_presentation_value})</span>
-  //           ${btn}
-  //         </div>
-  //         ${content_recipe}
-  //       </a>
-  //     `;
-  //   })
-  //   content_command_procesed += `</div>`;
-  //   return { 'content': content_command_procesed, 'price': raw_price };
-  // }
   generate_articleSplited(request_split) {
     console.log(request_split)
     var content_command_procesed = ``;
@@ -794,7 +743,7 @@ class class_command{
     this.command_list = [];
     this.command_procesed = [];
   }
-  index(request_info, table_slug){
+  async index(request_info, table_slug){
     cls_request.request_opened = request_info;
 
     var request_slug = '';
@@ -822,7 +771,7 @@ class class_command{
     }
 
     var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
-    var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+    var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
     var raw_category = [];
     cls_article.article_list.map((article) => {
       var cat = raw_category.find((category)=> { return category === article.tx_category_value})
@@ -1000,13 +949,13 @@ class class_command{
         if (btn) {
           var url = '/request/' + request_slug; var method = 'GET';
           var body = "";
-          var funcion = function (obj) {
+          var funcion = async function (obj) {
             if (obj.data.command_procesed.length === 0) {
               cls_general.shot_toast_bs('El pedido ya fue cerrado.', { bg: 'text-bg-warning' }); return false;
             }
             cls_command.command_procesed = obj.data.command_procesed;
             var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
-            var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+            var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
             document.getElementById('commandList').innerHTML = content_command_procesed.content;
             document.getElementById('requestTotal').innerHTML = `B/ ${cls_general.val_price(total_sale.total, 2, 1, 1) }`
           }
@@ -1075,6 +1024,7 @@ class class_command{
   filter_article_category(category){
     var filtered = cls_article.look_for_category(category);
     var content = cls_command.generate_article_list(filtered)
+    document.getElementById('articleFilter').focus();
     document.getElementById('article_list').innerHTML = content;
   }
   generate_article_list(filtered){
@@ -1277,12 +1227,12 @@ class class_command{
     Modal.hide();
     cls_command.render_articleselected();
   }
-  render_articleselected(){
-    var content = cls_command.generate_articleselected(cls_command.command_list);
+  async render_articleselected(){
+    var content = await cls_command.generate_articleselected(cls_command.command_list);
     document.getElementById('article_selected').innerHTML = content.content;
     document.getElementById('span_commandTotal').innerHTML = '<h5>Total: B/ ' + content.price_sale.total +'</h5>';
   }
-  generate_articleselected(command_list){
+  async generate_articleselected(command_list){
     var content = '<ul class="list-group">';
     var raw_price = [];
     command_list.map((article,index) => {
@@ -1328,7 +1278,7 @@ class class_command{
       raw_price.push({price: article.price, discount: article.discount_rate, tax: article.tax_rate, quantity: article.quantity})
       
     })
-    var price_sale = cls_general.calculate_sale(raw_price);
+    var price_sale = await cls_general.calculate_sale(raw_price);
     content += '</ul>';
     return { 'content': content, 'price_sale': price_sale };
   }
@@ -1483,7 +1433,7 @@ class class_command{
 
     var url = '/command/'; var method = 'POST';
     var body = JSON.stringify({a: command_list, b: table_slug, c: client.name, d: 'Ped.'+title, e: consumption, f: observation });
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
         document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
@@ -1491,13 +1441,10 @@ class class_command{
         cls_command.command_list = [];
         var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
         cls_command.render_articleselected();
-        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
 
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ '+cls_general.val_price(total_sale.total,2,1,1);
-
-        // const Modal = bootstrap.Modal.getInstance('#commandModal');
-        // Modal.hide();
 
         if (obj.data.cashier === 1) {
           swal({
@@ -1555,13 +1502,13 @@ class class_command{
 
     var url = '/command/'+request_slug; var method = 'PUT';
     var body = JSON.stringify({ a: command_list, e: consumption, f: observation });
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         cls_command.command_procesed = obj.data.command_procesed;
         cls_command.command_list = [];
         var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
         cls_command.render_articleselected();
-        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
         
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
@@ -1661,12 +1608,12 @@ class class_command{
           var url = '/command/' + commanddata_id + '/cancel';
           var method = 'PUT';
           var body = JSON.stringify({a: 1});;
-          var funcion = function (obj) {
+          var funcion = async function (obj) {
             if (obj.status === 'success') {
 
               cls_command.command_procesed = obj.data.command_procesed;
               var command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
-              var total_sale = cls_general.calculate_sale(command_procesed.price);
+              var total_sale = await cls_general.calculate_sale(command_procesed.price);
 
               document.getElementById('commandList').innerHTML = command_procesed.content;
               document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
@@ -1690,12 +1637,12 @@ class class_command{
           var url = '/command/' + commanddata_id + '/cancel';
           var method = 'PUT';
           var body = JSON.stringify({ a: 0 });;
-          var funcion = function (obj) {
+          var funcion = async function (obj) {
             if (obj.status === 'success') {
 
               cls_command.command_procesed = obj.data.command_procesed;
               var command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
-              var total_sale = cls_general.calculate_sale(command_procesed.price);
+              var total_sale = await cls_general.calculate_sale(command_procesed.price);
 
               document.getElementById('commandList').innerHTML = command_procesed.content;
               document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total,2,1,1);
@@ -1719,7 +1666,7 @@ class class_command{
     var url = cls_request.api_url + 'APIrequest/show/' + request_slug;
     var method = 'GET';
     var body = '';
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         var raw_data = obj.data;
         var onlinerequest_info = raw_data.request_api;
@@ -1801,7 +1748,7 @@ class class_command{
         content_command_procesed += `</div>`;
 
 
-        var raw_total = cls_general.calculate_sale(raw_price);
+        var raw_total = await cls_general.calculate_sale(raw_price);
         var raw_category = [];
         cls_article.article_list.map((article) => {
           var cat = raw_category.find((category) => { return category === article.tx_category_value })
@@ -2044,7 +1991,7 @@ class class_command{
 
     var url = '/command/'; var method = 'POST';
     var body = JSON.stringify({ a: command_list, b: table_slug, c: client.name, d: 'Ped.' + title, e: consumption, f: observation, g: onlinerequest_slug, h: cls_request.api_token });
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
         document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
@@ -2052,7 +1999,7 @@ class class_command{
         cls_command.command_list = [];
         var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
         cls_command.render_articleselected();
-        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
 
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
@@ -2117,13 +2064,13 @@ class class_command{
 
     var url = '/command/' + request_slug; var method = 'PUT';
     var body = JSON.stringify({ a: command_list, e: consumption, f: observation, g: onlinerequest_slug, h: cls_request.api_token });
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         cls_command.command_procesed = obj.data.command_procesed;
         cls_command.command_list = [];
         var content_command_procesed = cls_command.generate_articleprocesed(cls_command.command_procesed);
         cls_command.render_articleselected();
-        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
 
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);

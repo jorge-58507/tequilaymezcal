@@ -1669,7 +1669,7 @@ class class_articleproduct{
       measure_id: measure.value,
       measure_value: measure.options[measure.selectedIndex].text,
       warehouse: warehouse.value,
-      warehouse_value: warehouse.options[measure.selectedIndex].text,
+      warehouse_value: warehouse.options[warehouse.selectedIndex].text,
       quantity: quantity,
       to_go: togo
     });

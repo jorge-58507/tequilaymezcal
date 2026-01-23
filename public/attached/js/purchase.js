@@ -359,7 +359,7 @@ class class_productinput{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  update_dataproductinput(dataproductinput_id) {
+  async update_dataproductinput(dataproductinput_id) {
     var quantity = document.getElementById('dataproductinputQuantity').value;
     var measure_id = document.getElementById('dataproductinputMeasure').value;
     var price = document.getElementById('dataproductinputPrice').value;
@@ -383,9 +383,9 @@ class class_productinput{
       raw_calculate.push({ price: data.tx_dataproductinput_price, discount: data.tx_dataproductinput_discountrate, tax: data.tx_dataproductinput_taxrate, quantity: data.tx_dataproductinput_quantity })
     })
 
-    var total_productinput = cls_general.calculate_sale(raw_calculate)
+    var total_productinput = await cls_general.calculate_sale(raw_calculate)
 
-    var total = cls_general.calculate_sale([{price: price, discount: discountrate, tax: taxrate, quantity: quantity}])
+    var total = await cls_general.calculate_sale([{price: price, discount: discountrate, tax: taxrate, quantity: quantity}])
     var url = '/dataproductinput/' + dataproductinput_id;
     var method = 'PUT';
     var body = JSON.stringify({a: quantity, b: measure_id, c: price, d: discountrate, e: taxrate, f: total, g: duedate, h: total_productinput });
@@ -709,7 +709,7 @@ class class_requisition{
     content += '</ul>';
     return content;
   }
-  product_total(){
+  async product_total(){
     var product_quantity = document.getElementById('productQuantity').value;
     var product_price = document.getElementById('productPrice').value;
     var product_discountrate = document.getElementById('productDiscountrate').value;
@@ -717,7 +717,7 @@ class class_requisition{
     if (cls_general.is_empty_var(product_quantity) === 0 || cls_general.is_empty_var(product_price) === 0 || cls_general.is_empty_var(product_discountrate) === 0 || cls_general.is_empty_var(product_taxrate) === 0) {
       var total = {total: 0.00};
     }else{
-      var total = cls_general.calculate_sale([{price: product_price, discount: product_discountrate, tax: product_taxrate, quantity: product_quantity}]);
+      var total = await cls_general.calculate_sale([{price: product_price, discount: product_discountrate, tax: product_taxrate, quantity: product_quantity}]);
     }
     //[{PRICE,discount,tax, quantity}]
     document.getElementById('productTotal').innerHTML = cls_general.val_price(total.total,2,1,1);
@@ -764,14 +764,14 @@ class class_requisition{
     const modal = new bootstrap.Modal('#requisitionModal', {})
     modal.show();
   }
-  process(){
+  async process(){
     var provider_slug = document.getElementById('requisition_providerSelected').name;
 
     var raw_product = [];
     cls_requisition.product_added.map((product) => {
       raw_product.push({ price: product.price, discount: product.discountrate, tax: product.taxrate, quantity: product.quantity})
     });
-    var raw_total = cls_general.calculate_sale(raw_product);
+    var raw_total = await cls_general.calculate_sale(raw_product);
     var url = '/requisition/';
     var method = 'POST';
     var body = JSON.stringify({ a: cls_requisition.product_added, b: provider_slug, c: raw_total});
@@ -1367,7 +1367,7 @@ class class_product{
     }
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  addproduct(){
+  async addproduct(){
     var product_id = document.getElementById('productId').value;
     var product_description = document.getElementById('productDescription').value;
     var select_measure = document.getElementById('productMeasure');
@@ -1381,19 +1381,19 @@ class class_product{
       cls_general.shot_toast_bs('Debe llenar todos los campos', {bg: 'text-bg-warning'});
       return false;
     }
-    var added_total = cls_general.calculate_sale([{ price: product_price, discount: product_discountrate, tax: product_taxrate, quantity: product_quantity }]);
+    var added_total = await cls_general.calculate_sale([{ price: product_price, discount: product_discountrate, tax: product_taxrate, quantity: product_quantity }]);
     cls_requisition.product_added.push({ id: product_id, description: product_description, measure_id: product_measureId, measure_description: product_measureDescription, quantity: product_quantity, price: product_price, discountrate: product_discountrate, taxrate: product_taxrate, total: added_total.total});
     var raw_total = [];
     cls_requisition.product_added.map((product) => {
       raw_total.push({ price: product.price, discount: product.discountrate, tax: product.taxrate, quantity: product.quantity })
     })
-    var total = cls_general.calculate_sale(raw_total);
+    var total = await cls_general.calculate_sale(raw_total);
     document.getElementById('span_requisitionTotal').innerHTML = '<h5>Total: B / '+ cls_general.val_price(total.total,2,1,1) + '</h5>';
     const Modal = bootstrap.Modal.getInstance('#addproductrequisitionModal');
     Modal.hide();
     document.getElementById('product_selected').innerHTML = cls_product.generate_productselected(cls_requisition.product_added);
   }
-  deleteproduct(index){
+  async deleteproduct(index){
     var product_added = cls_requisition.product_added;
     product_added.splice(index, 1);
     cls_requisition.product_added = product_added;
@@ -1402,7 +1402,7 @@ class class_product{
     cls_requisition.product_added.map((product) => {
       raw_total.push({ price: product.price, discount: product.discountrate, tax: product.taxrate, quantity: product.quantity })
     })
-    var total = cls_general.calculate_sale(raw_total);
+    var total = await cls_general.calculate_sale(raw_total);
     document.getElementById('span_requisitionTotal').innerHTML = '<h5>Total: B / ' + cls_general.val_price(total.total, 2, 1, 1) + '</h5>';
 
   }

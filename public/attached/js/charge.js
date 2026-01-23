@@ -461,7 +461,7 @@ class class_request{
     var api_token = cls_charge.api_token;
     await cls_general.async_api_request(url, method, funcion, body, api_token);
   }
-  inspect_information(raw_data){
+  async inspect_information(raw_data){
     var content_command_procesed = `<div class="list-group">`;
     var command_procesed = raw_data.commanddata;
     var raw_price = [];
@@ -543,7 +543,8 @@ class class_request{
     })
     content_command_related += `</div>`;
 
-    var raw_total = cls_general.calculate_sale(raw_price)
+    var raw_total = await cls_general.calculate_sale(raw_price)
+
     var request_info = raw_data.request_api;
     var btn_next = '';
     switch (request_info.tx_request_status) {
@@ -554,7 +555,6 @@ class class_request{
         var btn_next = `<div class="col-6 pt-4"><button id="btn_nextstatus" type="button" class="btn btn-info btn-lg" onclick="cls_request.request_next(this,'${request_info.tx_request_slug}')">Cerrar Pedido</button></div>`;
       break;
     }
-    // var btn_next = (request_info.tx_request_status === 2 || request_info.tx_request_status === 3) ? `<div class="col-6 pt-4"><button type="button" class="btn btn-info btn-lg" onclick="cls_request.request_next('${request_info.tx_request_slug}')">Siguiente</button></div>` : '';
     var content = `
           <div class="col-sm-12" style="height: 25vh;">
             <div class="row">
@@ -963,19 +963,19 @@ class class_charge{
       //cls_request.get_onlinependant()
     }, 30000);
   }
-  show(request_slug){
+  async show(request_slug){
     document.getElementById('giftcardModal_content').innerHTML = '';
     document.getElementById('giftcardModal_footer').innerHTML = '';
     cls_payment.payment = [];    
     var url = '/command/' + request_slug + '/byrequest';
     var method = 'GET';
     var body = '';
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         cls_charge.render(request_slug);
         var content_command = cls_command.generate_articleprocesed(obj.data.command_procesed)
         document.getElementById('container_commandlist').innerHTML = content_command.content;
-        let price = cls_general.calculate_sale(content_command.price)
+        let price = await cls_general.calculate_sale(content_command.price)
         document.getElementById('sp_gross').innerHTML = 'B/. ' + cls_general.val_price(price.gross_total, 2, 1, 1);
         document.getElementById('sp_discount').innerHTML = 'B/. ' + cls_general.val_price(price.discount, 2, 1, 1);
         document.getElementById('sp_subtotal').innerHTML = 'B/. ' + cls_general.val_price(price.subtotal, 2, 1, 1);
@@ -1464,7 +1464,7 @@ class class_command{
     this.command_list = [];
     this.command_procesed = [];
   }
-  index(request_info, table_slug) {
+  async index(request_info, table_slug) {
     var request_slug = '';
     if (request_info != null) {
       var key = Object.keys(request_info);
@@ -1492,7 +1492,7 @@ class class_command{
     }
 
     var content_command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
-    var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+    var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
     var raw_category = [];
     cls_article.article_list.map((article) => {
       var cat = raw_category.find((category) => { return category === article.tx_category_value })
@@ -1662,13 +1662,13 @@ class class_command{
         if (btn) {
           var url = '/request/' + request_slug; var method = 'GET';
           var body = "";
-          var funcion = function (obj) {
+          var funcion = async function (obj) {
             if (obj.data.command_procesed.length === 0) {
               cls_general.shot_toast_bs('El pedido ya fue cerrado.', { bg: 'text-bg-warning' }); return false;
             }
             cls_command.command_procesed = obj.data.command_procesed;
             var content_command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
-            var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+            var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
             document.getElementById('commandList').innerHTML = content_command_procesed.content;
             document.getElementById('requestTotal').innerHTML = `B/ ${cls_general.val_price(total_sale.total, 2, 1, 1)}`
           }
@@ -1769,7 +1769,8 @@ class class_command{
   filter_article_category(category) {
     var filtered = cls_article.look_for_category(category);
     var content = cls_command.generate_article_list(filtered)
-    document.getElementById('article_list').innerHTML = content;
+    document.getElementById("articleFilter").focus();
+    document.getElementById("article_list").innerHTML = content;
   }
   generate_article_list(filtered) {
     var content = '<ul class="list-group">';
@@ -1925,7 +1926,7 @@ class class_command{
     cls_general.async_laravel_request(url, method, funcion, body);
 
   }
-  add_article_lastrequest(article_slug, description, article_id) {
+  async add_article_lastrequest(article_slug, description, article_id) {
     var quantity = document.getElementById('articleQuantity').value;
     if (isNaN(quantity) || quantity < 1) {
       cls_general.shot_toast_bs('Corrija la cantidad.', { bg: 'text-bg-warning' });
@@ -1980,14 +1981,14 @@ class class_command{
       var url = '/commanddatalastrequest/';
       var method = 'POST';
       var body = JSON.stringify({ a: request_slug, b: raw_article });
-      var funcion = function (obj) {
+      var funcion = async function (obj) {
         if (obj.status === 'success') {
           cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
   
           var content_command = cls_command.generate_articleprocesed(obj.data.command_procesed)
           document.getElementById('container_commandlist').innerHTML = content_command.content;
   
-          let price = cls_general.calculate_sale(content_command.price)
+          let price = await cls_general.calculate_sale(content_command.price)
           document.getElementById('sp_gross').innerHTML = 'B/. ' + cls_general.val_price(price.gross_total, 2, 1, 1);
           document.getElementById('sp_discount').innerHTML = 'B/. ' + cls_general.val_price(price.discount, 2, 1, 1);
           document.getElementById('sp_subtotal').innerHTML = 'B/. ' + cls_general.val_price(price.subtotal, 2, 1, 1);
@@ -2005,14 +2006,14 @@ class class_command{
       cls_general.async_laravel_request(url, method, funcion, body);    
     }
   }
-  render_articleselected() {
-    var content = cls_command.generate_articleselected(cls_command.command_list);
+  async render_articleselected() {
+    var content = await cls_command.generate_articleselected(cls_command.command_list);
     document.getElementById('article_selected').innerHTML = content.content;
     document.getElementById('span_commandTotal').innerHTML = '<h5>Total: B/ ' + content.price_sale.total + '</h5>';
   }
 
 
-  generate_articleselected(command_list) {
+  async generate_articleselected(command_list) {
     var content = '<div class="accordion" id="">';
     var raw_price = [];
     command_list.map((article, index) => {
@@ -2062,8 +2063,8 @@ class class_command{
       raw_price.push({ price: article.price, discount: article.discount_rate, tax: article.tax_rate, quantity: article.quantity })
 
     })
-    var price_sale = cls_general.calculate_sale(raw_price);
     content += '</div>';
+    var price_sale = await cls_general.calculate_sale(raw_price);
     return { 'content': content, 'price_sale': price_sale };
   }
   generate_articleprocesed_newsale(command_procesed) {
@@ -2115,6 +2116,7 @@ class class_command{
       `;
     })
     content_command_procesed += `</div>`;
+    
     return { 'content': content_command_procesed, 'price': raw_price };
   }
   delete_articleselected(index) {
@@ -2196,7 +2198,7 @@ class class_command{
 
     var url = '/command/'; var method = 'POST';
     var body = JSON.stringify({ a: command_list, b: table_slug, c: client.name, d: 'Ped.' + title, e: consumption, f: observation });
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
         document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
@@ -2204,7 +2206,7 @@ class class_command{
         cls_command.command_list = [];
         var content_command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
         cls_command.render_articleselected();
-        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
 
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
@@ -2263,13 +2265,13 @@ class class_command{
 
     var url = '/command/' + request_slug; var method = 'PUT';
     var body = JSON.stringify({ a: command_list, e: consumption, f: observation });
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         cls_command.command_procesed = obj.data.command_procesed;
         cls_command.command_list = [];
         var content_command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
         cls_command.render_articleselected();
-        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
 
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
@@ -2357,11 +2359,11 @@ class class_command{
           var url = '/command/' + commanddata_id + '/cancel';
           var method = 'PUT';
           var body = JSON.stringify({ a: 1 });;
-          var funcion = function (obj) {
+          var funcion = async function (obj) {
             if (obj.status === 'success') {
               var content_command = cls_command.generate_articleprocesed(obj.data.command_procesed)
               document.getElementById('container_commandlist').innerHTML = content_command.content;
-              let price = cls_general.calculate_sale(content_command.price)
+              let price = await cls_general.calculate_sale(content_command.price)
               document.getElementById('sp_gross').innerHTML = 'B/. ' + cls_general.val_price(price.gross_total, 2, 1, 1);
               document.getElementById('sp_discount').innerHTML = 'B/. ' + cls_general.val_price(price.discount, 2, 1, 1);
               document.getElementById('sp_subtotal').innerHTML = 'B/. ' + cls_general.val_price(price.subtotal, 2, 1, 1);
@@ -2379,11 +2381,11 @@ class class_command{
           var url = '/command/' + commanddata_id + '/cancel';
           var method = 'PUT';
           var body = JSON.stringify({ a: 0 });;
-          var funcion = function (obj) {
+          var funcion = async function (obj) {
             if (obj.status === 'success') {
               var content_command = cls_command.generate_articleprocesed(obj.data.command_procesed)
               document.getElementById('container_commandlist').innerHTML = content_command.content;
-              let price = cls_general.calculate_sale(content_command.price)
+              let price = await cls_general.calculate_sale(content_command.price)
               document.getElementById('sp_gross').innerHTML = 'B/. ' + cls_general.val_price(price.gross_total, 2, 1, 1);
               document.getElementById('sp_discount').innerHTML = 'B/. ' + cls_general.val_price(price.discount, 2, 1, 1);
               document.getElementById('sp_subtotal').innerHTML = 'B/. ' + cls_general.val_price(price.subtotal, 2, 1, 1);
@@ -2405,7 +2407,7 @@ class class_command{
 
 
   // API
-  create_request(raw_data) {
+  async create_request(raw_data) {
     var onlinerequest_info = raw_data.request_api;
     var onlinerequest_slug = onlinerequest_info.tx_request_slug
 
@@ -2487,7 +2489,7 @@ class class_command{
     content_command_procesed += `</div>`;
 
 
-    var raw_total = cls_general.calculate_sale(raw_price);
+    var raw_total = await cls_general.calculate_sale(raw_price);
     var raw_category = [];
     cls_article.article_list.map((article) => {
       var cat = raw_category.find((category) => { return category === article.tx_category_value })
@@ -2725,7 +2727,7 @@ class class_command{
 
     var url = '/command/'; var method = 'POST';
     var body = JSON.stringify({ a: command_list, b: table_slug, c: client.name, d: 'Ped.' + title, e: consumption, f: observation, g: onlinerequest_slug, h: cls_charge.api_token });
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         document.getElementById('btn_commandprocess').name = obj.data.request.tx_request_slug;
         document.getElementById('container_buttonUpdateInfo').innerHTML = `<button class="btn btn-lg btn-info" type="button" onclick="cls_general.disable_submit(this); cls_request.update_info('${obj.data.request.tx_request_slug}')">Actualizar</button>`;
@@ -2733,7 +2735,7 @@ class class_command{
         cls_command.command_list = [];
         var content_command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
         cls_command.render_articleselected();
-        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
 
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
@@ -2799,13 +2801,13 @@ class class_command{
 
     var url = '/command/' + request_slug; var method = 'PUT';
     var body = JSON.stringify({ a: command_list, e: consumption, f: observation, g: onlinerequest_slug, h: cls_charge.api_token });
-    var funcion = function (obj) {
+    var funcion = async function (obj) {
       if (obj.status === 'success') {
         cls_command.command_procesed = obj.data.command_procesed;
         cls_command.command_list = [];
         var content_command_procesed = cls_command.generate_articleprocesed_newsale(cls_command.command_procesed);
         cls_command.render_articleselected();
-        var total_sale = cls_general.calculate_sale(content_command_procesed.price);
+        var total_sale = await cls_general.calculate_sale(content_command_procesed.price);
 
         document.getElementById('commandList').innerHTML = content_command_procesed.content;
         document.getElementById('requestTotal').innerHTML = 'B/ ' + cls_general.val_price(total_sale.total, 2, 1, 1);
@@ -3116,15 +3118,15 @@ class class_payment{
 
   }
 }
-class class_creditnote{
-  constructor(active,inactive){
+class class_creditnote {
+  constructor(active, inactive) {
     this.creditnote_charge = [];
     this.selected = [];
     this.active_list = active;
     this.inactive_list = inactive;
-    this.pass = 'tequilaymezcal2023';
+    this.pass = "tequilaymezcal2023";
   }
-  index(){
+  index() {
     var content = `
     
       <div class="row">
@@ -3170,94 +3172,146 @@ class class_creditnote{
       </div>
     `;
 
-    document.getElementById('container_request').innerHTML = content;
-    cls_creditnote.filter('', document.getElementById('creditnoteLimit').value)
+    document.getElementById("container_request").innerHTML = content;
+    cls_creditnote.filter("", document.getElementById("creditnoteLimit").value);
   }
-  generate_list(raw_active){
+  generate_list(raw_active) {
     var active_list = '<ul class="list-group">';
     for (const a in raw_active) {
       active_list += `
-        <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_creditnote.inspect(${raw_active[a].ai_creditnote_id})">
+        <li class="list-group-item cursor_pointer d-flex justify-content-between align-items-start" onclick="cls_creditnote.inspect(${
+          raw_active[a].ai_creditnote_id
+        })">
           <div class="ms-2 me-auto">
-            <div class="fw-bold"><h5>${raw_active[a].tx_creditnote_number} - ${raw_active[a].tx_client_name}</h5></div>
+            <div class="fw-bold"><h5>${raw_active[a].tx_creditnote_number} - ${
+        raw_active[a].tx_client_name
+      }</h5></div>
           </div>
-          <span class="badge bg-secondary fs_20">B/ ${(raw_active[a].tx_creditnote_nontaxable + raw_active[a].tx_creditnote_taxable + raw_active[a].tx_creditnote_tax).toFixed(2)}</span>
+          <span class="badge bg-secondary fs_20">B/ ${(
+            raw_active[a].tx_creditnote_nontaxable +
+            raw_active[a].tx_creditnote_taxable +
+            raw_active[a].tx_creditnote_tax
+          ).toFixed(2)}</span>
           &nbsp;&nbsp;&nbsp;
-          <span>${cls_general.datetime_converter(raw_active[a].created_at)}</span>
+          <span>${cls_general.datetime_converter(
+            raw_active[a].created_at
+          )}</span>
         </li>
       `;
     }
-    active_list += '</ul>';
+    active_list += "</ul>";
 
     return active_list;
   }
   inspect(creditnote_id) {
-    var url = '/creditnote/'+creditnote_id;
-    var method = 'GET';
-    var body = '';
+    var url = "/creditnote/" + creditnote_id;
+    var method = "GET";
+    var body = "";
     var funcion = function (obj) {
-      if (obj.status === 'success') {
+      if (obj.status === "success") {
         var info = obj.data.info;
         var raw_data = obj.data.article;
 
-        cls_creditnote.render_inspect(info,raw_data);
+        cls_creditnote.render_inspect(info, raw_data);
 
-        const modal = new bootstrap.Modal('#inspectModal', {})
+        const modal = new bootstrap.Modal("#inspectModal", {});
         modal.show();
       } else {
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        cls_general.shot_toast_bs(obj.message, { bg: "text-bg-warning" });
       }
-    }
+    };
     cls_general.async_laravel_request(url, method, funcion, body);
   }
-  render_inspect(info,raw_data) {
-    var article_list = '';
+  render_inspect(info, raw_data) {
+    var article_list = "";
     raw_data.map((article) => {
-      var discount = ((article.tx_commanddata_discountrate * article.tx_commanddata_price) / 100); discount = discount.toFixed(2);
+      var discount =
+        (article.tx_commanddata_discountrate * article.tx_commanddata_price) /
+        100;
+      discount = discount.toFixed(2);
       var price = article.tx_commanddata_price - parseFloat(discount);
       article_list += `
         <li class="list-group-item d-flex justify-content-between align-items-start fs_20">
           <div class="ms-2 me-auto text-truncate">
-            ${article.tx_datacreditnote_quantity} - ${article.tx_commanddata_description}
+            ${article.tx_datacreditnote_quantity} - ${
+        article.tx_commanddata_description
+      }
           </div>
-          <span class="badge bg-secondary fs_20">${cls_general.val_price(price, 2, 1, 1)}</span>
+          <span class="badge bg-secondary fs_20">${cls_general.val_price(
+            price,
+            2,
+            1,
+            1
+          )}</span>
         </li>
       `;
-    })
+    });
     var content = `
     	<div class="col-sm-12" style="height: 60vh;">
         <div class="row">
           <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">Numero</label>
-            <input type="text" id="" class="form-control" value="${info.tx_creditnote_number}" readonly>
+            <input type="text" id="" class="form-control" value="${
+              info.tx_creditnote_number
+            }" readonly>
           </div>
           <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">Fecha</label>
-            <input type="text" id="" class="form-control" value="${cls_general.datetime_converter(info.created_at)}" readonly>
+            <input type="text" id="" class="form-control" value="${cls_general.datetime_converter(
+              info.created_at
+            )}" readonly>
           </div>
           <div class="col-md-12 col-lg-6">
             <label class="form-label" for="">Cliente</label>
-            <input type="text" id="" class="form-control" value="${info.tx_client_name}" readonly>
+            <input type="text" id="" class="form-control" value="${
+              info.tx_client_name
+            }" readonly>
           </div>
           <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">No imponible</label>
-            <input type="text" id="" class="form-control" value="${cls_general.val_price(info.tx_creditnote_nontaxable, 2, 1, 1)}" readonly>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(
+              info.tx_creditnote_nontaxable,
+              2,
+              1,
+              1
+            )}" readonly>
           </div>
           <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">Imponible</label>
-            <input type="text" id="" class="form-control" value="${cls_general.val_price(info.tx_creditnote_taxable, 2, 1, 1)}" readonly>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(
+              info.tx_creditnote_taxable,
+              2,
+              1,
+              1
+            )}" readonly>
           </div>
           <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">Impuesto</label>
-            <input type="text" id="" class="form-control" value="${cls_general.val_price(info.tx_creditnote_tax, 2, 1, 1)}" readonly>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(
+              info.tx_creditnote_tax,
+              2,
+              1,
+              1
+            )}" readonly>
           </div>
           <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">Total</label>
-            <input type="text" id="" class="form-control" value="${cls_general.val_price((info.tx_creditnote_nontaxable + info.tx_creditnote_taxable + info.tx_creditnote_tax).toFixed(2), 2, 1, 1)}" readonly>
+            <input type="text" id="" class="form-control" value="${cls_general.val_price(
+              (
+                info.tx_creditnote_nontaxable +
+                info.tx_creditnote_taxable +
+                info.tx_creditnote_tax
+              ).toFixed(2),
+              2,
+              1,
+              1
+            )}" readonly>
           </div>
           <div class="col-md-12 col-lg-6">
             <label class="form-label" for="">Motivo</label>
-            <input type="text" id="" class="form-control" value="${info.tx_creditnote_reason}" readonly>
+            <input type="text" id="" class="form-control" value="${
+              info.tx_creditnote_reason
+            }" readonly>
           </div>
         </div>
         <div class="row">
@@ -3284,39 +3338,70 @@ class class_creditnote{
         </div>
       `;
 
-    document.getElementById('inspectModal_content').innerHTML = content;
-    document.getElementById('inspectModal_footer').innerHTML = footer;
-    document.getElementById('inspectModal_title').innerHTML = 'Inspeccionar Nota de Cr&eacute;dito';
+    document.getElementById("inspectModal_content").innerHTML = content;
+    document.getElementById("inspectModal_footer").innerHTML = footer;
+    document.getElementById("inspectModal_title").innerHTML =
+      "Inspeccionar Nota de Cr&eacute;dito";
   }
   async filter(str, limit) {
-    document.getElementById('container_creditnote').innerHTML = cls_creditnote.generate_list(await cls_creditnote.look_for(str, limit));
+    document.getElementById("container_creditnote").innerHTML =
+      cls_creditnote.generate_list(await cls_creditnote.look_for(str, limit));
   }
   look_for(str, limit) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       clearTimeout(this.timer);
       this.timer = setTimeout(function () {
         var haystack = cls_creditnote.active_list;
-        var needles = str.split(' ');
+        var needles = str.split(" ");
         var raw_filtered = [];
         for (var i in haystack) {
-          if (i == limit) { break; }
+          if (i == limit) {
+            break;
+          }
           var ocurrencys = 0;
           for (const a in needles) {
-            if (haystack[i]['tx_client_name'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_client_cif'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1 || haystack[i]['tx_creditnote_number'].toLowerCase().indexOf(needles[a].toLowerCase()) > -1) { ocurrencys++ }
+            if (
+              haystack[i]["tx_client_name"]
+                .toLowerCase()
+                .indexOf(needles[a].toLowerCase()) > -1 ||
+              haystack[i]["tx_client_cif"]
+                .toLowerCase()
+                .indexOf(needles[a].toLowerCase()) > -1 ||
+              haystack[i]["tx_creditnote_number"]
+                .toLowerCase()
+                .indexOf(needles[a].toLowerCase()) > -1
+            ) {
+              ocurrencys++;
+            }
           }
           if (ocurrencys === needles.length) {
             raw_filtered.push(haystack[i]);
           }
         }
-        resolve(raw_filtered)
-      }, 500)
+        resolve(raw_filtered);
+      }, 500);
     });
   }
-  render(charge_slug,number,date,client,raw_article,raw_creditnote, payment){
+  render(
+    charge_slug,
+    number,
+    date,
+    client,
+    raw_article,
+    raw_creditnote,
+    payment
+  ) {
     var article_charge = cls_creditnote.generate_articlecharge(raw_article);
     var creditnote_list = cls_creditnote.generate_creditnote(raw_creditnote);
-    var check_methoddebit = payment.find((pay) => { return pay.payment_ai_paymentmethod_id === 3 })
-    var btn_nullify = (raw_creditnote.length === 0 && payment.length === 1 && check_methoddebit === undefined) ? `<button type="button" id="btn_creditnoteNullify" class="btn btn-danger btn-lg" onclick="cls_creditnote.nullify('${charge_slug}')">Anular</button>` : '';
+    var check_methoddebit = payment.find((pay) => {
+      return pay.payment_ai_paymentmethod_id === 3;
+    });
+    var btn_nullify =
+      raw_creditnote.length === 0 &&
+      payment.length === 1 &&
+      check_methoddebit === undefined
+        ? `<button type="button" id="btn_creditnoteNullify" class="btn btn-danger btn-lg" onclick="cls_creditnote.nullify('${charge_slug}')">Anular</button>`
+        : "";
 
     var content = `
       <div class="col-sm-12">
@@ -3327,7 +3412,9 @@ class class_creditnote{
           </div>
           <div class="col-md-6 col-lg-3">
             <label class="form-label" for="">Fecha</label>
-            <input type="text" id="" class="form-control" value="${cls_general.datetime_converter(date)}" readonly>
+            <input type="text" id="" class="form-control" value="${cls_general.datetime_converter(
+              date
+            )}" readonly>
           </div>
           <div class="col-md-12 col-lg-6">
             <label class="form-label" for="">Cliente</label>
@@ -3407,21 +3494,24 @@ class class_creditnote{
         </div>
       </div>
     `;
-    document.getElementById('container_request').innerHTML = content;
-    const Modal = bootstrap.Modal.getInstance('#inspectModal');
+    document.getElementById("container_request").innerHTML = content;
+    const Modal = bootstrap.Modal.getInstance("#inspectModal");
     if (Modal != null) {
       Modal.hide();
     }
-    document.getElementById('btn_creditnoteProcess').addEventListener('click', ()=>{  cls_creditnote.process(charge_slug);  });
-
+    document
+      .getElementById("btn_creditnoteProcess")
+      .addEventListener("click", () => {
+        cls_creditnote.process(charge_slug);
+      });
   }
-  generate_articlecharge(raw_article) {
+  /*async generate_articlecharge(raw_article) {
     var content = ``;
     raw_article.map((commanddata) => {
       if (commanddata.commanddata_status === 1) {
         //[{PRICE,discount,tax, quantity}]
         var raw_price = [{ 'price': commanddata.commanddata_price, 'discount': commanddata.commanddata_discountrate, 'tax': commanddata.commanddata_taxrate, 'quantity': 1 }];
-        var price_sale = cls_general.calculate_sale(raw_price);
+        var price_sale = await cls_general.calculate_sale(raw_price);
   
         content += `<tr class="cursor_pointer" onclick="cls_creditnote.add('${commanddata.commanddata_id}','${commanddata.article_code}','${commanddata.article_value}','${commanddata.commanddata_presentation_value}',${price_sale.total},${parseFloat(commanddata.commanddata_quantity) - parseFloat(commanddata.commanddata_cnquantity)},${commanddata.article_id},${commanddata.commanddata_presentation_id})">`;
         content += `<td class="d-none d-lg-table-cell">${commanddata.article_code}</td><td>${commanddata.article_value}</td><td class="d-none d-lg-table-cell">${commanddata.commanddata_presentation_value}</td><td>${parseFloat(commanddata.commanddata_quantity) - parseFloat(commanddata.commanddata_cnquantity) }</td><td>B/ ${cls_general.val_price(price_sale.total, 2, 1, 1)}</td>`;
@@ -3429,10 +3519,76 @@ class class_creditnote{
       }
     })
     return content;
+  }*/
+
+  async generate_articlecharge(raw_article) {
+    var content = ``;
+
+    for (const commanddata of raw_article) {
+      if (commanddata.commanddata_status === 1) {
+        var raw_price = [
+          {
+            price: commanddata.commanddata_price,
+            discount: commanddata.commanddata_discountrate,
+            tax: commanddata.commanddata_taxrate,
+            quantity: 1,
+          },
+        ];
+
+        var price_sale = await cls_general.calculate_sale(raw_price);
+
+        content += `<tr class="cursor_pointer"
+                onclick="cls_creditnote.add(
+                    '${commanddata.commanddata_id}',
+                    '${commanddata.article_code}',
+                    '${commanddata.article_value}',
+                    '${commanddata.commanddata_presentation_value}',
+                    ${price_sale.total},
+                    ${
+                      parseFloat(commanddata.commanddata_quantity) -
+                      parseFloat(commanddata.commanddata_cnquantity)
+                    },
+                    ${commanddata.article_id},
+                    ${commanddata.commanddata_presentation_id}
+                )">`;
+
+        content += `
+                <td class="d-none d-lg-table-cell">${
+                  commanddata.article_code
+                }</td>
+                <td>${commanddata.article_value}</td>
+                <td class="d-none d-lg-table-cell">${
+                  commanddata.commanddata_presentation_value
+                }</td>
+                <td>${
+                  parseFloat(commanddata.commanddata_quantity) -
+                  parseFloat(commanddata.commanddata_cnquantity)
+                }</td>
+                <td>B/ ${cls_general.val_price(price_sale.total, 2, 1, 1)}</td>
+            </tr>`;
+      }
+    }
+
+    return content;
   }
-  add(commanddata_id,article_code,article_value,presentation_value,price,commanddata_quantity,article_id,presentation_id){
-    var returned = cls_creditnote.selected.find((commanddata)=> { return commanddata.commanddata_id === commanddata_id })
-    var available = (returned != undefined) ? commanddata_quantity - parseFloat(returned.quantity) : commanddata_quantity;
+
+  add(
+    commanddata_id,
+    article_code,
+    article_value,
+    presentation_value,
+    price,
+    commanddata_quantity,
+    article_id,
+    presentation_id
+  ) {
+    var returned = cls_creditnote.selected.find((commanddata) => {
+      return commanddata.commanddata_id === commanddata_id;
+    });
+    var available =
+      returned != undefined
+        ? commanddata_quantity - parseFloat(returned.quantity)
+        : commanddata_quantity;
     swal({
       title: article_value,
       text: "Ingrese la cantidad a anular.",
@@ -3444,88 +3600,152 @@ class class_creditnote{
           type: "text",
         },
       },
-    })
-    .then((quantity) => {
+    }).then((quantity) => {
       if (cls_general.is_empty_var(quantity) === 0) {
         return swal("Debe ingresar un numero.");
       }
       if (isNaN(quantity)) {
         return swal("Debe ingresar un numero entero.");
       }
-      
-      quantity = cls_general.val_dec(quantity,1,0,1);
+
+      quantity = cls_general.val_dec(quantity, 1, 0, 1);
       if (quantity > available) {
         return swal("Ha excedido la cantidad disponible.");
       }
-      var i = '';
-      cls_creditnote.selected.find((commanddata, index) => { if (commanddata.commanddata_id === commanddata_id) { i = index; } })
-      if (cls_general.is_empty_var(i) === 1) { //SI YA EXISTE
+      var i = "";
+      cls_creditnote.selected.find((commanddata, index) => {
+        if (commanddata.commanddata_id === commanddata_id) {
+          i = index;
+        }
+      });
+      if (cls_general.is_empty_var(i) === 1) {
+        //SI YA EXISTE
         cls_creditnote.selected[i].quantity += quantity;
-      }else{
-        cls_creditnote.selected.push({ 'commanddata_id': commanddata_id, 'article_id': article_id, 'article_code': article_code, 'article_value': article_value, 'presentation_value': presentation_value, 'presentation_id': presentation_id, 'price': price, 'quantity': quantity});
+      } else {
+        cls_creditnote.selected.push({
+          commanddata_id: commanddata_id,
+          article_id: article_id,
+          article_code: article_code,
+          article_value: article_value,
+          presentation_value: presentation_value,
+          presentation_id: presentation_id,
+          price: price,
+          quantity: quantity,
+        });
       }
-      var content = cls_creditnote.generate_articleselected(cls_creditnote.selected);
-      document.getElementById('container_tocancel').innerHTML = content;
+      var content = cls_creditnote.generate_articleselected(
+        cls_creditnote.selected
+      );
+      document.getElementById("container_tocancel").innerHTML = content;
     });
   }
   generate_articleselected(raw_article) {
     var content = ``;
     raw_article.map((commanddata) => {
       content += `<tr class="cursor_pointer">`;
-      content += `<td class="d-none d-lg-table-cell">${commanddata.article_code}</td><td>${commanddata.article_value}</td><td class="d-none d-lg-table-cell">${commanddata.presentation_value}</td><td>${commanddata.quantity}</td><td>B/ ${cls_general.val_price(commanddata.price, 2, 1, 1)}</td><td class="text-center"><button class="btn btn-danger" onclick="cls_creditnote.delete('${commanddata.commanddata_id}')"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16"><path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path></svg></button></td>`;
-      content += '</tr>';
-    })
+      content += `<td class="d-none d-lg-table-cell">${
+        commanddata.article_code
+      }</td><td>${
+        commanddata.article_value
+      }</td><td class="d-none d-lg-table-cell">${
+        commanddata.presentation_value
+      }</td><td>${commanddata.quantity}</td><td>B/ ${cls_general.val_price(
+        commanddata.price,
+        2,
+        1,
+        1
+      )}</td><td class="text-center"><button class="btn btn-danger" onclick="cls_creditnote.delete('${
+        commanddata.commanddata_id
+      }')"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16"><path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path></svg></button></td>`;
+      content += "</tr>";
+    });
     return content;
   }
-  delete(commanddata_id){
-    var i = '';
-    cls_creditnote.selected.find((commanddata, index) => { if (commanddata.commanddata_id === commanddata_id) { i = index; } })
-    
+  delete(commanddata_id) {
+    var i = "";
+    cls_creditnote.selected.find((commanddata, index) => {
+      if (commanddata.commanddata_id === commanddata_id) {
+        i = index;
+      }
+    });
+
     // var selected = cls_creditnote.selected.find((commanddata, index) => { if (commanddata_id == commanddata.commanddata_id) { return index } });
     if (cls_general.is_empty_var(i) === 1) {
-      cls_creditnote.selected.splice(i,1);
+      cls_creditnote.selected.splice(i, 1);
     }
-    var content = cls_creditnote.generate_articleselected(cls_creditnote.selected);
-    document.getElementById('container_tocancel').innerHTML = content;
+    var content = cls_creditnote.generate_articleselected(
+      cls_creditnote.selected
+    );
+    document.getElementById("container_tocancel").innerHTML = content;
   }
-  process(charge_slug){
-    cls_general.disable_submit(document.getElementById('btn_creditnoteProcess'));
+  process(charge_slug) {
+    cls_general.disable_submit(
+      document.getElementById("btn_creditnoteProcess")
+    );
     if (cls_creditnote.selected.length < 1) {
-      cls_general.shot_toast_bs('Debe incluir productos.', { bg: 'text-bg-warning' }); return false;
+      cls_general.shot_toast_bs("Debe incluir productos.", {
+        bg: "text-bg-warning",
+      });
+      return false;
     }
 
-    var reason = document.getElementById('creditnoteReason').value;
-    var url = '/creditnote/';
-    var method = 'POST';
-    var body = JSON.stringify({ a: charge_slug, b: cls_creditnote.selected, c: reason });
+    var reason = document.getElementById("creditnoteReason").value;
+    var url = "/creditnote/";
+    var method = "POST";
+    var body = JSON.stringify({
+      a: charge_slug,
+      b: cls_creditnote.selected,
+      c: reason,
+    });
     var funcion = function (obj) {
-      if (obj.status === 'success') {
+      if (obj.status === "success") {
         cls_creditnote.selected = [];
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
+        cls_general.shot_toast_bs(obj.message, { bg: "text-bg-success" });
         cls_charge.index();
-        cls_request.render('open', cls_request.open_request);
-        cls_request.render('closed', cls_request.closed_request);
-        cls_request.render('canceled', cls_charge.charge_list);
-
+        cls_request.render("open", cls_request.open_request);
+        cls_request.render("closed", cls_request.closed_request);
+        cls_request.render("canceled", cls_charge.charge_list);
       } else {
-        cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
+        cls_general.shot_toast_bs(obj.message, { bg: "text-bg-warning" });
       }
-    }
+    };
     cls_general.async_laravel_request(url, method, funcion, body);
-
-
   }
   generate_creditnote(raw_creditnote) {
     var content = ``;
     raw_creditnote.map((creditnote) => {
-      var nully = (creditnote.tx_creditnote_nullification === 1) ? 'Anulaci&oacute;n':'Nota de Cr&eacute;dito';
+      var nully =
+        creditnote.tx_creditnote_nullification === 1
+          ? "Anulaci&oacute;n"
+          : "Nota de Cr&eacute;dito";
       content += `<tr class="cursor_pointer">`;
-      content += `<td>${cls_general.datetime_converter(creditnote.created_at)}</td><td>${creditnote.tx_creditnote_number}</td><td>${nully}</td><td class="d-none d-lg-table-cell">B/ ${cls_general.val_price(creditnote.tx_creditnote_nontaxable + creditnote.tx_creditnote_taxable, 2, 1, 1)}</td><td class="d-none d-lg-table-cell">B/ ${cls_general.val_price(creditnote.tx_creditnote_tax, 2, 1, 1)}</td><td class="d-none d-lg-table-cell">B/ ${cls_general.val_price(creditnote.tx_creditnote_nontaxable+creditnote.tx_creditnote_taxable+creditnote.tx_creditnote_tax, 2, 1, 1)}</td>`;
-      content += '</tr>';
-    })
+      content += `<td>${cls_general.datetime_converter(
+        creditnote.created_at
+      )}</td><td>${
+        creditnote.tx_creditnote_number
+      }</td><td>${nully}</td><td class="d-none d-lg-table-cell">B/ ${cls_general.val_price(
+        creditnote.tx_creditnote_nontaxable + creditnote.tx_creditnote_taxable,
+        2,
+        1,
+        1
+      )}</td><td class="d-none d-lg-table-cell">B/ ${cls_general.val_price(
+        creditnote.tx_creditnote_tax,
+        2,
+        1,
+        1
+      )}</td><td class="d-none d-lg-table-cell">B/ ${cls_general.val_price(
+        creditnote.tx_creditnote_nontaxable +
+          creditnote.tx_creditnote_taxable +
+          creditnote.tx_creditnote_tax,
+        2,
+        1,
+        1
+      )}</td>`;
+      content += "</tr>";
+    });
     return content;
   }
-  nullify(charge_slug){
+  nullify(charge_slug) {
     swal({
       title: "¿Desea anular esta factura?",
       text: "Se creará una salida.",
@@ -3534,7 +3754,7 @@ class class_creditnote{
       buttons: {
         si: {
           text: "Si, cerrarlo",
-          className: "btn btn-success btn-lg"
+          className: "btn btn-success btn-lg",
         },
         no: {
           text: "No",
@@ -3542,32 +3762,30 @@ class class_creditnote{
         },
       },
       dangerMode: true,
-    })
-      .then((ans) => {
-        switch (ans) {
-          case 'si':
-            var url = '/creditnote/' + charge_slug + '/nullify';
-            var method = 'POST';
-            var body = JSON.stringify({ a: charge_slug, c: 'ANULADA' });
-            var funcion = function (obj) {
-              if (obj.status === 'success') {
-                cls_creditnote.selected = [];
-                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-success' });
-                cls_charge.index();
-                cls_request.render('open', cls_request.open_request);
-                cls_request.render('closed', cls_request.closed_request);
-                cls_request.render('canceled', cls_charge.charge_list);
-              } else {
-                cls_general.shot_toast_bs(obj.message, { bg: 'text-bg-warning' });
-              }
+    }).then((ans) => {
+      switch (ans) {
+        case "si":
+          var url = "/creditnote/" + charge_slug + "/nullify";
+          var method = "POST";
+          var body = JSON.stringify({ a: charge_slug, c: "ANULADA" });
+          var funcion = function (obj) {
+            if (obj.status === "success") {
+              cls_creditnote.selected = [];
+              cls_general.shot_toast_bs(obj.message, { bg: "text-bg-success" });
+              cls_charge.index();
+              cls_request.render("open", cls_request.open_request);
+              cls_request.render("closed", cls_request.closed_request);
+              cls_request.render("canceled", cls_charge.charge_list);
+            } else {
+              cls_general.shot_toast_bs(obj.message, { bg: "text-bg-warning" });
             }
-            cls_general.async_laravel_request(url, method, funcion, body);
+          };
+          cls_general.async_laravel_request(url, method, funcion, body);
           break;
-          case 'no':
-
-            break;
-        }
-      });
+        case "no":
+          break;
+      }
+    });
   }
 }
 class class_cashoutput{

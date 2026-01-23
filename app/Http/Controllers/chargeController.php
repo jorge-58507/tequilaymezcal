@@ -3,6 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Contracts\View\Factory;
+
 use App\tm_charge;
 use App\tm_request;
 use App\tm_paymentmethod;
@@ -29,7 +35,7 @@ class chargeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(): Factory|RedirectResponse|View
     {
         if ( auth()->user()->hasAnyRole(['admin','super','cashier']) != true){ 
             return redirect() -> route('request.index');
@@ -63,22 +69,12 @@ class chargeController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         if ( auth()->user()->hasAnyRole(['admin','super','cashier']) != true){ 
             return response()->json(['status'=>'failed','message'=>'Usuario no autorizado.']);
@@ -166,104 +162,6 @@ class chargeController extends Controller
     public function print_charge($number, $date, $client_name, $client_ruc, $raw_item, $subtotal, $discount, $tax, $total, $raw_payment, $change, $user_name, $birthday_congrats,$tip){
         $connector = new NetworkPrintConnector("192.168.3.5", 9100);
         $printer = new Printer($connector);
-
-        /* Information for the receipt */
-        
-        // ############ COMANDA  ############
-
-        /* Start the printer */
-        //$logo = EscposImage::load("./attached/image/logo_print2.png", 30);
-        // $printer = new Printer($connector);
-        
-        // PRINT TOP DATE
-        //$printer -> setJustification(Printer::JUSTIFY_RIGHT);
-        //$printer -> text(date('d-m-Y')."\n");
-
-        /* Print top logo */
-        //$printer -> setJustification(Printer::JUSTIFY_CENTER);
-        //$printer -> bitImage($logo);
-        
-        /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
-        //$optionController = new optionController;
-        //$rs_option = $optionController->getOption();
-
-        //$printer -> text($rs_option['SOCIETY']."\n");
-        //$printer -> text($rs_option['RUC']." DV ".$rs_option['DV']."\n");
-        //$printer -> text($rs_option['DIRECCION']."\n");
-        //$printer -> text("Whatsapp: ".$rs_option['CEL']." Tel. ".$rs_option['TELEFONO']."\n");
-        //$printer -> feed();
-        
-        /* Title of receipt */
-        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-        //$printer -> setEmphasis(true);
-        //$printer -> text("Facturación #".$number."\n");
-        //$printer -> setEmphasis(false);
-
-        /* Client Info */
-        //$printer -> selectPrintMode();
-        //$printer -> text(date('d-m-Y h:i:s', strtotime($date))."\n");
-        //$printer -> text("Cliente: ".$client_name."\n");
-        //$printer -> text("RUC: ".$client_ruc."\n");
-
-        //$printer -> setJustification(Printer::JUSTIFY_CENTER);
-        //$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-        //$printer -> text("COMANDA\n");
-        //$printer -> selectPrintMode();
-        //$printer -> setJustification(Printer::JUSTIFY_LEFT);
-
-        //$printer -> feed(2);
-        
-        /* Items */
-        //$printer -> text("Articulos de la Comanda.\n");
-
-        //$content_observation = '';
-        //$last_observation = '';
-        //$command_id = 0 ;
-        // foreach ($raw_item as $item) {
-        /*
-        foreach ($raw_item as $key => $item) {
-            if ($item['tx_commanddata_status'] === 1) {  
-
-                $printer -> text($item['tx_article_code']." - ".$item['tx_commanddata_description']);
-                $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-                $printer -> setEmphasis(true);
-                $printer -> text(" (".$item['tx_presentation_value'].")\n");
-                $printer -> setEmphasis(false);
-                $printer -> selectPrintMode();
-
-                $printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-                $printer -> setEmphasis(true);
-                $printer -> text($item['tx_commanddata_quantity']." x ".$item['tx_commanddata_price']."\n");
-                $printer -> setEmphasis(false);
-                $printer -> selectPrintMode();
-
-                $raw_recipe = json_decode($item['tx_commanddata_recipe'],true);
-                foreach ($raw_recipe as $ingredient) {
-                    foreach ($ingredient as $k => $formule) {
-                        $splited_formule = explode(",",$formule);
-                        if ($splited_formule[3] === 'show') {
-                            $ing = explode(")",$k,2);
-                            $printer -> text('   -'.$ing[1]."\n");
-                        }
-                    }
-                }
-
-                if (!empty($raw_item[$key+1])) {
-                    if ($raw_item[$key+1]['ai_command_id'] != $item['ai_command_id']) {
-                        $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-                    }
-                }else{
-                    $printer -> text("OBS. ".$item['tx_command_observation']."\n"."Consumo: ".$item['tx_command_consumption']."\n");
-                }
-            }
-        }
-        */
-        /* Cut the receipt */
-        //$printer -> cut();
 
                                                 // ############ RECIBO  ############
         
@@ -356,6 +254,7 @@ class chargeController extends Controller
         $printer -> text("Cajera: ".$user_name."\n");
 
         $printer -> setJustification(Printer::JUSTIFY_CENTER);
+        /*
         if ($birthday_congrats === 1) {
            $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
            $printer -> text("FELICIDADES\n");
@@ -364,6 +263,7 @@ class chargeController extends Controller
            $printer -> text("De parte de Tequila y Mezcal"."\n");
            $printer -> text("le obsequiamos un Café."."\n");
         }
+           */
         /* Footer */
         $printer -> feed(2);
         $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
@@ -513,7 +413,7 @@ class chargeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($slug)
+    public function show($slug): JsonResponse|RedirectResponse
     {
         if ( auth()->user()->hasAnyRole(['admin','super','cashier']) != true){ 
             return redirect() -> route('request.index');
@@ -525,7 +425,7 @@ class chargeController extends Controller
         $rs = $this->showIt($slug);
         return response()->json(['status'=>'success','message'=>'','data'=>['charge'=>$rs['charge'], 'payment'=>$rs['payment'], 'article'=>$rs['article']]]);
     }
-    public function filter(Request $request, $from,$to,$limit){
+    public function filter(Request $request, $from,$to,$limit): JsonResponse{
         $rs_canceledrequest =   tm_request::select('users.name as user_name','tm_clients.tx_client_name','tm_charges.tx_charge_number','tm_charges.updated_at','tm_charges.tx_charge_total','tm_charges.tx_charge_slug','tm_requests.tx_request_title','tm_requests.tx_request_code','tm_tables.tx_table_value','tm_charges.created_at')
         ->join('tm_charges','tm_charges.ai_charge_id','tm_requests.request_ai_charge_id')
         ->join('tm_clients','tm_clients.ai_client_id','tm_requests.request_ai_client_id')
@@ -558,7 +458,7 @@ class chargeController extends Controller
 
         return ['charge'=>$rs, 'payment'=>$rs_payment, 'article'=>$rs_article];
     }
-    public function show_cashregister($date){
+    public function show_cashregister($date): JsonResponse{
         $user = auth()->user();
         $cashregister = $this->get_cashregister($date,$user);
         return response()->json(['status'=>'success','message'=>'','data'=>['cashregister'=>$cashregister]]);
@@ -679,39 +579,6 @@ class chargeController extends Controller
             'giftcard' => $rs_giftcard
         ];
     }
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
     public function calculate_sale($raw_price){ //[{price,discount,tax, quantity}]
         $ttl_gross = 0;
         $ttl_discount = 0;
@@ -721,13 +588,17 @@ class chargeController extends Controller
         $total = 0;
 
         foreach ($raw_price as $key => $article) {
+            $discount = round($article['price'] * $article['discount'] / 100, 2);
+            /*
             $discount = ($article['price'] * $article['discount'])/100;
             $discount = round($discount,3);
-            $discount = round($discount,2);
+            $discount = round($discount,2);*/
             $price_discount = $article['price'] - $discount;
+            $tax = round($price_discount * $article['tax'] / 100, 2);
+            /*
             $tax = ($price_discount*$article['tax'])/100;
             $tax = round($tax,3);
-            $tax = round($tax,2);
+            $tax = round($tax,2);*/
             $price_tax = $price_discount+$tax;
 
             if ($article['tax'] != 0) {
@@ -748,6 +619,11 @@ class chargeController extends Controller
             'discount' =>  round($ttl_discount,2), 
             'tax' =>  round($ttl_tax,2)
         ];
+    }
+    public function calculateSaleApi(Request $request): JsonResponse
+    {
+        $sale = $this->calculate_sale($request->raw_price);
+        return response()->json(['status' => 'success', 'message' => 'Calculo hecho con exito.', 'data' => $sale]);
     }
 
     public function report ($from,$to){
@@ -779,10 +655,6 @@ class chargeController extends Controller
         $printer -> bitImage($logo);
         
         /* Name of shop */
-        // $printer -> text("Cancino Nuñez, S.A.\n");
-        // $printer -> text("155732387-2-2023 DV 14.\n");
-        // $printer -> text("Boulevard Penonomé, Feria, Local #50\n");
-        // $printer -> text("Whatsapp: 6890-7358 Tel. 909-7100\n");
         $optionController = new optionController;
         $rs_option = $optionController->getOption();
 
@@ -859,7 +731,7 @@ class chargeController extends Controller
 
     }
 
-    public function checklogin_reprint(Request $request){
+    public function checklogin_reprint(Request $request): JsonResponse{
         // ESTA FUNCION LLAMA AL CHECKLOGIN DE USER para corroborar que lo indicado es correcto y devuelve un JSON
         
         $userController = new userController;
@@ -872,7 +744,7 @@ class chargeController extends Controller
         
     }
 
-    public function checklogin_creditnote(Request $request){
+    public function checklogin_creditnote(Request $request): JsonResponse{
         $userController = new userController;
         $login = $userController->check_user($request->input('a'),$request->input('b'), ['admin','super']);
         if($login['check'] === 1){
